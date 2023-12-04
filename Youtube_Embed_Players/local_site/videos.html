@@ -24,25 +24,19 @@
 			pollDOM();
 		</script>
 		<!--script type="application/javascript">
-
 			function resizeIFrameToFitContent( iFrame ) {
-			
 				iFrame.width  = iFrame.contentWindow.document.body.scrollWidth;
 				iFrame.height = iFrame.contentWindow.document.body.scrollWidth*9/16;
 			}
-			
 			window.addEventListener('DOMContentLoaded', function(e) {
-			
 				var iFrame = document.getElementById( 'iFrame' );
 				resizeIFrameToFitContent( iFrame );
-			
 				// or, to resize all iframes:
 				var iframes = document.querySelectorAll("iframe");
 				for( var i = 0; i < iframes.length; i++) {
 					resizeIFrameToFitContent( iframes[i] );
 				}
 			} );
-			
 		</script-->
 		<script>
 			// global variable for the player
@@ -85,13 +79,13 @@
 			for(let i=0;i<storageArray.length;i++){
 				const ls = JSON.parse(localStorage.getItem(storageArray[i]));
 				if(ls && (lastReadState.length != storageArray.length || ls.Expire!=lastReadState[i].Expire)){
-					console.log(lastReadState[i], ls, Date.now());
+					//console.log(lastReadState[i], ls, Date.now());
 					if(Date.now()>ls.Expire){
 						//localStorage.removeItem(storageArray[i]);
 					}
-						 if(ls.Buttons.playState == 1){player[i].playVideo();  /*console.log("1",i);*/}
-					else if(ls.Buttons.playState == 0){player[i].stopVideo();  /*console.log("0",i);*/}
-					else if(ls.Buttons.playState == 2){player[i].pauseVideo(); /*console.log("2",i);*/}
+						 if(ls.Buttons.playState == 1 && player[i].getPlayerState() != 1){player[i].playVideo();  /*console.log("1",i);*/}
+					else if(ls.Buttons.playState == 0 && player[i].getPlayerState() != 0){player[i].stopVideo();  /*console.log("0",i);*/}
+					else if(ls.Buttons.playState == 2 && player[i].getPlayerState() != 2){player[i].pauseVideo(); /*console.log("2",i);*/}
 					if(ls.Buttons.speedState != 0){
 						var currentTime = player[i].getCurrentTime();
 						player[i].seekTo(currentTime+ls.Buttons.speedState, true);
