@@ -73,8 +73,8 @@
 			}
 			updateLocalStorage(playState, speedState){
 				const buttons = {playState: playState, speedState: speedState };
-				const exp = (Date.now()+604800000); // Expire in a week (default)
-//				const exp = (Date.now()+5000); // Expire test (5 seconds)
+//				const exp = (Date.now()+604800000); // Expire in a week
+				const exp = (Date.now()+15000); // Expires in 15 seconds
 				localStorage.setItem(this.storage, JSON.stringify({Buttons: buttons, Expire: exp}));
 			}
 			
@@ -125,7 +125,8 @@
 				
 			function updateLocalStorage(playState, Null){
 				const buttons = {playState: playState, Null: Null };
-				const exp = (Date.now()+604800000);
+//				const exp = (Date.now()+604800000); // Expires in one week
+				const exp = (Date.now()+5000); // expires after 5 seconds
 				localStorage.setItem('YT_Player_1', JSON.stringify({Buttons: buttons, Expire: exp}));
 			}
 		}
