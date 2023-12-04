@@ -1,0 +1,270 @@
+<html>
+	<head>
+	</head>
+	<body>
+		<div id="buttonHost"></div>
+
+	<!-- Make sure ?enablejsapi=1 is in URL -->
+	<script>
+		// global variable for the player
+		var player;
+		
+		// this function gets called when API is ready to use
+	//	function onYouTubePlayerAPIReady() {
+	//		// create the global player from the specific iframe (#video)
+	//		player = new YT.Player('video1', {
+	//			events: {
+	//				// call this function when player is ready to use
+	//				'onReady': onPlayerReady
+	//			}
+	//		});
+	//	}
+	//	
+	//	function onPlayerReady(event) {
+	//	seperatedVersion(); // comment out to test class version
+		class ButtonPanel { // IDs of buttons
+			constructor(storage, play, pause, stop, back, skip){
+				this.playButton = document.getElementById(play);
+				this.pauseButton = document.getElementById(pause);
+				this.stopButton = document.getElementById(stop);
+				this.backButton = document.getElementById(back);
+				this.skipButton = document.getElementById(skip);
+				this.p = 0;
+				this.n = 0;
+				this.storage = storage;
+			}
+			setButtonLinks(){
+				// bind events
+				let that = this;
+				this.playButton.addEventListener("click", function() {
+					that.p = 1;
+//					player.playVideo(); // command sent to other URL
+					that.updateLocalStorage(that.p,that.n);
+				});
+			
+				this.pauseButton.addEventListener("click", function() {
+					that.p = 2;
+//					player.pauseVideo(); // command sent to other URL
+					that.updateLocalStorage(that.p,that.n);
+				});
+			
+				this.stopButton.addEventListener("click", function() {
+					that.p = 0;
+//					player.stopVideo(); // command sent to other URL
+					that.updateLocalStorage(that.p,that.n);
+				});
+				
+				this.backButton.addEventListener("mousedown", function() {
+					that.n = that.n-.5
+					that.updateLocalStorage(that.p,that.n);
+				});
+				this.backButton.addEventListener("mouseup", function() {
+					that.n = 0
+					that.updateLocalStorage(that.p,that.n);
+				});			
+				this.skipButton.addEventListener("mousedown", function() {
+					that.n = that.n+.5
+					that.updateLocalStorage(that.p,that.n);
+				});
+				this.skipButton.addEventListener("mouseup", function() {
+					that.n = 0
+					that.updateLocalStorage(that.p,that.n);
+				});
+			}
+			updateLocalStorage(playState, speedState){
+				const buttons = {playState: playState, speedState: speedState };
+				const exp = (Date.now()+604800000); // Expire in a week (default)
+//				const exp = (Date.now()+5000); // Expire test (5 seconds)
+				localStorage.setItem(this.storage, JSON.stringify({Buttons: buttons, Expire: exp}));
+			}
+			
+		} // exit class
+		// ===
+		function seperatedVersion(){
+			var p=0,n=0;
+				// bind events
+				var playButton = document.getElementById("play-button");
+				playButton.addEventListener("click", function() {
+					p = 1;
+	//				player.playVideo(); // command sent to other URL
+					updateLocalStorage(p,n);
+				});
+			
+				var pauseButton = document.getElementById("pause-button");
+				pauseButton.addEventListener("click", function() {
+					p = 2;
+	//				player.pauseVideo(); // command sent to other URL
+					updateLocalStorage(p,n);
+				});
+			
+				var stopButton = document.getElementById("stop-button");
+				stopButton.addEventListener("click", function() {
+					p = 0;
+	//				player.stopVideo(); // command sent to other URL
+					updateLocalStorage(p,n);
+				});
+				
+				var backButton = document.getElementById("back-button");
+				backButton.addEventListener("mousedown", function() {
+					n = -1
+					updateLocalStorage(p,n);
+				});
+				backButton.addEventListener("mouseup", function() {
+					n = 0
+					updateLocalStorage(p,n);
+				});			
+				var skipButton = document.getElementById("skip-button");
+				skipButton.addEventListener("mousedown", function() {
+					n = 1
+					updateLocalStorage(p,n);
+				});
+				skipButton.addEventListener("mouseup", function() {
+					n = 0
+					updateLocalStorage(p,n);
+				});
+				
+			function updateLocalStorage(playState, Null){
+				const buttons = {playState: playState, Null: Null };
+				const exp = (Date.now()+604800000);
+				localStorage.setItem('YT_Player_1', JSON.stringify({Buttons: buttons, Expire: exp}));
+			}
+		}
+		// ===
+		
+		function looper(){
+			//	console.log(JSON.parse(localStorage.getItem('YT_Player_1')));
+			//	console.log(JSON.parse(localStorage.getItem('YT_Player_1')).Expire);
+			for(let i=0;i<array.length;i++){
+				const ls = JSON.parse(localStorage.getItem(array[i][0]));
+				if(ls && Date.now()>ls.Expire){
+					localStorage.removeItem(array[i][0]);
+				}
+			}
+			//console.log(array);
+			timeUpdate()
+		}
+		function timeUpdate(){
+			var refresh=100; // Refresh rate in milli seconds
+			mytime=setTimeout('looper()',refresh)
+		}
+		const array = [
+			["YT_Player_1","play-button-1","pause-button-1","stop-button-1","back-button-1","skip-button-1"],
+			["YT_Player_2","play-button-2","pause-button-2","stop-button-2","back-button-2","skip-button-2"]
+		];
+		timeUpdate()
+	</script>
+	<script>
+		console.log(array.length,array[1].length);
+		let YT = []
+		var buttonsLocation = document.getElementById("buttonHost");
+		for(let i=0;i<array.length;i++){
+			var div = document.createElement("div");
+			div.classList.add("buttons","YT".concat(i+1));
+			var title = document.createElement("p");
+			title.innerHTML = array[i][0];
+			title.style.display = "flex";
+			title.style.justifyContent = "center";
+			title.style.margin = "0px";
+			div.appendChild(title);
+			for(let j=1;j<array[i].length;j++){
+				console.log(i,j);
+				var button = document.createElement("button");
+				var type;
+				 if(j==1){type="play";  button.innerHTML = "►";  }
+			else if(j==2){type="pause"; button.innerHTML = "‖"; }
+			else if(j==3){type="stop";  button.innerHTML = "■";  }
+			else if(j==4){type="back";  button.innerHTML = "‹";  } // «»
+			else if(j==5){type="skip";  button.innerHTML = "›";  }
+				if(j+1!=array[i].length){button.style.marginRight = "1px";}
+				button.classList.add("button",type);
+				button.id = array[i][j];
+				div.appendChild(button);
+			}
+			buttonsLocation.appendChild(div);
+			YT[i] = new ButtonPanel(array[i][0],array[i][1],array[i][2],array[i][3],array[i][4],array[i][5]).setButtonLinks()
+		}
+//		const YT1 = new ButtonPanel("YT_Player_1","play-button","pause-button","stop-button","back-button","skip-button").setButtonLinks();
+//		const YT2 = new ButtonPanel("YT_Player_2","play-button","pause-button","stop-button","back-button","skip-button").setButtonLinks();
+	</script>
+<!--	<iframe id="video1" src="https://www.youtube.com/embed/aIXOyOLkb24?enablejsapi=1&html5=1" frameborder="0" allowfullscreen></iframe>
+-->	<p style="float: left; display: block; padding-right:10px">Must click on player before buttons will work as expected</p>
+	<style>
+		body {
+			background-color: 2B2E38;
+		}
+		.buttons {
+			position: relative;
+			margin: 0 auto 20px auto;
+			padding: 10px;
+			float: left;
+			display: block;
+			background-color: #3C404B;
+			border-radius: 4px;
+		}
+		.buttons:after {
+			top: 5%;
+			left: 5%;
+			border: solid transparent;
+			content: " ";
+			height: 0;
+			width: 0;
+			position: absolute;
+			pointer-events: none;
+			border-color: rgba(238, 238, 238, 0);
+			border-top-color: #3C404B;
+			border-width: 10px;
+			margin-left: -10px;
+		}
+		.button {
+			padding: 10px 10px 10px 15px;
+			font-weight: bold;
+			letter-spacing: 5px;
+			outline: none;
+			cursor: pointer;
+			color: white;
+			background-color: #7F8C8D;
+			border: none;
+			border-radius: 4px;
+		}
+		.button:hover {
+			background-color: #708080;
+		}
+		.play {
+			background-color: #2ECC71;
+		}
+		.play:hover {
+			background-color: #27AE60;
+		}
+		.pause {
+			background-color: #E67E22;
+		}
+		.pause:hover {
+			background-color: #D35400;
+		}
+		.stop {
+			background-color: #E74C3C;
+		}
+		.stop:hover {
+			background-color: #C0392B;
+		}
+		#play-button,
+		#skip-button,
+		#pause-button,
+		#stop-button {
+			margin-left: 15px;
+		}
+		iframe {
+			margin: 0 auto;
+			width: 560px;
+			height: 315px;
+			float: left;
+			clear: both;
+			display: block;
+			background-color: #eee;
+		}
+		p {
+			color: #d0d0dd;
+		}
+	</style>
+	</body>
+</html>

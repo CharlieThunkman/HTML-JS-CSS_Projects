@@ -1,0 +1,61 @@
+<html>
+	<head>
+	</head>
+	<body>
+		<script>console.log(document.body.clientHeight,document.body.clientWidth)</script>
+		<div width="100%">
+			<!--iframe id="myFrame1" class="iframe1" src="https://www.youtube.com/embed/?fs=0&list=PLuXaDdOtKhFeu-eIaEG63-qVwt2DUO8tA&listType=playlist&modestbranding=1&iv_load_policy=3" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe-->
+			<iframe id="myFrame2" class="iframe2" src="https://www.youtube.com/embed/?fs=0&list=PLuXaDdOtKhFdgYYaZ5SmkxqHntujrS73k&listType=playlist&modestbranding=1&iv_load_policy=3" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+			<iframe id="myFrame3" class="iframe3" src="https://www.youtube.com/embed/videoseries?list=PLuXaDdOtKhFcytpEqQ6fay1KF4eSZI-eq" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+		</div>
+		<script>
+		var source = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=PLuXaDdOtKhFdgYYaZ5SmkxqHntujrS73k&key=AIzaSyDI5nYD54CtFM3GjiP1fm2J59LmGJDH-7g&maxResults=50"
+		
+			function pollDOM () {
+				var el = document.getElementById('myFrame1');
+				//el.height = el.width*9/16
+				
+				if (el.length) {
+					// Do something with el
+				} else {
+					setTimeout(pollDOM, 3000); // try again in 300 milliseconds
+				}
+			}
+			pollDOM();
+		</script>
+		<!--script type="application/javascript">
+
+			function resizeIFrameToFitContent( iFrame ) {
+			
+				iFrame.width  = iFrame.contentWindow.document.body.scrollWidth;
+				iFrame.height = iFrame.contentWindow.document.body.scrollWidth*9/16;
+			}
+			
+			window.addEventListener('DOMContentLoaded', function(e) {
+			
+				var iFrame = document.getElementById( 'iFrame' );
+				resizeIFrameToFitContent( iFrame );
+			
+				// or, to resize all iframes:
+				var iframes = document.querySelectorAll("iframe");
+				for( var i = 0; i < iframes.length; i++) {
+					resizeIFrameToFitContent( iframes[i] );
+				}
+			} );
+			
+		</script-->
+		<style>
+			iframe{
+				display: inline-block;
+				width: 50%;
+				height: 100%;
+				position: fixed;
+				top: 0;
+			}
+			.iframe2{
+				left: 50%;
+				}
+			
+		</style>
+	</body>
+</html>
