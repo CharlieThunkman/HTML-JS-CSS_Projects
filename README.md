@@ -6,4 +6,4 @@ Visit https://charliethunkman.github.io/HTML-JS-CSS_Projects/[insert_filename_HE
 
 ### Here's a compilation of some of the sites:
 https://charliethunkman.github.io/HTML-JS-CSS_Projects/Youtube_Embed_Players/local_site/buttons.html
-https://charliethunkman.github.io/HTML-JS-CSS_Projects/Youtube_Embed_Players/local_site/videos.html
+https://charliethunkman.github.io/HTML-JS-CSS_Projects/Youtube_Embed_Players/local_site/videos.html?allowfullscreen
