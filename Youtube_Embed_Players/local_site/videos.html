@@ -5,7 +5,7 @@
 		<script>console.log(document.body.clientHeight,document.body.clientWidth)</script>
 		<div width="100%">
 <!--			<iframe id="myFrame3" class="iframe3" src="https://www.youtube.com/embed/?fs=0&list=PLuXaDdOtKhFeu-eIaEG63-qVwt2DUO8tA&listType=playlist&modestbranding=1&iv_load_policy=3" title="AmoGus" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
--->			<iframe id="myFrame2" class="iframe2" src="https://www.youtube.com/embed/?enablejsapi=1&fs=0&list=PLuXaDdOtKhFdgYYaZ5SmkxqHntujrS73k&listType=playlist&modestbranding=1&iv_load_policy=3" title="Watch Next" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+-->			<iframe id="myFrame2" class="iframe2" src="https://www.youtube.com/embed/videoseries?enablejsapi=1&list=PLuXaDdOtKhFdgYYaZ5SmkxqHntujrS73k" title="Watch Next" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 			<iframe id="myFrame1" class="iframe1" src="https://www.youtube.com/embed/videoseries?enablejsapi=1&list=PLuXaDdOtKhFcytpEqQ6fay1KF4eSZI-eq" title="Hermie Cwaft" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 		</div>
 		<script>
@@ -24,21 +24,38 @@
 			pollDOM();
 		</script>
 		<!--script type="application/javascript">
+
 			function resizeIFrameToFitContent( iFrame ) {
+			
 				iFrame.width  = iFrame.contentWindow.document.body.scrollWidth;
 				iFrame.height = iFrame.contentWindow.document.body.scrollWidth*9/16;
 			}
+			
 			window.addEventListener('DOMContentLoaded', function(e) {
+			
 				var iFrame = document.getElementById( 'iFrame' );
 				resizeIFrameToFitContent( iFrame );
+			
 				// or, to resize all iframes:
 				var iframes = document.querySelectorAll("iframe");
 				for( var i = 0; i < iframes.length; i++) {
 					resizeIFrameToFitContent( iframes[i] );
 				}
 			} );
+			
 		</script-->
 		<script>
+		var url = window.location.href;
+		let allowFS = 0;
+		if(getAllUrlParams(url)["allowfullscreen"]){
+			allowFS = 1; 
+			console.log(allowFS)
+		} else {
+			let myFrame1 = document.getElementById("myFrame1");
+			myFrame1.src = myFrame1.src + "&fs=0";
+			let myFrame2 = document.getElementById("myFrame2");
+			myFrame2.src = myFrame2.src + "&fs=0";
+		}
 			// global variable for the player
 		var player;
 		var running=0;
@@ -79,13 +96,13 @@
 			for(let i=0;i<storageArray.length;i++){
 				const ls = JSON.parse(localStorage.getItem(storageArray[i]));
 				if(ls && (lastReadState.length != storageArray.length || ls.Expire!=lastReadState[i].Expire)){
-					//console.log(lastReadState[i], ls, Date.now());
+					console.log(lastReadState[i], ls, Date.now());
 					if(Date.now()>ls.Expire){
 						//localStorage.removeItem(storageArray[i]);
 					}
-						 if(ls.Buttons.playState == 1 && player[i].getPlayerState() != 1){player[i].playVideo();  /*console.log("1",i);*/}
-					else if(ls.Buttons.playState == 0 && player[i].getPlayerState() != 0){player[i].stopVideo();  /*console.log("0",i);*/}
-					else if(ls.Buttons.playState == 2 && player[i].getPlayerState() != 2){player[i].pauseVideo(); /*console.log("2",i);*/}
+						 if(ls.Buttons.playState == 1){player[i].playVideo();  /*console.log("1",i);*/}
+					else if(ls.Buttons.playState == 0){player[i].stopVideo();  /*console.log("0",i);*/}
+					else if(ls.Buttons.playState == 2){player[i].pauseVideo(); /*console.log("2",i);*/}
 					if(ls.Buttons.speedState != 0){
 						var currentTime = player[i].getCurrentTime();
 						player[i].seekTo(currentTime+ls.Buttons.speedState, true);
@@ -110,6 +127,52 @@
 		tag.src = "https://www.youtube.com/player_api";
 		var firstScriptTag = document.getElementsByTagName('script')[0];
 		firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+		
+		function getAllUrlParams(url) {
+			// get query string from url (optional) or window
+			var queryString = url ? url.split('?')[1] : window.location.search.slice(1);
+			var obj = {};
+			if (queryString) {
+				// stuff after # is not part of query string, so get rid of it
+				queryString = queryString.split('#')[0];
+				// split our query string into its component parts
+				var arr = queryString.split('&');
+				for (var i = 0; i < arr.length; i++) {
+				var a = arr[i].split('=');
+				// set parameter name and value (use 'true' if empty)
+				var paramName = a[0];
+				var paramValue = typeof (a[1]) === 'undefined' ? true : a[1];
+				// (optional) keep case consistent
+				paramName = paramName.toLowerCase();
+				if (typeof paramValue === 'string') paramValue = paramValue.toLowerCase();
+				// if the paramName ends with square brackets, e.g. colors[] or colors[2]
+				if (paramName.match(/\[(\d+)?\]$/)) {
+					// create key if it doesn't exist
+					var key = paramName.replace(/\[(\d+)?\]/, '');
+					if (!obj[key]) obj[key] = [];
+					// if it's an indexed array e.g. colors[2]
+					if (paramName.match(/\[\d+\]$/)) {
+					// get the index value and add the entry at the appropriate position
+					var index = /\[(\d+)\]/.exec(paramName)[1];
+					obj[key][index] = paramValue;
+					} else { //push value into array
+					obj[key].push(paramValue);
+					}
+				} else {// we're dealing with a string
+					if (!obj[paramName]) {// if it doesn't exist, create property
+					obj[paramName] = paramValue;
+					} else if (obj[paramName] && typeof obj[paramName] === 'string'){
+					// if property does exist and it's a string, convert it to an array
+					obj[paramName] = [obj[paramName]];
+					obj[paramName].push(paramValue);
+					} else {
+					obj[paramName].push(paramValue);
+					}
+				}
+				}
+			}
+			return obj;
+		}
 		</script>
 		<style>
 			iframe{
