@@ -7,6 +7,7 @@
 <!--			<iframe id="myFrame3" class="iframe3" src="https://www.youtube.com/embed/?fs=0&list=PLuXaDdOtKhFeu-eIaEG63-qVwt2DUO8tA&listType=playlist&modestbranding=1&iv_load_policy=3" title="AmoGus" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 -->			<iframe id="myFrame2" class="iframe2" src="https://www.youtube.com/embed/videoseries?enablejsapi=1&list=PLuXaDdOtKhFdgYYaZ5SmkxqHntujrS73k" title="Watch Next" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 			<iframe id="myFrame1" class="iframe1" src="https://www.youtube.com/embed/videoseries?enablejsapi=1&list=PLuXaDdOtKhFcytpEqQ6fay1KF4eSZI-eq" title="Hermie Cwaft" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+			<iframe id="myFrame4" class="iframe4" src="https://www.youtube.com/embed/videoseries?enablejsapi=1&list=PL07iBthz24JBwDqSScgUCH_XpCxd72-WC" title="Music Queue" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 		</div>
 		<script>
 		var source = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=PLuXaDdOtKhFdgYYaZ5SmkxqHntujrS73k&key=AIzaSyDI5nYD54CtFM3GjiP1fm2J59LmGJDH-7g&maxResults=50"
@@ -55,6 +56,8 @@
 			myFrame1.src = myFrame1.src + "&fs=0";
 			let myFrame2 = document.getElementById("myFrame2");
 			myFrame2.src = myFrame2.src + "&fs=0";
+			let myFrame4 = document.getElementById("myFrame4");
+			myFrame4.src = myFrame4.src + "&fs=0";
 		}
 			// global variable for the player
 		var player;
@@ -76,7 +79,7 @@
 				}
 			}) ];
 		}
-		const storageArray = ["YT_Player_1","YT_Player_2"];
+		const storageArray = ["YT_Player_1","YT_Player_2","YT_Player_4"];
 		var lastReadState = [""];
 		function onPlayerReady(event) {
 			console.log("Player1 is ready.");
@@ -85,6 +88,11 @@
 		}
 		function onPlayerReady2(event) {
 			console.log("Player2 is ready.");
+			timeUpdate();
+			running++;
+		}
+		function onPlayerReady4(event) {
+			console.log("Player4 is ready.");
 			timeUpdate();
 			running++;
 		}
@@ -177,13 +185,17 @@
 		<style>
 			iframe{
 				display: inline-block;
-				width: 50%;
+				width: calc(50% - 200px);
 				height: 100%;
 				position: fixed;
 				top: 0;
 			}
 			.iframe2{
-				left: 50%;
+				left: calc(50% - 200px);
+				}
+			.iframe4{
+				left: calc(100% - 400px);
+				width: 400px;
 				}
 			
 		</style>
