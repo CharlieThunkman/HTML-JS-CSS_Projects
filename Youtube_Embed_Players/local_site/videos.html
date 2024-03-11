@@ -3,12 +3,7 @@
 	</head>
 	<body>
 		<script>console.log(document.body.clientHeight,document.body.clientWidth)</script>
-		<div width="100%">
-<!--			<iframe id="myFrame3" class="iframe3" src="https://www.youtube.com/embed/?fs=0&list=PLuXaDdOtKhFeu-eIaEG63-qVwt2DUO8tA&listType=playlist&modestbranding=1&iv_load_policy=3" title="AmoGus" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
--->			<iframe id="myFrame2" class="iframe2" src="https://www.youtube.com/embed/videoseries?enablejsapi=1&list=PLuXaDdOtKhFdgYYaZ5SmkxqHntujrS73k" title="Watch Next" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-			<iframe id="myFrame1" class="iframe1" src="https://www.youtube.com/embed/videoseries?enablejsapi=1&list=PLuXaDdOtKhFcytpEqQ6fay1KF4eSZI-eq" title="Hermie Cwaft" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-			<iframe id="myFrame4" class="iframe4" src="https://www.youtube.com/embed/videoseries?enablejsapi=1&list=PL07iBthz24JBwDqSScgUCH_XpCxd72-WC" title="Music Queue" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-		</div>
+		<div width="100%" id="myFrameDiv">		</div>
 		<script>
 		var source = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=PLuXaDdOtKhFdgYYaZ5SmkxqHntujrS73k&key=AIzaSyDI5nYD54CtFM3GjiP1fm2J59LmGJDH-7g&maxResults=50"
 		
@@ -48,17 +43,61 @@
 		<script>
 		var url = window.location.href;
 		let allowFS = 0;
+		function myFrame(){
+		return document.createElement("iFrame");}
+		let myFrameBase = "https://www.youtube.com/embed/videoseries?enablejsapi=1";
+		let myFrameHolder = [myFrame(),myFrame(),myFrame(),myFrame()];
+		const playlist_IDs = ["PLuXaDdOtKhFcytpEqQ6fay1KF4eSZI-eq","PLuXaDdOtKhFdgYYaZ5SmkxqHntujrS73k","PL07iBthz24JBwDqSScgUCH_XpCxd72-WC","PLuXaDdOtKhFeu-eIaEG63-qVwt2DUO8tA"]
+		if(getAllUrlParams(url)["showplayer"] && parseInt(getAllUrlParams(url)["showplayer"]) >= 0){
+			let hidePlayerInt = parseInt(getAllUrlParams(url)["showplayer"]);
+			let hidePlayerBin = hidePlayerInt.toString(2).padStart(playlist_IDs.length,"0");
+			let showPlayerCount = 0;
+			for(i=0;i<playlist_IDs.length;i++){
+				showPlayerCount += parseInt(hidePlayerBin.charAt(i));
+			}
+			let indexSPC = 0;
+			console.log(getAllUrlParams(url)["showplayer"],hidePlayerInt,hidePlayerBin,showPlayerCount)
+			console.log(hidePlayerBin.charAt(3),hidePlayerBin.charAt(2),hidePlayerBin.charAt(1),hidePlayerBin.charAt(0));
+			for(var i=0;i<myFrameHolder.length;i++){
+				if(hidePlayerBin.charAt(playlist_IDs.length - i - 1) == "1"){ // if 1 is showing, indicated by EVEN number
+					myFrameHolder[i].src = myFrameBase + "&list=" + playlist_IDs[i];
+					myFrameHolder[i].style.width= 100.0 / showPlayerCount + "%";
+					myFrameHolder[i].style.left= 100 * (indexSPC++ / showPlayerCount) + "%";
+					console.log("modified index " + i);
+				} 
+			}
+
+		} else {
+			for(var i=0;i<myFrameHolder.length;i++){
+				myFrameHolder[i].src = myFrameBase + "&list=" + playlist_IDs[i];
+				myFrameHolder[i].style.width= 100.0 / myFrameHolder.length + "%";
+				myFrameHolder[i].style.left= 100 * (i / myFrameHolder.length) + "%";
+			}
+		}
 		if(getAllUrlParams(url)["allowfullscreen"]){
 			allowFS = 1; 
 			console.log(allowFS)
 		} else {
-			let myFrame1 = document.getElementById("myFrame1");
-			myFrame1.src = myFrame1.src + "&fs=0";
-			let myFrame2 = document.getElementById("myFrame2");
-			myFrame2.src = myFrame2.src + "&fs=0";
-			let myFrame4 = document.getElementById("myFrame4");
-			myFrame4.src = myFrame4.src + "&fs=0";
+			for(var i=0;i<myFrameHolder.length;i++){
+				myFrameHolder[i].src = myFrameHolder[i].src + "&fs=0";
+			}
 		}
+		
+		let myFrameDiv = document.getElementById("myFrameDiv");
+		for(i=0;i<playlist_IDs.length;i++){
+			if(getAllUrlParams(url)["showplayer"] && parseInt(getAllUrlParams(url)["showplayer"]) >= 0){
+				let hidePlayerInt = parseInt(getAllUrlParams(url)["showplayer"]);
+				let hidePlayerBin = hidePlayerInt.toString(2).padStart(playlist_IDs.length,"0");
+				if(hidePlayerBin.charAt(playlist_IDs.length - i - 1) == "1"){ // if 1 is showing, indicated by EVEN number
+					myFrameDiv.appendChild(myFrameHolder[i]);
+					console.log("displaying index " + i);
+				}
+			} else {
+				myFrameDiv.appendChild(myFrameHolder[i]);
+				console.log("displaying all indexes");
+			}
+		}
+		
 			// global variable for the player
 		var player;
 		var running=0;
@@ -67,25 +106,26 @@
 		function onYouTubePlayerAPIReady() {
 			// create the global player from the specific iframe (#video)
 			player = [new YT.Player('myFrame1', {
-				events: {
-					// call this function when player is ready to use
-					'onReady': onPlayerReady
-				}
-			}),			// create the global player from the specific iframe (#video)
-			new YT.Player('myFrame2', {
-				events: {
-					// call this function when player is ready to use
-					'onReady': onPlayerReady2
-				}
-			}),			// create the global player from the specific iframe (#video)
-			new YT.Player('myFrame4', {
-				events: {
-					// call this function when player is ready to use
-					'onReady': onPlayerReady4
-				}
-			}) ];
+					events: {
+						// call this function when player is ready to use
+						'onReady': onPlayerReady
+					}
+				}),			// create the global player from the specific iframe (#video)
+				new YT.Player('myFrame2', {
+					events: {
+						// call this function when player is ready to use
+						'onReady': onPlayerReady2
+					}
+				}),			// create the global player from the specific iframe (#video)
+				new YT.Player('myFrame4', {
+					events: {
+						// call this function when player is ready to use
+						'onReady': onPlayerReady4
+					}
+				}) 
+			];
 		}
-		const storageArray = ["YT_Player_1","YT_Player_2","YT_Player_4"];
+		const storageArray = ["YT_Player_1","YT_Player_2","YT_Player_4","YT_Player_8"];
 		var lastReadState = [""];
 		function onPlayerReady(event) {
 			console.log("Player1 is ready.");
@@ -99,6 +139,11 @@
 		}
 		function onPlayerReady4(event) {
 			console.log("Player4 is ready.");
+			timeUpdate();
+			running++;
+		}
+		function onPlayerReady8(event) {
+			console.log("Player8 is ready.");
 			timeUpdate();
 			running++;
 		}
@@ -191,19 +236,10 @@
 		<style>
 			iframe{
 				display: inline-block;
-				width: calc(50% - 200px);
 				height: 100%;
 				position: fixed;
 				top: 0;
 			}
-			.iframe2{
-				left: calc(50% - 200px);
-				}
-			.iframe4{
-				left: calc(100% - 400px);
-				width: 400px;
-				}
-			
 		</style>
 	</body>
 </html>
