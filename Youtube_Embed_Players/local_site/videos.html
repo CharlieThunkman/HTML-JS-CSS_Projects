@@ -45,10 +45,12 @@
 		let allowFS = 0;
 		function myFrame(){
 			let iframe = document.createElement("iFrame");
-			let textblip = document.createElement("span");
+			let textblip1 = document.createElement("span");
+			let textblip2 = document.createElement("span");
 			let div = document.createElement("div");
 			div.appendChild(iframe);
-			div.appendChild(textblip);
+			div.appendChild(textblip1);
+			div.appendChild(textblip2);
 			return div;
 		}
 		let myFrameBase = "https://www.youtube.com/embed/videoseries?enablejsapi=1";
@@ -104,9 +106,16 @@
 		for(var i=0;i<myFrameHolder.length;i++){
 			if(hidePlayerBin.charAt(playlist_IDs.length - i - 1) == "1"){ // if 1 is showing, indicated by EVEN number
 				myFrameHolder[i].children[1].innerHTML = "Placeholder Text";
-				myFrameHolder[i].children[1].style.left= "calc(" + 100 * (indexSPC++ / showPlayerCount) + "% + 2px)";
-				myFrameHolder[i].children[1].style.top= "calc(100% - 44px)";
+				myFrameHolder[i].children[2].innerHTML = "Placeholder Time";
+				myFrameHolder[i].children[1].style.left= "calc(" + 100 * (indexSPC / showPlayerCount) + "% + 2px)";
+				myFrameHolder[i].children[2].style.left= "calc(" + 100 * (indexSPC / showPlayerCount) + "% + 2px)";
+				indexSPC++;
 				myFrameHolder[i].children[1].style.right= 100 * ((showPlayerCount - indexSPC) / showPlayerCount) + "%";
+				myFrameHolder[i].children[2].style.right= 100 * ((showPlayerCount - indexSPC) / showPlayerCount) + "%";
+				myFrameHolder[i].children[1].style.top= "calc(100% - 40px)";
+				myFrameHolder[i].children[2].style.top= "calc(100% - 20px)";
+				myFrameHolder[i].children[1].style.justifyContent = "center";
+				
 			}
 		}
 		
@@ -212,7 +221,8 @@
 				if(hidePlayerBin.charAt(playlist_IDs.length - i - 1) == "1"){ // if 1 is showing, indicated by EVEN number
 					let duration = player[i].getDuration();
 					let currentTime = player[i].getCurrentTime();
-					myFrameHolder[i].children[1].innerHTML = timeFormat(currentTime) + " / " + timeFormat(duration) + "\r\n\t" + myFrameHolder[i].children[0].title;
+					myFrameHolder[i].children[1].innerHTML = myFrameHolder[i].children[0].title;
+					myFrameHolder[i].children[2].innerHTML = timeFormat(currentTime) + " / " + timeFormat(duration);
 				}
 			}
 			lastReadState = thisReadState;
@@ -309,9 +319,9 @@
 				font-family: 'Algerian';
 				color: #50f050;	
 				display: flex;
-				justify-content: left;
-				align-items: center;
+				text-align: center;
 				font-size: 18px;
+				line-height: 20px;
 				text-shadow:
 				-1px -1px 0 #000000,
 				1px -1px 0 #000000,
