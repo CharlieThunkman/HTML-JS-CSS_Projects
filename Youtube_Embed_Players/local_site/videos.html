@@ -221,8 +221,9 @@
 				if(hidePlayerBin.charAt(playlist_IDs.length - i - 1) == "1"){ // if 1 is showing, indicated by EVEN number
 					let duration = player[i].getDuration();
 					let currentTime = player[i].getCurrentTime();
+					let currentBuffer = player[i].getVideoLoadedFraction();
 					myFrameHolder[i].children[1].innerHTML = myFrameHolder[i].children[0].title;
-					myFrameHolder[i].children[2].innerHTML = timeFormat(currentTime) + " / " + timeFormat(duration);
+					myFrameHolder[i].children[2].innerHTML = timeFormat(currentTime) + " / " + timeFormat(duration) + "  (" + timeFormat(duration*currentBuffer) + ")";
 				}
 			}
 			lastReadState = thisReadState;
