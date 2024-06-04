@@ -1,5 +1,7 @@
 <html>
 	<head>
+		<title>YouTube Playlist Viewer | A CharlieThunkman Extention</title>
+  		<link rel="icon" type="image/x-icon" href="../images/Red Play Button.png">
 	</head>
 	<body>
 		<script>console.log(document.body.clientHeight,document.body.clientWidth)</script>
@@ -22,27 +24,6 @@
 			}
 			pollDOM();
 		</script>
-		<!--script type="application/javascript">
-
-			function resizeIFrameToFitContent( iFrame ) {
-			
-				iFrame.width  = iFrame.contentWindow.document.body.scrollWidth;
-				iFrame.height = iFrame.contentWindow.document.body.scrollWidth*9/16;
-			}
-			
-			window.addEventListener('DOMContentLoaded', function(e) {
-			
-				var iFrame = document.getElementById( 'iFrame' );
-				resizeIFrameToFitContent( iFrame );
-			
-				// or, to resize all iframes:
-				var iframes = document.querySelectorAll("iframe");
-				for( var i = 0; i < iframes.length; i++) {
-					resizeIFrameToFitContent( iframes[i] );
-				}
-			} );
-			
-		</script-->
 		<script>
 		var url = window.location.href;
 		let allowFS = 0;
