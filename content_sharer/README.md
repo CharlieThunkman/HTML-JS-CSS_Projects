@@ -6,9 +6,9 @@ Instructions on how to customize your experience.
 2) After the question mark in the URL, add in any of the following parameters, seperated by the `&` character if multiple:
 	* `domain=` to change the domain site. By default, this is Youtube.com 
 	* `contents=` [REQUIRED] followed by the content ID on the youtube website or app.
-		*  If the `domain=` parameter is omitted, this is only the 11 characters before the `?` in the youtube url
-        *  Otherwise, this is everything after the domain in your specified site (omitting the first `/`
+		*  If the `domain=` parameter is omitted, this is only the 11 characters directly after the `v=` in the youtube url
   		    *  For example in this video [https://www.youtube.com/watch?v=xxV7oxeryfc?si=aI9GCGrN10F6uOTj](https://youtu.be/xxV7oxeryfc?si=aI9GCGrN10F6uOTj), the only the  `xxV7oxeryfc` part is needed for the full parameter
+        *  Otherwise, this is everything after the domain in your specified site (omitting the `/` directly after the domain)
         *  To add multiple links to the same domain, seperate each entry with a `+`
  	 * `author=` allows you to let people who you send this link to know who they retrieved it from. This  
 
