@@ -1,7 +1,5 @@
 <html>
 	<head>
-		<title>YouTube Multi-Playlist Pop-out Interaction Field | A CharlieThunkman Extention</title>
-  		<link rel="icon" type="image/x-icon" href="../images/Red Play Button.png">
 	</head>
 	<body>
 		<div id="buttonHost"></div>
@@ -10,6 +8,8 @@
 	<script>
 		// global variable for the player
 		var player;
+		// the IFRAME API REFERENCE
+		// https://developers.google.com/youtube/iframe_api_reference
 		
 		// this function gets called when API is ready to use
 	//	function onYouTubePlayerAPIReady() {
@@ -25,65 +25,158 @@
 	//	function onPlayerReady(event) {
 	//	seperatedVersion(); // comment out to test class version
 		class ButtonPanel { // IDs of buttons
-			constructor(storage, play, pause, stop, back, skip, delay){
-				this.playButton = document.getElementById(play);
-				this.pauseButton = document.getElementById(pause);
-				this.stopButton = document.getElementById(stop);
-				this.backButton = document.getElementById(back);
-				this.skipButton = document.getElementById(skip);
-				this.delayValue = document.getElementById(delay);
-				this.p = 0;
-				this.n = 0;
-				this.d = 0;
-				this.storage = storage;
+			constructor(index, thisArray = [8], thisIntArray = [4]){
+			// thisArray: storage, play, pause, stop, prev, back, skip, next, ismute
+			// thisIntArray: delay, speed, vol
+				this.playButton = document.getElementById(thisArray[1]	+ "-" + index);
+				this.pauseButton = document.getElementById(thisArray[2]	+ "-" + index);
+				this.stopButton = document.getElementById(thisArray[3]	+ "-" + index);
+				this.backButton = document.getElementById(thisArray[5]	+ "-" + index);
+				this.skipButton = document.getElementById(thisArray[6]	+ "-" + index);
+				this.delayValue = document.getElementById(thisIntArray[0].id);
+				
+				this.speedValue = document.getElementById(thisIntArray[1].id);
+
+				this.prevButton = document.getElementById(thisArray[4]	+ "-" + index);
+				this.nextButton = document.getElementById(thisArray[7]	+ "-" + index);
+
+				this.isMuteButton = document.getElementById(thisArray[8]+ "-" + index);
+				this.volumeValue = document.getElementById(thisIntArray[2].id);
+
+				this.p = 0; // play state (running / paused / stopped)
+				this.n = 0; // tells which direction to seek in +- (and scale) (temp acceleration)
+				this.s = 1; // perm time acceleration
+				this.d = 0; // decay value
+				this.v = 20; // volume control
+				this.isMuted = 0;
+				this.currentIndex = 1;
+				this.storage = thisArray[0] + "_" + index;
+				console.log("Aug4Test", thisArray, index, this.isMuteButton,thisArray[8]	+ "-" + index);
 			}
 			setButtonLinks(){
 				// bind events
-				let that = this;
+				let that = this; // link all following requests to the requested call
 				this.playButton.addEventListener("click", function() {
 					that.p = 1;
 //					player.playVideo(); // command sent to other URL
-					setTimeout( function(){that.updateLocalStorage(that.p,that.n)}, that.d);
+					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
 				});
 			
 				this.pauseButton.addEventListener("click", function() {
 					that.p = 2;
 //					player.pauseVideo(); // command sent to other URL
-					setTimeout( function(){that.updateLocalStorage(that.p,that.n)}, that.d);
+					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
 				});
 			
 				this.stopButton.addEventListener("click", function() {
 					that.p = 0;
 //					player.stopVideo(); // command sent to other URL
-					setTimeout( function(){that.updateLocalStorage(that.p,that.n)}, that.d);
+					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
 				});
 				
 				this.backButton.addEventListener("mousedown", function() {
 					that.n = that.n-.5
-					setTimeout( function(){that.updateLocalStorage(that.p,that.n)}, that.d);
+					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
 				});
 				this.backButton.addEventListener("mouseup", function() {
 					that.n = 0
-					setTimeout( function(){that.updateLocalStorage(that.p,that.n)}, that.d);
+					if(that.nTime < Date.now()){
+						console.log("Tapped instead of held, auto seeking 5 seconds.");
+					}
+					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
 				});			
 				this.skipButton.addEventListener("mousedown", function() {
 					that.n = that.n+.5
-					setTimeout( function(){that.updateLocalStorage(that.p,that.n)}, that.d);
+					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
 				});
 				this.skipButton.addEventListener("mouseup", function() {
 					that.n = 0
-					setTimeout( function(){that.updateLocalStorage(that.p,that.n)}, that.d);
+					if(that.nTime < Date.now()){
+						console.log("Tapped instead of held, auto seeking 5 seconds.");
+					}
+					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
+				});	
+				
+				this.prevButton.addEventListener("click", function() {
+					that.currentIndex = -1; // NEEDS RESET AFTER FUNCTION CALL, reset IN function call
+//					player.playVideo(); // command sent to other URL
+					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
+	//			});
+	//			.addEventListener("click", function() {
+	//				setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
+	//				setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d + 20);
+				});		
+				this.nextButton.addEventListener("click", function() {
+					that.currentIndex = 1; // NEEDS RESET AFTER FUNCTION CALL, reset IN function call
+					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
+	//				that.currentIndex = 0;
+				});
+				this.isMuteButton.addEventListener("mousedown", function() {
+					that.isMuted = (that.isMuted + 1) % 2;
+					let delta = that.updateMuteStatus(that.v,parseInt(that.volumeValue.value),that.isMuted);
+					that.isMuted = delta[1];
+					that.isMuteButton.innerHTML = delta[0];
+					console.log("Muted:",that.isMuted,Date.now())
+					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
+				});
+				this.isMuteButton.addEventListener("mouseup", function() {
+	//				that.isMuted = 0
+	//				setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
+				});
+				this.volumeValue.addEventListener("change", function() {
+					let delta = that.updateMuteStatus(parseInt(that.volumeValue.value),that.v,that.isMuted);
+					that.v = Math.min(100, Math.max(0, that.volumeValue.value));
+					that.volumeValue.value = that.v;
+					that.isMuted = delta[1];
+					that.isMuteButton.innerHTML = delta[0];
+					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
+				});
+				this.speedValue.addEventListener("change", function() {
+					that.s = Math.min(2, Math.max(.2, that.volumeValue.value));
+					that.volumeValue.value = that.s;
+					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
 				});
 				this.delayValue.addEventListener("change", function() {
 					that.d = that.delayValue.value * 1000;
-					console.log("constructor " + that.delayValue, that.d, that);
+					console.log("Delay value now " + that.d/1000 + " second(s)", that);
 				});
 			}
-			updateLocalStorage(playState, speedState){
-				const buttons = {playState: playState, speedState: speedState };
+			
+			updateMuteStatus(newVol, oldVol, isMuted){
+				let icon;
+		//		console.log("in",newVol, oldVol, isMuted);
+				if(isMuted == 0 || newVol > oldVol){ // unmute on volume increase
+					icon = "🔊";
+					isMuted = 0;
+				} 
+				if(isMuted == 1 || newVol == 0){ // muted
+					isMuted = 1;
+					icon = "🔇";
+				}
+		//		console.log("out",newVol, oldVol, isMuted);
+				return [icon, isMuted];
+			}
+			
+			updateLocalStorage(playState,
+								skimState = 0,
+								playbackSpeedState = 1,
+								volState = 20, 
+								isMuted = 0,
+								skipState = 0
+								){
+
+				const buttons = {
+				playState: playState,
+				skimState: skimState,
+				playbackSpeedState: playbackSpeedState,
+				volState: volState,
+				isMuted: isMuted,
+				skipState: skipState
+				};
 //				const exp = (Date.now()+604800000); // Expire in a week
 				const exp = (Date.now()+15000); // Expires in 15 seconds
 				localStorage.setItem(this.storage, JSON.stringify({Buttons: buttons, Expire: exp}));
+				this.currentIndex = 0;
 			}
 			
 		} // exit class
@@ -143,64 +236,110 @@
 		function looper(){
 			//	console.log(JSON.parse(localStorage.getItem('YT_Player_1')));
 			//	console.log(JSON.parse(localStorage.getItem('YT_Player_1')).Expire);
-			for(let i=0;i<array.length;i++){
-				const ls = JSON.parse(localStorage.getItem(array[i][0]));
+			let tempInteger = 1;
+			for(let i=0;i<4;i++){
+				const itemName = array[0] + "_" + tempInteger;
+				const ls = JSON.parse(localStorage.getItem(itemName));
 				if(ls && Date.now()>ls.Expire){
-					localStorage.removeItem(array[i][0]);
+					localStorage.removeItem(itemName);
 				}
+				tempInteger *= 2;
 			}
-			//console.log(array);
+			// console.log(array);
 			timeUpdate()
 		}
 		function timeUpdate(){
 			var refresh=100; // Refresh rate in milli seconds
 			mytime=setTimeout('looper()',refresh)
 		}
-		const array = [
-			["YT_Player_1","play-button-1","pause-button-1","stop-button-1","back-button-1","skip-button-1"],
-			["YT_Player_2","play-button-2","pause-button-2","stop-button-2","back-button-2","skip-button-2"],
-			["YT_Player_4","play-button-4","pause-button-4","stop-button-4","back-button-4","skip-button-4"],
-			["YT_Player_8","play-button-8","pause-button-8","stop-button-8","back-button-8","skip-button-8"]
-		];
+		const array = ["YT_Player","play-button","pause-button","stop-button","prev-button",
+					"back-button","skip-button","next-button","isMuted"];
 		timeUpdate()
 	</script>
 	<script>
 //		console.log(array.length,array[1].length);
 		let YT = []
 		var buttonsLocation = document.getElementById("buttonHost");
-		for(let i=0;i<array.length;i++){
+		let tempInteger = 1;
+		for(let i=0;i<4;i++){
 			var div = document.createElement("div");
 			div.classList.add("buttons","YT".concat(i+1));
 			var title = document.createElement("p");
-			title.innerHTML = array[i][0];
+			title.innerHTML = array[0] + "_" + tempInteger;
 			title.style.display = "flex";
 			title.style.justifyContent = "center";
 			title.style.margin = "0px";
 			div.appendChild(title);
-			for(let j=1;j<array[i].length;j++){
+			for(let j=1;j<array.length;j++){
 //				console.log(i,j);
 				var button = document.createElement("button");
 				var type;
 				 if(j==1){type="play";  button.innerHTML = "►";  }
 			else if(j==2){type="pause"; button.innerHTML = "‖"; }
 			else if(j==3){type="stop";  button.innerHTML = "■";  }
-			else if(j==4){type="back";  button.innerHTML = "‹";  } // «»
-			else if(j==5){type="skip";  button.innerHTML = "›";  }
+			else if(j==4){type="prev";  button.innerHTML = "«";  } // «»
+			else if(j==5){type="back";  button.innerHTML = "‹";  } // «»
+			else if(j==6){type="skip";  button.innerHTML = "›";  }
+			else if(j==7){type="next";  button.innerHTML = "»";  }
+			else if(j==8){type="mute";  button.innerHTML = "🔊"; button.style.padding = "8px 5px 10px 10px" }
 				button.style.marginRight = "1px";
 				button.classList.add("button",type);
-				button.id = array[i][j];
+				button.id = array[j] + "-" + tempInteger;
 				div.appendChild(button);
 			}
-			var delayInput = document.createElement("input");
-			delayInput.type = "number"
-			delayInput.min = 0;
-			delayInput.classList.add("textInput");
-			delayInput.id = "delay-value-" + array[i][0].charAt(10);
-			delayInput.value = 0;
-			delayInput.onchange = function(){newTimeoutLength(i,this);}
-			div.appendChild(delayInput);
-			buttonsLocation.appendChild(div);
-			YT[i] = new ButtonPanel(array[i][0],array[i][1],array[i][2],array[i][3],array[i][4],array[i][5],delayInput.id).setButtonLinks()
+			const inputarray = ["delay","speed","vol"]
+			var intInput = [4];
+			for(let j=0;j<inputarray.length;j++){ // adds numerical inputs
+				intInput[j] = document.createElement("input");
+				intInput[j].type = "number"			
+				intInput[j].classList.add("textInput",inputarray[j] + "Value");
+				intInput[j].id = inputarray[j] + "-value-" + tempInteger;
+				intInput[j].style.marginRight = "1px";
+		//		intInput[j].onchange = function(){newTimeoutLength(i,this);}
+				intInput[j].min = 0;
+				intInput[j].value = 0;
+				if(j == 1){
+					intInput[j].max = 2;
+					intInput[j].min = 0.2;
+					intInput[j].step = 0.05;
+					intInput[j].value = 1;
+				} 
+				if(j == 2){
+					intInput[j].max = 100;
+					intInput[j].value = 20;
+					intInput[j].step = 5;
+					div.insertBefore(intInput[j],div.lastChild.previousSibling.previousSibling);
+				} else {
+					div.appendChild(intInput[j]);
+				}
+			}
+			
+			// group buttons by category in seperate divs
+			var newDiv = document.createElement("div");
+			var tempDiv = document.createElement("div");
+			tempDiv.classList.add("buttonSubgroup");
+			newDiv.appendChild(div.childNodes[0]);
+			for(let j=0;j<3;j++){ // groups buttons
+				tempDiv.appendChild(div.childNodes[0]);
+			}
+			newDiv.appendChild(tempDiv);
+			var tempDiv = document.createElement("div");
+			tempDiv.classList.add("buttonSubgroup");
+			for(let j=0;j<4;j++){ // groups buttons
+				tempDiv.appendChild(div.childNodes[0]);
+			}
+			newDiv.appendChild(tempDiv);
+			var tempDiv = document.createElement("div");
+			tempDiv.classList.add("buttonSubgroup");
+			for(let j=0;j<4;j++){ // groups buttons
+				console.log(j,div,tempDiv)
+				tempDiv.appendChild(div.childNodes[0]);
+			}
+			newDiv.appendChild(tempDiv);
+			newDiv.classList.add("buttons","YT".concat(i+1));
+			buttonsLocation.appendChild(newDiv);
+			YT[i] = new ButtonPanel(tempInteger,array,intInput).setButtonLinks();
+			tempInteger *= 2;
 		}
 		
 		function newTimeoutLength(index,that){
@@ -219,10 +358,16 @@
 			position: relative;
 			margin: 0 3px 3px auto;
 			padding: 0 3px 10px;
-			float: left;
-			display: block;
 			background-color: #3C404B;
 			border-radius: 4px;
+		}
+		.buttons, .buttonSubgroup{
+			float: left;
+			display: block;
+		}
+		.buttonSubgroup{
+			display: flex;
+			justify-content: center;
 		}
 		.buttons:after {
 			top: 5%;
@@ -253,19 +398,27 @@
 			letter-spacing: 2px;
 			font-size: 18px;
 			padding: 6px 3px 8px 6px;
-			width: 100px;
+			width: 78px;
 			background-color: #a0a8a8
+		}
+		.speedValue{
+			width: 70px;
+		}
+		.volValue{
+			width: 62px;
 		}
 		.button:hover {
 			background-color: #708080;
 		}
 		.play {
+			padding: 10px 9px 10px 14px;
 			background-color: #2ECC71;
 		}
 		.play:hover {
 			background-color: #27AE60;
 		}
 		.pause {
+			padding: 10px 12px 10px 17px;
 			background-color: #E67E22;
 		}
 		.pause:hover {
@@ -276,6 +429,20 @@
 		}
 		.stop:hover {
 			background-color: #C0392B;
+		}
+		.prev, .next {
+			padding: 10px 4px 10px 9px;
+		}
+		.back, .skip {
+			padding: 10px 12px 10px 17px;
+		}
+		.speedValue,
+		.speedValue:hover
+		{
+			width: 0;
+			height: 0;
+			padding: 0;
+			color: #3C404B;
 		}
 		#play-button,
 		#skip-button,
