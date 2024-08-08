@@ -168,8 +168,8 @@
 			];
 		}
 		const storageArray = ["YT_Player_1","YT_Player_2","YT_Player_4","YT_Player_8"];
-		var lastReadState = [storageArray.length];
-		var thisReadState = [storageArray.length];
+		var lastReadState = [];
+		var thisReadState = [];
 		function onPlayerReady(event) {
 			console.log("Player1 is ready.");
 			timeUpdate();
@@ -196,6 +196,11 @@
 			if(running != hidePlayerInt){ return; }
 			for(let i=0;i<storageArray.length;i++){
 				const ls = JSON.parse(localStorage.getItem(storageArray[i]));
+				if(!lastReadState[i] && ls){
+					lastReadState[i] = ls;
+					console.log("Set " + i + " to", lastReadState[i]);
+					lastReadState[i].Expire = lastReadState[i].Expire%100000000 - 20;
+				}
 				if(ls && (ls.Buttons.skimState != 0 || ls.Expire%100000000!=lastReadState[i].Expire%100000000)){
 					console.log(lastReadState[i], ls, ls.Expire%100000000, lastReadState[i].Expire%100000000, Date.now()%100000000); // Background Debugging purposes
 					if(Date.now()>ls.Expire){
