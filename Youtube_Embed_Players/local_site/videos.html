@@ -192,7 +192,7 @@
 					lastReadState[i].Expire = lastReadState[i].Expire%100000000 - 20;
 				}
 				// adSense disable function, triggers every tick ad is detected from the previous tick
-				if(adSense[i]){console.log(adSense);player[i].unMute(); adSense[i]=0;}
+				if(adSense[i]){if(adSense[i] == 1){adSense[i]++;}else{player[i].unMute(); adSense[i]=0;}
 				// if request sent, request is either skimState or new, and request sent to a loaded player
 				if(ls && (ls.Buttons.skimState != 0 || ls.Expire%100000000!=lastReadState[i].Expire%100000000) && hidePlayerBin.charAt(playlist_IDs.length - i - 1) == "1"){
 					console.log(lastReadState[i], ls, ls.Expire%100000000, lastReadState[i].Expire%100000000, Date.now()%100000000); // Background Debugging purposes
@@ -254,7 +254,7 @@ The function returns an array of numbers ordered from slowest to fastest playbac
 					if(getAllUrlParams(url)["muteads"]){
 						if(duration*currentBufferFrac-currentTime < 0 || bufferTime > 180){
 							prefix = "ad?? ";
-							if(duration*currentBufferFrac-currentTime < -0.1 || bufferTime > 1260){
+							if(duration*currentBufferFrac-currentTime < -0.1 || bufferTime > 700){
 								// Definite ad detected, muted player and send request to unmute from volumeState above
 								adSense[i] = 1;
 								player[i].mute();
