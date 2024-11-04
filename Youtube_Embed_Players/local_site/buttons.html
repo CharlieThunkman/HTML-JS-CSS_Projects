@@ -51,7 +51,7 @@
 				this.isMuted = 0;
 				this.currentIndex = 1;
 				this.storage = thisArray[0] + "_" + index;
-				console.log("Aug4Test", thisArray, index, this.isMuteButton,thisArray[8]	+ "-" + index);
+//				console.log("Aug4Test", thisArray, index, this.isMuteButton,thisArray[8]	+ "-" + index);
 			}
 			setButtonLinks(){
 				// bind events
@@ -75,7 +75,7 @@
 				});
 				
 				this.backButton.addEventListener("mousedown", function() {
-					that.n = that.n-.5
+					that.n = that.n-.75
 					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
 				});
 				this.backButton.addEventListener("mouseup", function() {
@@ -86,7 +86,7 @@
 					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
 				});			
 				this.skipButton.addEventListener("mousedown", function() {
-					that.n = that.n+.5
+					that.n = that.n+.75
 					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
 				});
 				this.skipButton.addEventListener("mouseup", function() {
@@ -233,27 +233,54 @@
 		}
 		// ===
 		
+		const array = ["YT_Player","play-button","pause-button","stop-button","prev-button","back-button","skip-button","next-button","isMuted"];
 		function looper(){
 			//	console.log(JSON.parse(localStorage.getItem('YT_Player_1')));
 			//	console.log(JSON.parse(localStorage.getItem('YT_Player_1')).Expire);
 			let tempInteger = 1;
+			const ls_titlecards = JSON.parse(localStorage.getItem("buttons_titles"));
 			for(let i=0;i<4;i++){
+				let thisDiv = document.getElementById("buttonHost").children[i];
 				const itemName = array[0] + "_" + tempInteger;
 				const ls = JSON.parse(localStorage.getItem(itemName));
 				if(ls && Date.now()>ls.Expire){
 					localStorage.removeItem(itemName);
 				}
+				// Update title cards
+				if(ls_titlecards && ls_titlecards.Contents[i] && ls_titlecards.Contents[i].length >= 1 && ls_titlecards.Contents[i] != "YouTube video player"){
+					thisDiv.children[0].innerHTML = ls_titlecards.Contents[i];
+				} else if (ls_titlecards || thisDiv.children[0].innerHTML == "undefined" || thisDiv.children[0].innerHTML == ""){
+					thisDiv.children[0].innerHTML = array[0] + "_" + tempInteger;				
+				}
+				
+				// Hide buttons not used in video.html instance (assumes only one instance per browser)
+				const ls_hidePlayerBin = JSON.parse(localStorage.getItem("buttons_html"));
+				if(ls_hidePlayerBin && ls_hidePlayerBin.Contents.charAt(4 - i - 1) == "1"){ // if 1 is showing, indicated by EVEN number
+					thisDiv.style.display = "block";
+				} else if(ls_hidePlayerBin){
+					thisDiv.style.display = "none";
+				}
+		
 				tempInteger *= 2;
+			}
+
+			const videos_html_ls = ["buttons_html","buttons_titles"];
+			for(let i=0;i<videos_html_ls.length;i++){
+				const itemName = videos_html_ls[i];
+				const ls = JSON.parse(localStorage.getItem(itemName));
+				if(ls && Date.now()>ls.Expire){
+					localStorage.removeItem(itemName);
+				}
 			}
 			// console.log(array);
 			timeUpdate()
+			
+			
 		}
 		function timeUpdate(){
 			var refresh=100; // Refresh rate in milli seconds
 			mytime=setTimeout('looper()',refresh)
 		}
-		const array = ["YT_Player","play-button","pause-button","stop-button","prev-button",
-					"back-button","skip-button","next-button","isMuted"];
 		timeUpdate()
 	</script>
 	<script>
@@ -349,7 +376,7 @@
 //		const YT2 = new ButtonPanel("YT_Player_2","play-button","pause-button","stop-button","back-button","skip-button").setButtonLinks();
 	</script>
 <!--	<iframe id="video1" src="https://www.youtube.com/embed/aIXOyOLkb24?enablejsapi=1&html5=1" frameborder="0" allowfullscreen></iframe>
--->	<p style="float: left; display: block; padding-right:10px">Must click on player before buttons will work as expected</p>
+-->	<p style="float: left; display: block; padding-right:10px">May need to click on player before buttons will work as expected in some browsers.</p>
 	<style>
 		body {
 			background-color: 2B2E38;
