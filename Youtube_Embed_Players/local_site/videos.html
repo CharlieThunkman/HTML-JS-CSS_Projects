@@ -221,6 +221,12 @@ The getAvailablePlaybackRates method will return the possible playback rates for
 This function returns the set of playback rates in which the current video is available. The default value is 1, which indicates that the video is playing in normal speed.
 The function returns an array of numbers ordered from slowest to fastest playback speed. Even if the player does not support variable playback speeds, the array should always contain at least one value (1).
 */
+
+					if(ls.Buttons.playbackSpeedState != player[i].getPlaybackRate()){
+			//			console.log(player[i].getAvailablePlaybackRates(),ls.Buttons.playbackSpeedState);
+						player[i].setPlaybackRate(ls.Buttons.playbackSpeedState);
+					}
+					
 					// skipState - seeking through the playlist
 					
 						 if(ls.Buttons.skipState == -1 && lastReadState[i].Expire%100000000 != ls.Expire%100000000){player[i].previousVideo();  /*console.log("1",i);*/}
