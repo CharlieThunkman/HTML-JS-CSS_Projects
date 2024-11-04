@@ -43,7 +43,7 @@
 				this.isMuteButton = document.getElementById(thisArray[8]+ "-" + index);
 				this.volumeValue = document.getElementById(thisIntArray[2].id);
 
-				this.p = 0; // play state (running / paused / stopped)
+				this.p = 2; // play state (running / paused / stopped)
 				this.n = 0; // tells which direction to seek in +- (and scale) (temp acceleration)
 				this.s = 1; // perm time acceleration
 				this.d = 0; // decay value
@@ -132,8 +132,8 @@
 					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
 				});
 				this.speedValue.addEventListener("change", function() {
-					that.s = Math.min(2, Math.max(.2, that.volumeValue.value));
-					that.volumeValue.value = that.s;
+					that.s = Math.min(2.5, Math.max(.25, that.speedValue.value));
+					that.speedValue.value = that.s;
 					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
 				});
 				this.delayValue.addEventListener("change", function() {
@@ -327,7 +327,7 @@
 				intInput[j].value = 0;
 				if(j == 1){
 					intInput[j].max = 2;
-					intInput[j].min = 0.2;
+					intInput[j].min = 0.25;
 					intInput[j].step = 0.05;
 					intInput[j].value = 1;
 				} 
@@ -425,11 +425,11 @@
 			letter-spacing: 2px;
 			font-size: 18px;
 			padding: 6px 3px 8px 6px;
-			width: 78px;
+			width: 90px;
 			background-color: #a0a8a8
 		}
 		.speedValue{
-			width: 70px;
+			width: 60px;
 		}
 		.volValue{
 			width: 62px;
@@ -466,8 +466,6 @@
 		.speedValue,
 		.speedValue:hover
 		{
-			width: 0;
-			height: 0;
 			padding: 0;
 			color: #3C404B;
 		}
