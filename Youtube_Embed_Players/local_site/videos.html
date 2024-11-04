@@ -22,27 +22,7 @@
 			}
 			pollDOM();
 		</script>
-		<!--script type="application/javascript">
-
-			function resizeIFrameToFitContent( iFrame ) {
-			
-				iFrame.width  = iFrame.contentWindow.document.body.scrollWidth;
-				iFrame.height = iFrame.contentWindow.document.body.scrollWidth*9/16;
-			}
-			
-			window.addEventListener('DOMContentLoaded', function(e) {
-			
-				var iFrame = document.getElementById( 'iFrame' );
-				resizeIFrameToFitContent( iFrame );
-			
-				// or, to resize all iframes:
-				var iframes = document.querySelectorAll("iframe");
-				for( var i = 0; i < iframes.length; i++) {
-					resizeIFrameToFitContent( iframes[i] );
-				}
-			} );
-			
-		</script-->
+		<!--script type="application/javascript">	function resizeIFrameToFitContent( iFrame ) {	iFrame.width  = iFrame.contentWindow.document.body.scrollWidth;	iFrame.height = iFrame.contentWindow.document.body.scrollWidth*9/16;	}	window.addEventListener('DOMContentLoaded', function(e) {	var iFrame = document.getElementById( 'iFrame' );	resizeIFrameToFitContent( iFrame );	// or, to resize all iframes:	var iframes = document.querySelectorAll("iframe");	for( var i = 0; i < iframes.length; i++) {	resizeIFrameToFitContent( iframes[i] );	}	} );	</script-->
 		<script>
 		var url = window.location.href;
 		let allowFS = 0;
@@ -82,7 +62,16 @@
 				console.log("modified index " + i);
 			} 
 		}
+		updateLocalStorage("buttons_html",hidePlayerBin);
 
+		function updateLocalStorage(key,valueObject,expire = 10){
+	//	const buttons = {playState: playState,skimState: skimState,playbackSpeedState: playbackSpeedState,volState: volState,isMuted: isMuted,skipState: skipState};
+//			const exp = (Date.now()+604800000); // Expire in a week
+			const exp = (Date.now()+expire*1000); // Expires in seconds
+			localStorage.setItem(key, JSON.stringify({Contents: valueObject, Expire: exp}));
+			this.currentIndex = 0;
+		}
+		
 		if(getAllUrlParams(url)["allowfullscreen"]){
 			allowFS = 1; 
 			console.log(allowFS)
@@ -127,6 +116,7 @@
 			// global variable for the player
 		var player;
 		var running=0;
+		
 		
 		// this function gets called when API is ready to use
 		function onYouTubePlayerAPIReady() {
@@ -179,6 +169,8 @@
 			timeUpdate();
 			running = running + 8;
 		}
+		
+		var vid2ls_old = [4];
 		function looper(){
 			//	console.log(JSON.parse(localStorage.getItem('YT_Player_1')));
 			//	console.log(JSON.parse(localStorage.getItem('YT_Player_1')).Expire);
@@ -243,6 +235,8 @@ The function returns an array of numbers ordered from slowest to fastest playbac
 			for(i=0;i<playlist_IDs.length;i++){
 				showPlayerCount += parseInt(hidePlayerBin.charAt(i));
 			}
+			var vid2ls = [4];
+			var vid2ls_dif=false;
 			for(i=0;i<playlist_IDs.length;i++){
 				if(hidePlayerBin.charAt(playlist_IDs.length - i - 1) == "1"){ // if 1 is showing, indicated by EVEN number
 					let duration = player[i].getDuration();
@@ -262,15 +256,24 @@ The function returns an array of numbers ordered from slowest to fastest playbac
 						}
 					}
 					let currentVolume = player[i].getVolume();
-					myFrameHolder[i].children[1].innerHTML = prefix + myFrameHolder[i].children[0].title;
+					myFrameHolder[i].children[1].innerHTML = myFrameHolder[i].children[0].title;
+					vid2ls[i] = myFrameHolder[i].children[0].title.slice(0,32);
+					if(vid2ls[i]!=vid2ls_old[i]){
+						vid2ls_dif = true;
+					}
 					var aspace = "";
 					for(let j=0;j<duration*currentBufferFrac-currentTime;j=Math.floor((j*1.05)+1)){
 						aspace += " "; //  = alt+1279
 					}
-					myFrameHolder[i].children[2].innerHTML = timeFormat(currentTime) + " / " + timeFormat(duration) + " " + aspace + " " + currentVolume + "% (" + timeFormat(bufferTime,false) + ") ";
+					myFrameHolder[i].children[2].innerHTML = timeFormat(currentTime) + " / " + timeFormat(duration) + " " + prefix + " " + aspace + " " + currentVolume + "% (" + timeFormat(bufferTime,false) + ") ";
 		//			console.log("."+aspace+".",myFrameHolder[i].children[2].innerHTML,timeFormat(duration) + " " + aspace + "  (" + timeFormat(Math.max(0,duration*currentBuffer-currentTime),false));
 				}
 			}
+			if(vid2ls_dif){
+				updateLocalStorage("buttons_titles",vid2ls,15);
+				console.log(vid2ls,vid2ls_old);
+			}
+			vid2ls_old = vid2ls;
 			lastReadState = thisReadState;
 			timeUpdate()
 			return;
