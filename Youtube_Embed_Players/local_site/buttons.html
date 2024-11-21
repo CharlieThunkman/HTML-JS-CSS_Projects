@@ -49,7 +49,7 @@
 				this.d = 0; // decay value
 				this.v = 20; // volume control
 				this.isMuted = 0;
-				this.currentIndex = 1;
+				this.pushIndex = 0;
 				this.storage = thisArray[0] + "_" + index;
 //				console.log("Aug4Test", thisArray, index, this.isMuteButton,thisArray[8]	+ "-" + index);
 			}
@@ -59,57 +59,57 @@
 				this.playButton.addEventListener("click", function() {
 					that.p = 1;
 //					player.playVideo(); // command sent to other URL
-					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
+					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.pushIndex)}, that.d);
 				});
 			
 				this.pauseButton.addEventListener("click", function() {
 					that.p = 2;
 //					player.pauseVideo(); // command sent to other URL
-					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
+					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.pushIndex)}, that.d);
 				});
 			
 				this.stopButton.addEventListener("click", function() {
 					that.p = 0;
 //					player.stopVideo(); // command sent to other URL
-					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
+					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.pushIndex)}, that.d);
 				});
 				
 				this.backButton.addEventListener("mousedown", function() {
 					that.n = that.n-.75
-					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
+					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.pushIndex)}, that.d);
 				});
 				this.backButton.addEventListener("mouseup", function() {
 					that.n = 0
 					if(that.nTime < Date.now()){
 						console.log("Tapped instead of held, auto seeking 5 seconds.");
 					}
-					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
+					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.pushIndex)}, that.d);
 				});			
 				this.skipButton.addEventListener("mousedown", function() {
 					that.n = that.n+.75
-					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
+					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.pushIndex)}, that.d);
 				});
 				this.skipButton.addEventListener("mouseup", function() {
 					that.n = 0
 					if(that.nTime < Date.now()){
 						console.log("Tapped instead of held, auto seeking 5 seconds.");
 					}
-					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
+					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.pushIndex)}, that.d);
 				});	
 				
 				this.prevButton.addEventListener("click", function() {
-					that.currentIndex = -1; // NEEDS RESET AFTER FUNCTION CALL, reset IN function call
+					that.pushIndex = -1; // NEEDS RESET AFTER FUNCTION CALL, reset IN function call
 //					player.playVideo(); // command sent to other URL
-					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
+					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.pusjIndex)}, that.d);
 	//			});
 	//			.addEventListener("click", function() {
-	//				setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
-	//				setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d + 20);
+	//				setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.pushIndex)}, that.d);
+	//				setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.pushIndex)}, that.d + 20);
 				});		
 				this.nextButton.addEventListener("click", function() {
-					that.currentIndex = 1; // NEEDS RESET AFTER FUNCTION CALL, reset IN function call
-					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
-	//				that.currentIndex = 0;
+					that.pushIndex = 1; // NEEDS RESET AFTER FUNCTION CALL, reset IN function call
+					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.pushIndex)}, that.d);
+	//				that.pushIndex = 0;
 				});
 				this.isMuteButton.addEventListener("mousedown", function() {
 					that.isMuted = (that.isMuted + 1) % 2;
@@ -117,11 +117,11 @@
 					that.isMuted = delta[1];
 					that.isMuteButton.innerHTML = delta[0];
 					console.log("Muted:",that.isMuted,Date.now())
-					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
+					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.pushIndex)}, that.d);
 				});
 				this.isMuteButton.addEventListener("mouseup", function() {
 	//				that.isMuted = 0
-	//				setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
+	//				setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.pushIndex)}, that.d);
 				});
 				this.volumeValue.addEventListener("change", function() {
 					let delta = that.updateMuteStatus(parseInt(that.volumeValue.value),that.v,that.isMuted);
@@ -129,12 +129,12 @@
 					that.volumeValue.value = that.v;
 					that.isMuted = delta[1];
 					that.isMuteButton.innerHTML = delta[0];
-					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
+					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.pushIndex)}, that.d);
 				});
 				this.speedValue.addEventListener("change", function() {
 					that.s = Math.min(2.5, Math.max(.25, that.speedValue.value));
 					that.speedValue.value = that.s;
-					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d);
+					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.pushIndex)}, that.d);
 				});
 				this.delayValue.addEventListener("change", function() {
 					that.d = that.delayValue.value * 1000;
@@ -176,7 +176,7 @@
 //				const exp = (Date.now()+604800000); // Expire in a week
 				const exp = (Date.now()+15000); // Expires in 15 seconds
 				localStorage.setItem(this.storage, JSON.stringify({Buttons: buttons, Expire: exp}));
-				this.currentIndex = 0;
+				this.pushIndex = 0;
 			}
 			
 		} // exit class
