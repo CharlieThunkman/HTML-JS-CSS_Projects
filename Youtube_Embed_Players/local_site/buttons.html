@@ -100,7 +100,7 @@
 				this.prevButton.addEventListener("click", function() {
 					that.pushIndex = -1; // NEEDS RESET AFTER FUNCTION CALL, reset IN function call
 //					player.playVideo(); // command sent to other URL
-					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.pusjIndex)}, that.d);
+					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.pushIndex)}, that.d);
 	//			});
 	//			.addEventListener("click", function() {
 	//				setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.pushIndex)}, that.d);
