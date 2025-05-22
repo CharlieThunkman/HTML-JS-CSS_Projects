@@ -226,7 +226,7 @@
 				}
 				// Update title cards
 				if(ls_titlecards && ls_titlecards.Contents[i] && ls_titlecards.Contents[i].length >= 1 && ls_titlecards.Contents[i] != "YouTube video player"){
-					thisDiv.children[0].innerHTML = ls_titlecards.Contents[i][0];
+					thisDiv.children[0].innerHTML = " ID = " + ls_titlecards.Contents[i][3] + " | " + ls_titlecards.Contents[i][0] ;
 				} else if (ls_titlecards || thisDiv.children[0].innerHTML == "undefined" || thisDiv.children[0].innerHTML == ""){
 					thisDiv.children[0].innerHTML = array[0] + "_" + tempInteger;				
 				}
@@ -245,7 +245,7 @@
 			// Update compound player info
 			let thisDiv = document.getElementById("buttonHost").children[0],
 				clonDiv = document.getElementById("buttonHost").children[YT[0].playerIndex];
-			thisDiv.children[0].innerHTML = "(" + YT[0].playerIndex + ") " + clonDiv.children[0].innerHTML;
+			thisDiv.children[0].innerHTML = "(" + YT[0].playerIndex + ") " + clonDiv.children[0].innerHTML + " ";
 
 
 			const videos_html_ls = ["buttons_html","buttons_titles"];
