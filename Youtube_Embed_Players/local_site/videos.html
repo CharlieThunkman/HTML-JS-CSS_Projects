@@ -263,8 +263,15 @@ The function returns an array of numbers ordered from slowest to fastest playbac
 					}
 					let currentVolume = player[i].getVolume();
 					myFrameHolder[i].children[1].innerHTML = myFrameHolder[i].children[0].title;
-					vid2ls[i] = myFrameHolder[i].children[0].title.slice(0,32);
-					if(vid2ls[i]!=vid2ls_old[i]){
+					let prevIndex=null,nextIndex=null;
+					if(player[i].getPlaylistIndex()>1){
+						prevIndex = player[i].getPlaylist()[player[i].getPlaylistIndex()-1];
+						}
+					if(player[i].getPlaylistIndex()<player[i].getPlaylist().length){
+						nextIndex = player[i].getPlaylist()[player[i].getPlaylistIndex()+1]
+					}
+					vid2ls[i] = [myFrameHolder[i].children[0].title.slice(0,48),prevIndex,nextIndex,player[i].getPlaylistIndex()];
+					if(!isEqual(vid2ls[i],vid2ls_old[i])){
 						vid2ls_dif = true;
 					}
 					var aspace = "";
@@ -311,6 +318,10 @@ The function returns an array of numbers ordered from slowest to fastest playbac
 				minute += hour*60;
 				return minute.toString().padStart(1,"0") + ":" + second.toString().padStart(2,"0");
 				}
+		}
+		
+		function isEqual(arr1, arr2){
+			return JSON.stringify(arr1) === JSON.stringify(arr2);
 		}
 		
 		// Inject YouTube API script
