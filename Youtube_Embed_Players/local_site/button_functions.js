@@ -143,7 +143,7 @@ function looper(){
 	let tempInteger = 1;
 	const ls_titlecards = JSON.parse(localStorage.getItem("buttons_titles"));
 	for(let i=0;i<4;i++){
-		let thisDiv = document.getElementById("buttonHost").children[i];
+		let thisDiv = document.getElementById("buttonHost").children[i+1];
 		const itemName = array[0] + "_" + tempInteger;
 		const ls = JSON.parse(localStorage.getItem(itemName));
 		if(ls && Date.now()>ls.Expire){
@@ -151,7 +151,7 @@ function looper(){
 		}
 		// Update title cards
 		if(ls_titlecards && ls_titlecards.Contents[i] && ls_titlecards.Contents[i].length >= 1 && ls_titlecards.Contents[i] != "YouTube video player"){
-			thisDiv.children[0].innerHTML = " ID = " + ls_titlecards.Contents[i][3] + " | " + ls_titlecards.Contents[i][0] ;
+			thisDiv.children[0].innerHTML = " ID = " + (ls_titlecards.Contents[i][3]+1) + " | " + ls_titlecards.Contents[i][0] ;
 		} else if (ls_titlecards || thisDiv.children[0].innerHTML == "undefined" || thisDiv.children[0].innerHTML == ""){
 			thisDiv.children[0].innerHTML = array[0] + "_" + tempInteger;				
 		}
@@ -171,8 +171,8 @@ function looper(){
 	if(YT[0]){
 		let thisDiv = document.getElementById("buttonHost").children[0],
 			clonDiv = document.getElementById("buttonHost").children[YT[0].playerIndex];
-		thisDiv.children[0].innerHTML = "(" + YT[0].playerIndex + ") " + clonDiv.children[0].innerHTML + " ";
-		document.title =  "(" + YT[0].playerIndex + ") " + clonDiv.children[0].innerHTML + " ";
+		thisDiv.children[0].innerHTML = "(" + (YT[0].playerIndex) + ") " + clonDiv.children[0].innerHTML + " ";
+		document.title =  "(" + (YT[0].playerIndex) + ") " + clonDiv.children[0].innerHTML + " ";
 	}
 
 
