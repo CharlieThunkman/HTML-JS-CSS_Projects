@@ -146,7 +146,6 @@
 			];
 		}
 		const storageArray = ["YT_Player_1","YT_Player_2","YT_Player_4","YT_Player_8"];
-		var lastReadState = [];
 		var thisReadState = [];
 		var adSense = [];
 		function onPlayerReady(event) {
@@ -178,16 +177,16 @@
 			let hidePlayerBin = int2bin(hidePlayerInt,playlist_IDs.length);
 			for(let i=0;i<storageArray.length;i++){
 				const ls = JSON.parse(localStorage.getItem(storageArray[i]));
-				if(!lastReadState[i] && ls){
-					lastReadState[i] = ls;
-					console.log("Set " + i + " to", lastReadState[i]);
-					lastReadState[i].Expire = lastReadState[i].Expire%100000000 - 20;
+				if(!lastReadState_LS[i] && ls){
+					lastReadState_LS[i] = ls;
+					console.log("Set " + i + " to", lastReadState_LS[i]);
+					lastReadState_LS[i].Expire = lastReadState_LS[i].Expire%100000000 - 20;
 				}
 				// adSense disable function, triggers every tick ad is detected from the previous tick
 				if(adSense[i]){if(adSense[i] == 1){adSense[i]++;}else{player[i].unMute(); adSense[i]=0;}}
 				// if request sent, request is either skimState or new, and request sent to a loaded player
-				if(ls && (ls.Buttons.skimState != 0 || ls.Expire%100000000!=lastReadState[i].Expire%100000000) && hidePlayerBin.charAt(playlist_IDs.length - i - 1) == "1"){
-					console.log(lastReadState[i], ls, ls.Expire%100000000, lastReadState[i].Expire%100000000, Date.now()%100000000); // Background Debugging purposes
+				if(ls && (ls.Buttons.skimState != 0 || ls.Expire%100000000!=lastReadState_LS[i].Expire%100000000) && hidePlayerBin.charAt(playlist_IDs.length - i - 1) == "1"){
+					console.log(lastReadState_LS[i], ls, ls.Expire%100000000, lastReadState_LS[i].Expire%100000000, Date.now()%100000000); // Background Debugging purposes
 					if(Date.now()>ls.Expire){
 						//localStorage.removeItem(storageArray[i]);
 					}
@@ -229,8 +228,8 @@ The function returns an array of numbers ordered from slowest to fastest playbac
 					
 					// skipState - seeking through the playlist
 					
-						 if(ls.Buttons.skipState == -1 && lastReadState[i].Expire%100000000 != ls.Expire%100000000){player[i].previousVideo();  /*console.log("1",i);*/}
-					else if(ls.Buttons.skipState ==  1 && lastReadState[i].Expire%100000000 != ls.Expire%100000000){player[i].nextVideo();  /*console.log("0",i);*/}
+						 if(ls.Buttons.skipState == -1 && lastReadState_LS[i].Expire%100000000 != ls.Expire%100000000){player[i].previousVideo();  /*console.log("1",i);*/}
+					else if(ls.Buttons.skipState ==  1 && lastReadState_LS[i].Expire%100000000 != ls.Expire%100000000){player[i].nextVideo();  /*console.log("0",i);*/}
 					// store saved state
 					thisReadState[i] = ls;
 				}
@@ -287,11 +286,42 @@ The function returns an array of numbers ordered from slowest to fastest playbac
 				console.log(vid2ls,vid2ls_old);
 			}
 			vid2ls_old = vid2ls;
-			lastReadState = thisReadState;
+			lastReadState_LS = thisReadState;
 			timeUpdate()
 			return;
 		}
+		function timeUpdate(){
+			var refresh=100; // Refresh rate in milli seconds
+			mytime=setTimeout('looper()',refresh,lastReadState_LS)
+		}
 		
+		function pow(a,b){ // standard
+			var c = a;
+			for(var i=1;i<b;i++){
+				c = c * a;
+			}
+			return c;
+		}
+		
+		function int2bin(i, l=8){
+			return ((i+pow(2,l))%pow(2,l)).toString(2).padStart(l,"0");
+		}
+		
+		function timeFormat(f,h=true){
+			let hour = Math.floor(f/60/60);
+			let minute = Math.floor(f/60)%60;
+			let second = Math.floor(f)%60;
+			if(h){
+				return hour + ":" + minute.toString().padStart(2,"0") + ":" + second.toString().padStart(2,"0");
+			} else {
+				minute += hour*60;
+				return minute.toString().padStart(1,"0") + ":" + second.toString().padStart(2,"0");
+				}
+		}
+		
+		function isEqual(arr1, arr2){
+			return JSON.stringify(arr1) === JSON.stringify(arr2);
+		}
 		
 		// Inject YouTube API script
 		var tag = document.createElement('script');
@@ -345,7 +375,6 @@ The function returns an array of numbers ordered from slowest to fastest playbac
 			return obj;
 		}
 		</script>
-		<script src="extended_js_functions.js"></script>
 		<style>
 			iframe{
 				border-width: 0;
