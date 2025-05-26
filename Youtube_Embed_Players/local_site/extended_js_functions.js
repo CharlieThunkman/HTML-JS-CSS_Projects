@@ -4,9 +4,10 @@ function pow(a,b){
 	return n;
 }
 
+var lastReadState_LS = [];
 function timeUpdate(){
 	var refresh=100; // Refresh rate in milli seconds
-	mytime=setTimeout('looper()',refresh,lastReadState)
+	mytime=setTimeout('looper()',refresh,lastReadState_LS)
 }
 
 
