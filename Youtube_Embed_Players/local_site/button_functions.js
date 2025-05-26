@@ -6,9 +6,13 @@ function buttonFlexGroup(i,icons){
 	div.classList.add("buttons","YT".concat(i));
 	var title = document.createElement("p");
 	title.innerHTML = array[0] + "_" + tempInteger;
+	if(i==-1){
+		title.innerHTML = "OPTIONS TEMPLATE";
+	}
 	title.style.display = "flex";
 	title.style.justifyContent = "center";
 	title.style.margin = "0px";
+	title.style.minWidth = "255px";
 	div.appendChild(title);
 	let tempVar00998642 = 0;
 	if(tempInteger){tempVar00998642 = 2}
@@ -27,6 +31,7 @@ function buttonFlexGroup(i,icons){
 //		intInput[j].onchange = function(){newTimeoutLength(i,this);}
 		intInput[j].min = 0;
 		intInput[j].value = 0;
+		intInput[j].placeholder = inputarray[j];
 		if(j == 1){
 			intInput[j].max = 2;
 			intInput[j].min = 0.25;
@@ -40,18 +45,20 @@ function buttonFlexGroup(i,icons){
 			intInput[j].max = 100;
 			intInput[j].value = 20;
 			intInput[j].step = 5;
-//			div.insertBefore(intInput[j],div.lastChild.previousSibling.previousSibling.previousSibling);
+			if(i==-1){intInput[j].value = "";}
+			div.insertBefore(intInput[j],div.lastChild.previousSibling.previousSibling);
 		} else {
+			if(i==-1){intInput[j].value = "";}
 //			div.insertBefore(intInput[j],div.firstChild.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling);
+			div.appendChild(intInput[j]);
 		}
-		div.appendChild(intInput[j]);
 	}
 	buttonFlexSubgroup(9,["time"],icons,div,tempInteger);
 
 	var timeReadOnly = document.createElement("p");
 	timeReadOnly.innerHTML = "0:00:00";
 	timeReadOnly.style.width = "80px";
-	timeReadOnly.classList.add("textInput");
+	timeReadOnly.classList.add("textInput","timeValue");
 	div.insertBefore(timeReadOnly,div.lastChild);
 	
 	// group buttons by category in seperate divs
@@ -106,7 +113,8 @@ function buttonFlexGroup(i,icons){
 	newDiv.appendChild(tempDiv);
 	}
 	newDiv.classList.add("buttons","YT".concat(i+1));
-	if(i){	buttonsLocation.appendChild(newDiv);}
+	if(i == -1){	document.getElementById("extraInfo").appendChild(newDiv);}
+	else if(i){	buttonsLocation.appendChild(newDiv);}
 	else{	buttonsLocation.insertBefore(newDiv,div.firstChild);}
 	return intInput;
 }
@@ -137,11 +145,15 @@ function newTimeoutLength(index,that){
 	console.log("input " + index + " changed into " + that.value);
 }
 
+let last_ls_titlecards;
 function looper(){
 	//	console.log(JSON.parse(localStorage.getItem('YT_Player_1')));
 	//	console.log(JSON.parse(localStorage.getItem('YT_Player_1')).Expire);
 	let tempInteger = 1;
 	const ls_titlecards = JSON.parse(localStorage.getItem("buttons_titles"));
+	if(ls_titlecards){
+		last_ls_titlecards = ls_titlecards;
+	}
 	for(let i=0;i<4;i++){
 		let thisDiv = document.getElementById("buttonHost").children[i+1];
 		const itemName = array[0] + "_" + tempInteger;
@@ -171,8 +183,20 @@ function looper(){
 	if(YT[0]){
 		let thisDiv = document.getElementById("buttonHost").children[0],
 			clonDiv = document.getElementById("buttonHost").children[YT[0].playerIndex];
-		thisDiv.children[0].innerHTML = "(" + (YT[0].playerIndex) + ") " + clonDiv.children[0].innerHTML + " ";
-		document.title =  "(" + (YT[0].playerIndex) + ") " + clonDiv.children[0].innerHTML + " ";
+		thisDiv.children[0].innerHTML = "[" + (YT[0].playerIndex) + "] " + clonDiv.children[0].innerHTML + " ";
+	}
+	if(last_ls_titlecards){
+		document.title =  "[" + (YT[0].playerIndex) + "] " + last_ls_titlecards.Contents[YT[0].playerIndex-1][0] + " ";
+	}
+	let playerCount = 4;
+	for(let i=0;i<=playerCount;i++){
+		let thisDiv = document.getElementById("buttonHost").children[i];
+		if(thisDiv.children[0].innerHTML.charAt(0)!=" "){
+			thisDiv.children[0].innerHTML = "  " + thisDiv.children[0].innerHTML
+			if(i==0&&thisDiv.children[0].innerHTML.charAt(5)==' '){
+				thisDiv.children[0].innerHTML = thisDiv.children[0].innerHTML.substring(0,5) + " " + thisDiv.children[0].innerHTML.substring(8,99) //substring
+			}
+		}
 	}
 
 
@@ -185,12 +209,5 @@ function looper(){
 		}
 	}
 	// console.log(array);
-	timeUpdate()
-	
-	
-}
-
-function timeUpdate(){
-	var refresh=100; // Refresh rate in milli seconds
-	mytime=setTimeout('looper()',refresh)
+	timeUpdate();
 }
