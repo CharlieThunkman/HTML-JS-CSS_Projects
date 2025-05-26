@@ -291,38 +291,7 @@ The function returns an array of numbers ordered from slowest to fastest playbac
 			timeUpdate()
 			return;
 		}
-		function timeUpdate(){
-			var refresh=100; // Refresh rate in milli seconds
-			mytime=setTimeout('looper()',refresh,lastReadState)
-		}
 		
-		function pow(a,b){ // standard
-			var c = a;
-			for(var i=1;i<b;i++){
-				c = c * a;
-			}
-			return c;
-		}
-		
-		function int2bin(i, l=8){
-			return ((i+pow(2,l))%pow(2,l)).toString(2).padStart(l,"0");
-		}
-		
-		function timeFormat(f,h=true){
-			let hour = Math.floor(f/60/60);
-			let minute = Math.floor(f/60)%60;
-			let second = Math.floor(f)%60;
-			if(h){
-				return hour + ":" + minute.toString().padStart(2,"0") + ":" + second.toString().padStart(2,"0");
-			} else {
-				minute += hour*60;
-				return minute.toString().padStart(1,"0") + ":" + second.toString().padStart(2,"0");
-				}
-		}
-		
-		function isEqual(arr1, arr2){
-			return JSON.stringify(arr1) === JSON.stringify(arr2);
-		}
 		
 		// Inject YouTube API script
 		var tag = document.createElement('script');
@@ -376,6 +345,7 @@ The function returns an array of numbers ordered from slowest to fastest playbac
 			return obj;
 		}
 		</script>
+		<script src="extended_js_functions.js"></script>
 		<style>
 			iframe{
 				border-width: 0;
