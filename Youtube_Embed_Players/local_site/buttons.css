@@ -5,7 +5,7 @@ body {
 		.buttons {
 			position: relative;
 			margin: 0 3px 3px auto;
-			padding: 0 3px 10px;
+			padding: 2px 4px;
 			background-color: #3C404B;
 			border-radius: 4px;
 		}
@@ -41,6 +41,13 @@ body {
 			background-color: #7F8C8D;
 			border: none;
 			border-radius: 4px;
+			font-variant-caps: all-petite-caps;
+		}
+		textInput,
+		::placeholder {
+			color: white;
+			font-size: 15px;
+			letter-spacing: 0px;
 		}
 		.textInput{
 			letter-spacing: 2px;
@@ -53,7 +60,7 @@ body {
 			width: 60px;
 		}
 		.volValue{
-			width: 52px;
+			width: 62px;
 		}
 		.button:hover {
 			background-color: #708080;
@@ -80,6 +87,10 @@ body {
 		}
 		.prev, .next {
 			padding: 10px 4px 10px 9px;
+			background-color: #7f8c8dc0;
+		}
+		.prev:hover, .next:hover {
+			background-color: #708080c0;
 		}
 		.back, .skip {
 			padding: 10px 12px 10px 17px;
@@ -90,11 +101,24 @@ body {
 			height: 0;
 			width: 0;
 		}
+		.volValue, .mute {
+			background-color: #5490ff80;
+		}
+		.volValue:hover, .mute:hover {
+			background-color: #5080df80;
+		}
 		.speedValue,
 		.speedValue:hover
 		{
 			padding: 0;
 			color: #3C404B;
+			background-color: #f9ff6bb0;
+		}
+		.timeValue, .time{
+			background-color: #e585ff94;
+		}
+		p.timevalue{
+			cursor:default;
 		}
 		#play-button,
 		#skip-button,
