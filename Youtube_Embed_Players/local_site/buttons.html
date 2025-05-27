@@ -39,18 +39,19 @@
 		let YT = []
 		window.onload = () => {
 			var divLoc = document.getElementById("buttonHost");
-			let intInput = buttonFlexGroup(0,arrayIcons,divLoc);
-			YT[0] = new compoundButtonPanel(0,array,intInput)
+			let intInput = []
+			intInput[0] = buttonFlexGroup(0,arrayIcons,divLoc);
+			YT[0] = new compoundButtonPanel(0,array,intInput[0])
 			YT[0].setButtonLinksCompound(); // Initialize to Player 1 by default
 			var div = document.createElement("div");
-			for(let i=1;i<=4;i++){
-				let intInput = buttonFlexGroup(i,arrayIcons,div);
+			for(let i=0;i<4;i++){
+				intInput[i] = buttonFlexGroup(i+1,arrayIcons,div);
 			}
 			div.style.display = "inline-block";
 			divLoc.appendChild(div); // display:inline-block
-			for(let i=1;i<=4;i++){
-				YT[i] = new ButtonPanel(pow(2,i-1),array,intInput);
-				YT[i].setButtonLinks();
+			for(let i=0;i<4;i++){
+				YT[i+1] = new ButtonPanel(pow(2,i),array,intInput[i]);
+				YT[i+1].setButtonLinks();
 			}
 			buttonFlexGroup(-1,arrayTypes,document.getElementById("extraInfo"));
 			timeUpdate()
