@@ -114,8 +114,7 @@ function buttonFlexGroup(i,icons,buttonsLocation){
 	newDiv.appendChild(tempDiv);
 	}
 	newDiv.classList.add("buttons","YT".concat(i));
-	if(i == -1){	document.getElementById("extraInfo").appendChild(newDiv);}
-	else if(i){	buttonsLocation.appendChild(newDiv);}
+	if(i){	buttonsLocation.appendChild(newDiv);}
 	else{	buttonsLocation.insertBefore(newDiv,div.firstChild);}
 	return intInput;
 }
