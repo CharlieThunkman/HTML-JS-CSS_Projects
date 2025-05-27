@@ -40,6 +40,7 @@ function buttonFlexGroup(i,icons){
 		} 
 		if(j == 3){
 			intInput[j].max = 600;
+			intInput[j].step = .2;
 		}
 		if(j == 2){
 			intInput[j].max = 100;
@@ -57,6 +58,7 @@ function buttonFlexGroup(i,icons){
 
 	var timeReadOnly = document.createElement("p");
 	timeReadOnly.innerHTML = "0:00:00";
+	timeReadOnly.id = "time-value-READ_ONLY-" + tempInteger;
 	timeReadOnly.style.width = "80px";
 	timeReadOnly.classList.add("textInput","timeValue");
 	div.insertBefore(timeReadOnly,div.lastChild);
@@ -102,7 +104,7 @@ function buttonFlexGroup(i,icons){
 	if(i==0){
 		buttonFlexSubgroup(10,["up",	"down"],icons,div,tempInteger);
 		text = document.createElement("p");
-		text.style.margin = "5px 5px 15px 5px";
+		text.style.margin = "5px 5px 12px 5px";
 		text.innerHTML = "|";  
 		div.appendChild(text);
 		//text.classList.add("button");
