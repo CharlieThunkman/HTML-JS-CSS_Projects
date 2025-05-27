@@ -122,6 +122,7 @@ class ButtonPanel { // IDs of buttons
 		that.timeValue.addEventListener("change", function() {
 			that.j = that.timeValue.value * 60;
 			that.timeDisplay.innerHTML = timeFormat(that.j)
+			console.log(that)
 		});
 		that.timeButton.addEventListener("click", function() {
 			var old_d = that.d;
@@ -161,7 +162,7 @@ class ButtonPanel { // IDs of buttons
 						timeJump = -1,
 						jumpConfirm = false
 						) {
-		console.log(jumpConfirm)
+		console.log(jumpConfirm,timeJump)
 		if(!jumpConfirm){
 			timeJump = -1;
 		}
