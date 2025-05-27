@@ -159,9 +159,13 @@ class ButtonPanel { // IDs of buttons
 						volState = 20, 
 						isMuted = 0,
 						skipState = 0,
-						timeJump = -1
+						timeJump = -1,
+						jumpConfirm = false
 						) {
 
+		if(!jumpConfirm){
+			timeJump = -1;
+		}
 		const buttons = {
 		playState: playState,
 		skimState: skimState,
