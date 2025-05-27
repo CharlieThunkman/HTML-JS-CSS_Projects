@@ -40,24 +40,24 @@ class ButtonPanel { // IDs of buttons
 		that.playButton.addEventListener("click", function() {
 			that.p = 1;
 //					player.playVideo(); // command sent to other URL
-			setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.Confirm)}, that.d);
+			setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.confirm)}, that.d);
 		});
 	
 		that.pauseButton.addEventListener("click", function() {
 			that.p = 2;
 //					player.pauseVideo(); // command sent to other URL
-			setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.Confirm)}, that.d);
+			setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.confirm)}, that.d);
 		});
 	
 		that.stopButton.addEventListener("click", function() {
 			that.p = 0;
 //					player.stopVideo(); // command sent to other URL
-			setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.Confirm)}, that.d);
+			setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.confirm)}, that.d);
 		});
 		
 		that.backButton.addEventListener("mousedown", function() {
 			that.n = that.n-.75
-			setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.Confirm)}, that.d);
+			setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.confirm)}, that.d);
 		});
 		
 		that.backButton.addEventListener("mouseup", function() {
@@ -65,33 +65,33 @@ class ButtonPanel { // IDs of buttons
 			if(that.nTime < Date.now()){
 				console.log("Tapped instead of held, auto seeking 5 seconds.");
 			}
-			setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.Confirm)}, that.d);
+			setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.confirm)}, that.d);
 		});		
 		
 		that.skipButton.addEventListener("mousedown", function() {
 			that.n = that.n+.75
-			setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.Confirm)}, that.d);
+			setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.confirm)}, that.d);
 		});
 		that.skipButton.addEventListener("mouseup", function() {
 			that.n = 0
 			if(that.nTime < Date.now()){
 				console.log("Tapped instead of held, auto seeking 5 seconds.");
 			}
-			setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.Confirm)}, that.d);
+			setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.confirm)}, that.d);
 		});	
 		
 		that.prevButton.addEventListener("click", function() {
 			that.currentIndex = -1; // NEEDS RESET AFTER FUNCTION CALL, reset IN function call
 //					player.playVideo(); // command sent to other URL
-			setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.Confirm)}, that.d);
+			setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.confirm)}, that.d);
 			//			});
 //			.addEventListener("click", function() {
-//				setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.Confirm)}, that.d);
+//				setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.confirm)}, that.d);
 //				setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex)}, that.d + 20);
 		});		
 		that.nextButton.addEventListener("click", function() {
 			that.currentIndex = 1; // NEEDS RESET AFTER FUNCTION CALL, reset IN function call
-			setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.Confirm)}, that.d);
+			setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.confirm)}, that.d);
 //				that.currentIndex = 0;
 		});	
 		that.isMuteButton.addEventListener("mousedown", function() {
@@ -100,11 +100,11 @@ class ButtonPanel { // IDs of buttons
 			that.isMuted = delta[1];
 			that.isMuteButton.innerHTML = delta[0];
 			console.log("Muted:",that.isMuted,Date.now())
-			setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.Confirm)}, that.d);
+			setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.confirm)}, that.d);
 		});
 		that.isMuteButton.addEventListener("mouseup", function() {
 //				that.isMuted = 0
-//				setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.Confirm)}, that.d);
+//				setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.confirm)}, that.d);
 		});
 		that.volumeValue.addEventListener("change", function() {
 			let delta = that.updateMuteStatus(parseInt(that.volumeValue.value),that.v,that.isMuted);
@@ -112,12 +112,12 @@ class ButtonPanel { // IDs of buttons
 			that.volumeValue.value = that.v;
 			that.isMuted = delta[1];
 			that.isMuteButton.innerHTML = delta[0];
-			setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.Confirm)}, that.d);
+			setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.confirm)}, that.d);
 		});
 		that.speedValue.addEventListener("change", function() {
 			that.s = Math.min(2.5, Math.max(.25, that.speedValue.value));
 			that.speedValue.value = that.s;
-			setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.Confirm)}, that.d);
+			setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.confirm)}, that.d);
 		});
 		that.timeValue.addEventListener("change", function() {
 			that.j = that.timeValue.value * 60;
@@ -128,9 +128,8 @@ class ButtonPanel { // IDs of buttons
 			that.d=0;
 			that.currentIndex = 0;
 			that.confirm = true;
-			setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.Confirm)}, that.d);
+			setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.confirm)}, that.d);
 			that.d = old_d;
-			that.confirm = false;
 		});
 		that.delayValue.addEventListener("change", function() {
 			that.d = that.delayValue.value * 1000;
@@ -162,7 +161,7 @@ class ButtonPanel { // IDs of buttons
 						timeJump = -1,
 						jumpConfirm = false
 						) {
-
+		console.log(jumpConfirm)
 		if(!jumpConfirm){
 			timeJump = -1;
 		}
@@ -179,6 +178,7 @@ class ButtonPanel { // IDs of buttons
 		const exp = (Date.now()+15000); // Expires in 15 seconds
 		localStorage.setItem(this.storage, JSON.stringify({Buttons: buttons, Expire: exp}));
 		this.currentIndex = 0;
+		this.confirm = false;
 //		console.log(buttons);
 	}
 	
@@ -201,13 +201,13 @@ class compoundButtonPanel extends ButtonPanel {
 			that.playerIndex -= 1;
 			if(that.playerIndex<1){that.playerIndex = 4;}
 			that.storage = that.storage.substring(0,that.storage.length-2) + "_" + pow(2,that.playerIndex-1);
-//					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.Confirm)}, that.d);
+//					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.confirm)}, that.d);
 		});
 		this.nextPlayer.addEventListener("click", function() {
 			that.playerIndex += 1;
 			if(that.playerIndex>4){that.playerIndex = 1;}
 			that.storage = that.storage.substring(0,that.storage.length-2) + "_" + pow(2,that.playerIndex-1);
-//					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.Confirm)}, that.d);
+//					setTimeout( function(){that.updateLocalStorage(that.p,that.n,that.s,that.v,that.isMuted,that.currentIndex,that.j,that.confirm)}, that.d);
 		});
 	}
 }
