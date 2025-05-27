@@ -1,9 +1,8 @@
-function buttonFlexGroup(i,icons){
-	var buttonsLocation = document.getElementById("buttonHost");
+function buttonFlexGroup(i,icons,buttonsLocation){
 	var tempInteger = pow(2,i-1);
 	if(i==0){tempInteger = 0;}
 	var div = document.createElement("div");
-	div.classList.add("buttons","YT".concat(i));
+	div.classList.add("buttons","YT".concat(tempInteger));
 	var title = document.createElement("p");
 	title.innerHTML = array[0] + "_" + tempInteger;
 	if(i==-1){
@@ -114,7 +113,7 @@ function buttonFlexGroup(i,icons){
 	}
 	newDiv.appendChild(tempDiv);
 	}
-	newDiv.classList.add("buttons","YT".concat(i+1));
+	newDiv.classList.add("buttons","YT".concat(i));
 	if(i == -1){	document.getElementById("extraInfo").appendChild(newDiv);}
 	else if(i){	buttonsLocation.appendChild(newDiv);}
 	else{	buttonsLocation.insertBefore(newDiv,div.firstChild);}
@@ -157,7 +156,7 @@ function looper(){
 		last_ls_titlecards = ls_titlecards;
 	}
 	for(let i=0;i<4;i++){
-		let thisDiv = document.getElementById("buttonHost").children[i+1];
+		let thisDiv = document.getElementById("buttonHost").children[1].children[i];
 		const itemName = array[0] + "_" + tempInteger;
 		const ls = JSON.parse(localStorage.getItem(itemName));
 		if(ls && Date.now()>ls.Expire){
@@ -184,21 +183,26 @@ function looper(){
 	// Update compound player info
 	if(YT[0]){
 		let thisDiv = document.getElementById("buttonHost").children[0],
-			clonDiv = document.getElementById("buttonHost").children[YT[0].playerIndex];
+			clonDiv = document.getElementById("buttonHost").children[1].children[YT[0].playerIndex-1];
 		thisDiv.children[0].innerHTML = "[" + (YT[0].playerIndex) + "] " + clonDiv.children[0].innerHTML + " ";
 	}
 	if(last_ls_titlecards){
 		document.title =  "[" + (YT[0].playerIndex) + "] " + last_ls_titlecards.Contents[YT[0].playerIndex-1][0] + " ";
 	}
 	let playerCount = 4;
-	for(let i=0;i<=playerCount;i++){
-		let thisDiv = document.getElementById("buttonHost").children[i];
+	for(let i=0;i<playerCount;i++){
+		let thisDiv = document.getElementById("buttonHost").children[1].children[i];
 		if(thisDiv.children[0].innerHTML.charAt(0)!=" "){
 			thisDiv.children[0].innerHTML = "  " + thisDiv.children[0].innerHTML
-			if(i==0&&thisDiv.children[0].innerHTML.charAt(5)==' '){
-				thisDiv.children[0].innerHTML = thisDiv.children[0].innerHTML.substring(0,5) + " " + thisDiv.children[0].innerHTML.substring(8,99) //substring
-			}
 		}
+	}
+	let thisDiv2 = document.getElementById("buttonHost").children[0];
+	if(thisDiv2.children[0].innerHTML.charAt(0)!=" "){
+			thisDiv2.children[0].innerHTML = "  " + thisDiv2.children[0].innerHTML
+		
+	}
+	if(thisDiv2.children[0].innerHTML.charAt(5)==' '){
+		thisDiv2.children[0].innerHTML = thisDiv2.children[0].innerHTML.substring(0,5) + " " + thisDiv2.children[0].innerHTML.substring(8,99) //substring
 	}
 
 
