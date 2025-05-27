@@ -32,7 +32,7 @@ class ButtonPanel { // IDs of buttons
 		this.currentIndex = 1;
 		this.storage = thisArray[0] + "_" + index;
 		
-				console.log("May26Test", thisArray, index, this.isMuteButton,thisArray[9]	+ "-" + index);
+	//			console.log("May26Test", thisArray, index, this.isMuteButton,thisArray[9]	+ "-" + index);
 	}
 	setButtonLinks(){
 		// bind events
@@ -175,7 +175,7 @@ class ButtonPanel { // IDs of buttons
 		const exp = (Date.now()+15000); // Expires in 15 seconds
 		localStorage.setItem(this.storage, JSON.stringify({Buttons: buttons, Expire: exp}));
 		this.currentIndex = 0;
-		console.log(buttons);
+//		console.log(buttons);
 	}
 	
 } // exit class
