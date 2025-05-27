@@ -38,15 +38,21 @@
 //		console.log(array.length,array[1].length);
 		let YT = []
 		window.onload = () => {
-			let intInput = buttonFlexGroup(0,arrayIcons);
+			var divLoc = document.getElementById("buttonHost");
+			let intInput = buttonFlexGroup(0,arrayIcons,divLoc);
 			YT[0] = new compoundButtonPanel(0,array,intInput)
 			YT[0].setButtonLinksCompound(); // Initialize to Player 1 by default
+			var div = document.createElement("div");
 			for(let i=1;i<=4;i++){
-				let intInput = buttonFlexGroup(i,arrayIcons);
+				let intInput = buttonFlexGroup(i,arrayIcons,div);
+			}
+			div.style.display = "inline-block";
+			divLoc.appendChild(div); // display:inline-block
+			for(let i=1;i<=4;i++){
 				YT[i] = new ButtonPanel(pow(2,i-1),array,intInput);
 				YT[i].setButtonLinks();
 			}
-			buttonFlexGroup(-1,arrayTypes);
+			buttonFlexGroup(-1,arrayTypes,div);
 			timeUpdate()
 		}
 		
