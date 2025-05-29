@@ -185,7 +185,7 @@ function looper(){
 			clonDiv = document.getElementById("buttonHost").children[1].children[YT[0].playerIndex-1];
 		thisDiv.children[0].innerHTML = "[" + (YT[0].playerIndex) + "] " + clonDiv.children[0].innerHTML + " ";
 	}
-	if(last_ls_titlecards){
+	if(last_ls_titlecards && last_ls_titlecards.Contents.length > YT[0].playerIndex && last_ls_titlecards.Contents[YT[0].playerIndex-1] ){
 		document.title =  "[" + (YT[0].playerIndex) + "] " + last_ls_titlecards.Contents[YT[0].playerIndex-1][0] + " ";
 	}
 	let playerCount = 4;
