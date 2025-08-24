@@ -1,9 +1,3 @@
-function pow(a,b){
-	let n = a**b;
-	// n = Math.pow(a,b)
-	return n;
-}
-
 var lastReadState_LS = [];
 function timeUpdate(){
 	var refresh=100; // Refresh rate in milli seconds
@@ -12,7 +6,7 @@ function timeUpdate(){
 
 
 function int2bin(i, l=8){
-	return ((i+pow(2,l))%pow(2,l)).toString(2).padStart(l,"0");
+	return ((i+Math.pow(2,l))%Math.pow(2,l)).toString(2).padStart(l,"0");
 }
 
 function timeFormat(f,h=true){
