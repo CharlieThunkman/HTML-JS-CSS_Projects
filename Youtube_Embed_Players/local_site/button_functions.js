@@ -65,7 +65,7 @@ function buttonFlexGroup(i,icons,buttonsLocation){
 	// group buttons by category in seperate divs
 	var newDiv = document.createElement("div");
 	newDiv.appendChild(div.childNodes[0]);
-	let jGroups = [3,4,2,2,4];
+	let jGroups = [3,4,2,1,1,4];
 	for(let k=0;k<jGroups.length;k++){
 		var tempDiv = document.createElement("div");
 		tempDiv.classList.add("buttonSubgroup");
