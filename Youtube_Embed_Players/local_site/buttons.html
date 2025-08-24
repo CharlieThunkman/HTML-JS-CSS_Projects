@@ -29,9 +29,9 @@
 	//	seperatedVersion(); // comment out to test class version
 
 		
-		const array = ["YT_Player","play-button","pause-button","stop-button","prev-button","back-button","skip-button","next-button","isMuted","timeConfirm","prev-player","next-player"];
-		const arrayTypes = ["play",	"pause","stop",	"prev",	"back",	"skip",	"next",	"mute",	"time",	"up",	"down",	];
-		const arrayIcons = [ "►",	 "‖",	 "■",	 "«",	 "‹",	 "›",	 "»",	 "🔊",	 "✅",	 "▲",	 "▼"	];
+		const array = ["YT_Player","play-button","pause-button","stop-button","prev-button","back-button","skip-button","next-button","isMuted","timeConfirm","replay-button","prev-player","next-player"];
+		const arrayTypes = ["play",	"pause","stop",	"prev",	"back",	"skip",	"next",	"mute",	"time", "replay",	"up",	"down",	];
+		const arrayIcons = [ "►",	 "‖",	 "■",	 "«",	 "‹",	 "›",	 "»",	 "🔊",	 "✅",	 "→",   	 "▲",	 "▼"	];
 
 	</script>
 	<script>
@@ -50,7 +50,7 @@
 			div.style.display = "inline-block";
 			divLoc.appendChild(div); // display:inline-block
 			for(let i=0;i<4;i++){
-				YT[i+1] = new ButtonPanel(pow(2,i),array,intInput[i]);
+				YT[i+1] = new ButtonPanel(Math.pow(2,i),array,intInput[i]);
 				YT[i+1].setButtonLinks();
 			}
 			buttonFlexGroup(-1,arrayTypes,document.getElementById("extraInfo"));
