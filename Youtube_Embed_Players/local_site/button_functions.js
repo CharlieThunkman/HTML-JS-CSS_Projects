@@ -1,5 +1,5 @@
 function buttonFlexGroup(i,icons,buttonsLocation){
-	var tempInteger = pow(2,i-1);
+	var tempInteger = Math.pow(2,i-1);
 	if(i==0){tempInteger = 0;}
 	var div = document.createElement("div");
 	div.classList.add("buttons","YT".concat(tempInteger));
@@ -53,7 +53,7 @@ function buttonFlexGroup(i,icons,buttonsLocation){
 			div.appendChild(intInput[j]);
 		}
 	}
-	buttonFlexSubgroup(9,["time"],icons,div,tempInteger);
+	buttonFlexSubgroup(9,["time","replay"],icons,div,tempInteger);
 
 	var timeReadOnly = document.createElement("p");
 	timeReadOnly.innerHTML = "0:00:00";
@@ -64,44 +64,19 @@ function buttonFlexGroup(i,icons,buttonsLocation){
 	
 	// group buttons by category in seperate divs
 	var newDiv = document.createElement("div");
-	var tempDiv = document.createElement("div");
-	tempDiv.classList.add("buttonSubgroup");
 	newDiv.appendChild(div.childNodes[0]);
-	for(let j=0;j<3;j++){ // groups buttons
-		tempDiv.appendChild(div.childNodes[0]);
+	let jGroups = [3,4,2,2,4];
+	for(let k=0;k<jGroups.length;k++){
+		var tempDiv = document.createElement("div");
+		tempDiv.classList.add("buttonSubgroup");
+		for(let j=0;j<jGroups[k];j++){ // groups buttons
+	//		console.log(j,div,tempDiv)
+			tempDiv.appendChild(div.childNodes[0]);
+		}
+		newDiv.appendChild(tempDiv);
 	}
-	newDiv.appendChild(tempDiv);
-	var tempDiv = document.createElement("div");
-	tempDiv.classList.add("buttonSubgroup");
-	for(let j=0;j<4;j++){ // groups buttons
-		tempDiv.appendChild(div.childNodes[0]);
-	}
-	newDiv.appendChild(tempDiv);
-	var tempDiv = document.createElement("div");
-	tempDiv.classList.add("buttonSubgroup");
-	for(let j=0;j<2;j++){ // groups buttons
-//		console.log(j,div,tempDiv)
-		tempDiv.appendChild(div.childNodes[0]);
-	}
-	newDiv.appendChild(tempDiv);
-	var tempDiv = document.createElement("div");
-	tempDiv.classList.add("buttonSubgroup");
-	for(let j=0;j<2;j++){ // groups buttons
-//		console.log(j,div,tempDiv)
-		tempDiv.appendChild(div.childNodes[0]);
-	}
-	newDiv.appendChild(tempDiv);
-	var tempDiv = document.createElement("div");
-	tempDiv.classList.add("buttonSubgroup");
-	for(let j=0;j<3;j++){ // groups buttons
-//		console.log(j,div,tempDiv)
-		tempDiv.appendChild(div.childNodes[0]);
-	}
-	newDiv.appendChild(tempDiv);
-	var tempDiv = document.createElement("div");
-	tempDiv.classList.add("buttonSubgroup");
 	if(i==0){
-		buttonFlexSubgroup(10,["up",	"down"],icons,div,tempInteger);
+		buttonFlexSubgroup(11,["up",	"down"],icons,div,tempInteger);
 		text = document.createElement("p");
 		text.style.margin = "5px 5px 12px 5px";
 		text.innerHTML = "|";  
@@ -115,7 +90,7 @@ function buttonFlexGroup(i,icons,buttonsLocation){
 	}
 	newDiv.classList.add("buttons","YT".concat(i));
 	if(i){	buttonsLocation.appendChild(newDiv);}
-	else{	buttonsLocation.insertBefore(newDiv,div.firstChild);}
+	else{	buttonsLocation.insertBefore(newDiv,div.firstChildElement);}
 	return intInput;
 }
 
@@ -136,6 +111,7 @@ function buttonFlexSubgroup(indexOne,typeArray,icons,div,tempInteger){
 		div.appendChild(button);
 		if(text){div.appendChild(text);}
 		if(type=="mute"){}
+		if(type=="replay"){}
 	}	
 }
 
@@ -146,15 +122,24 @@ function newTimeoutLength(index,that){
 }
 
 let last_ls_titlecards;
+let ls_playerCount;
 function looper(){
 	//	console.log(JSON.parse(localStorage.getItem('YT_Player_1')));
 	//	console.log(JSON.parse(localStorage.getItem('YT_Player_1')).Expire);
 	let tempInteger = 1;
+	let playerCount = 4;
 	const ls_titlecards = JSON.parse(localStorage.getItem("buttons_titles"));
+	const ls_hidePlayerBin = JSON.parse(localStorage.getItem("buttons_html"));
+	if(ls_hidePlayerBin){	
+		ls_playerCount = 0;
+		for(let i=0; i<playerCount;i++){
+			ls_playerCount += parseInt(ls_hidePlayerBin.Contents.charAt(4 - i - 1));
+		}
+	}
 	if(ls_titlecards){
 		last_ls_titlecards = ls_titlecards;
 	}
-	for(let i=0;i<4;i++){
+	for(let i=0;i<playerCount;i++){
 		let thisDiv = document.getElementById("buttonHost").children[1].children[i];
 		const itemName = array[0] + "_" + tempInteger;
 		const ls = JSON.parse(localStorage.getItem(itemName));
@@ -169,7 +154,6 @@ function looper(){
 		}
 		
 		// Hide buttons not used in video.html instance (assumes only one instance per browser)
-		const ls_hidePlayerBin = JSON.parse(localStorage.getItem("buttons_html"));
 		if(ls_hidePlayerBin && ls_hidePlayerBin.Contents.charAt(4 - i - 1) == "1"){ // if 1 is showing, indicated by EVEN number
 			thisDiv.style.display = "block";
 		} else if(ls_hidePlayerBin){
@@ -188,7 +172,6 @@ function looper(){
 	if(last_ls_titlecards && last_ls_titlecards.Contents.length > YT[0].playerIndex && last_ls_titlecards.Contents[YT[0].playerIndex-1] ){
 		document.title =  "[" + (YT[0].playerIndex) + "] " + last_ls_titlecards.Contents[YT[0].playerIndex-1][0] + " ";
 	}
-	let playerCount = 4;
 	for(let i=0;i<playerCount;i++){
 		let thisDiv = document.getElementById("buttonHost").children[1].children[i];
 		if(thisDiv.children[0].innerHTML.charAt(0)!=" "){
@@ -212,6 +195,22 @@ function looper(){
 		if(ls && Date.now()>ls.Expire){
 			localStorage.removeItem(itemName);
 		}
+	}
+	
+	// Resise Button elements
+	
+	const buttonClassElements = document.getElementsByClassName('buttons'); 
+    for (let i = 0; i < buttonClassElements.length; i++) {
+		if(document.body.clientWidth > 800){
+			buttonClassElements[i].classList.add('buttonsMaxWidth'); // Adds the new styles
+			if(document.body.clientWidth > 1200 && ls_playerCount > 2){
+				document.documentElement.style.setProperty('--buttonsMaxWidth', 'calc(33.3333% - 11px)'); // Changes the variable's value
+			} else {
+				document.documentElement.style.setProperty('--buttonsMaxWidth', 'calc(50% - 11px)'); // Changes the variable's value
+			}
+        } else {buttonClassElements[i].classList.remove('buttonsMaxWidth'); // Removes an old class
+		}
+        // buttonClassElements[i].classList.toggle('active'); // Toggles a class
 	}
 	// console.log(array);
 	timeUpdate();
