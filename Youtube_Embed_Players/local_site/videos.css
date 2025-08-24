@@ -1,0 +1,19 @@
+iframe {
+	border-width: 0;
+	display: inline-block;
+	height: calc(100% - 40px);
+	position: fixed;
+	top: 0;
+}
+
+span {
+	position: fixed;
+	background-color: #FFFF0000;
+	font-family: 'Algerian';
+	color: #50f050;	
+	display: flex;
+	text-align: center;
+	font-size: 18px;
+	line-height: 20px;
+	-webkit-text-stroke: 0.35px black;
+}
