@@ -1,141 +1,159 @@
 body {
-			background-color: 2B2E38;
-			overflow:hidden;
-		}
-		.buttons {
-			position: relative;
-			margin: 0 3px 3px auto;
-			padding: 2px 4px;
-			background-color: #3C404B;
-			border-radius: 4px;
-		}
-		.buttons, .buttonSubgroup{
-			float: left;
-			display: block;
-		}
-		.buttonSubgroup{
-			display: flex;
-			justify-content: center;
-		}
-		.buttons:after {
-			top: 5%;
-			left: 5%;
-			border: solid transparent;
-			content: " ";
-			height: 0;
-			width: 0;
-			position: absolute;
-			pointer-events: none;
-			border-color: rgba(238, 238, 238, 0);
-			border-top-color: #3C404B;
-			border-width: 10px;
-			margin-left: -10px;
-		}
-		.button, .textInput {
-			padding: 10px 10px 10px 15px;
-			font-weight: bold;
-			letter-spacing: 5px;
-			outline: none;
-			cursor: pointer;
-			color: white;
-			background-color: #7F8C8D;
-			border: none;
-			border-radius: 4px;
-			font-variant-caps: all-petite-caps;
-		}
-		textInput,
-		::placeholder {
-			color: white;
-			font-size: 15px;
-			letter-spacing: 0px;
-		}
-		.textInput{
-			letter-spacing: 2px;
-			font-size: 18px;
-			padding: 6px 3px 8px 6px;
-			width: 90px;
-			background-color: #a0a8a8
-		}
-		.speedValue, .timeValue{
-			width: 60px;
-		}
-		.volValue{
-			width: 62px;
-		}
-		.button:hover {
-			background-color: #708080;
-		}
-		.play {
-			padding: 10px 9px 10px 14px;
-			background-color: #2ECC71;
-		}
-		.play:hover {
-			background-color: #27AE60;
-		}
-		.pause {
-			padding: 10px 12px 10px 17px;
-			background-color: #E67E22;
-		}
-		.pause:hover {
-			background-color: #D35400;
-		}
-		.stop {
-			background-color: #E74C3C;
-		}
-		.stop:hover {
-			background-color: #C0392B;
-		}
-		.prev, .next {
-			padding: 10px 4px 10px 9px;
-			background-color: #7f8c8dc0;
-		}
-		.prev:hover, .next:hover {
-			background-color: #708080c0;
-		}
-		.back, .skip {
-			padding: 10px 12px 10px 17px;
-		}
-		.up, .down {
-			position: relative;
-			padding: 0 0;
-			height: 0;
-			width: 0;
-		}
-		.volValue, .mute {
-			background-color: #5490ff80;
-		}
-		.volValue:hover, .mute:hover {
-			background-color: #5080df80;
-		}
-		.speedValue,
-		.speedValue:hover
-		{
-			padding: 0;
-			color: #3C404B;
-			background-color: #f9ff6bb0;
-		}
-		.timeValue, .time{
-			background-color: #e585ff94;
-		}
-		p.timevalue{
-			cursor:default;
-		}
-		#play-button,
-		#skip-button,
-		#pause-button,
-		#stop-button {
-			margin-left: 15px;
-		}
-		iframe {
-			margin: 0 auto;
-			width: 560px;
-			height: 315px;
-			float: left;
-			clear: both;
-			display: block;
-			background-color: #eee;
-		}
-		p {
-			color: #d0d0dd;
-			margin: 0;
-		}
+	background-color: 2B2E38;
+	overflow:hidden;
+}
+.buttons {
+	position: relative;
+	margin: 0 3px 3px auto;
+	padding: 2px 4px;
+	background-color: #3C404B;
+	border-radius: 4px;
+}
+.buttons, .buttonSubgroup{
+	float: left;
+	display: block;
+}
+.buttonSubgroup{
+	display: flex;
+	justify-content: center;
+	height: 35px;
+}
+.buttons:after {
+	top: 5%;
+	left: 5%;
+	border: solid transparent;
+	content: " ";
+	height: 0;
+	width: 0;
+	position: absolute;
+	pointer-events: none;
+	border-color: rgba(238, 238, 238, 0);
+	border-top-color: #3C404B;
+	border-width: 10px;
+	margin-left: -10px;
+}
+.button, .textInput {
+	padding: 10px 10px 10px 15px;
+	font-weight: bold;
+	letter-spacing: 5px;
+	outline: none;
+	cursor: pointer;
+	color: white;
+	background-color: #7F8C8D;
+	border: none;
+	border-radius: 4px;
+	font-variant-caps: all-petite-caps;
+}
+textInput,
+::placeholder {
+	color: white;
+	font-size: 15px;
+	letter-spacing: 0px;
+}
+.textInput{
+	letter-spacing: 2px;
+	font-size: 18px;
+	padding: 6px 3px 8px 6px;
+	width: 90px;
+	background-color: #a0a8a8
+}
+.speedValue, .timeValue{
+	width: 60px;
+}
+.volValue{
+	width: 62px;
+}
+.button:hover {
+	background-color: #708080;
+}
+.play {
+	padding: 10px 9px 10px 14px;
+	background-color: #2ECC71;
+}
+.play:hover {
+	background-color: #27AE60;
+}
+.pause {
+	padding: 10px 12px 10px 17px;
+	background-color: #E67E22;
+}
+.pause:hover {
+	background-color: #D35400;
+}
+.stop {
+	background-color: #E74C3C;
+}
+.stop:hover {
+	background-color: #C0392B;
+}
+.prev, .next {
+	padding: 10px 4px 10px 9px;
+	background-color: #7f8c8dc0;
+}
+.prev:hover, .next:hover {
+	background-color: #708080c0;
+}
+.back, .skip {
+	padding: 10px 12px 10px 17px;
+}
+.up, .down {
+	position: relative;
+	padding: 0 0;
+	height: 0;
+	width: 0;
+}
+.volValue, .mute {
+	background-color: #5490ff80;
+}
+.volValue:hover, .mute:hover {
+	background-color: #5080df80;
+}
+.speedValue,
+.speedValue:hover
+{
+	padding: 0;
+	color: #3C404B;
+	background-color: #f9ff6bb0;
+}
+.timeValue, .time{
+	background-color: #e585ff94;
+}
+p.timevalue{
+	cursor:default;
+}
+#play-button,
+#skip-button,
+#pause-button,
+#stop-button {
+	margin-left: 15px;
+}
+iframe {
+	margin: 0 auto;
+	width: 560px;
+	height: 315px;
+	float: left;
+	clear: both;
+	display: block;
+	background-color: #eee;
+}
+p {
+	color: #d0d0dd;
+	margin: 0;
+	max-height: 20;
+	overflow:hidden;
+}
+.replay{
+	overflow: hidden;
+}
+.YT0{
+	background-color: 5f5860;
+}
+div.buttons:after {
+	border-color: transparent;
+}
+.buttonsMaxWidth{
+	max-width: var(--buttonsMaxWidth);
+}
+.buttonsMaxWidth.YT0, .buttonsMaxWidth.YT-1{
+	max-width: fit-content;
+}
