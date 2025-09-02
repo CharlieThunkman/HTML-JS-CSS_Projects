@@ -1,0 +1,52 @@
+<html>
+	<head>
+		<title>(i) Timer</title>
+		<link rel="shortcut icon" type="image/png" href="countdown/clock.png"/>
+	</head>
+	<body>
+		<div id="iFrameLoop"></div>
+		<div id="labelC">For initiation, should be blank when running.</div>
+	</body>
+</html>
+<script src="countdown/moment.js"></script>
+<script src="countdown/presets.js"></script>
+<script name="compareDates">
+function compareDates(a,b){
+	// console.log(a[0],b[0])
+	return (moment(a[0],"MMMM DD, YYYY HH:mm:ss")-moment(b[0],"MMMM DD, YYYY HH:mm:ss"))
+}
+</script>
+<script name="presetSort">
+	presets.sort(compareDates);
+	while(new Date(new Date(presets[0][0]) - new Date()).getUTCFullYear()<1970){
+		if(presets[0][2]){
+			let temp = presets[0][2].shift();
+			presets[0][2].push(temp);
+			let newDate = moment(presets[0][0],"MMMM DD, YYYY HH:mm:ss").add(temp, 'days').format("MMMM DD, YYYY HH:mm:ss");
+			console.log("Adjusting date to "+presets[0][1]+" by "+temp,newDate);
+			presets[0][0] = newDate;
+			presets.sort(compareDates);
+			console.log(presets);
+		} else {
+			presets.shift();
+		}
+	}
+	console.log("Final",presets)
+	let iFrames = document.getElementById('iFrameLoop');
+	for(var i=0;i<presets.length;i++){
+		let newiFrame = document.createElement('iFrame');
+		newiFrame.width = '400'
+		newiFrame.height = '80'
+	//	newiFrame.allowTransparency = true
+		newiFrame.frameBorder = "0"
+		newiFrame.src = 'Countdown_legacy.html?hideinput&index=' + i
+		iFrames.append(newiFrame)
+	//	iFrames.style.backgroundColor = transparent
+	}
+</script>
+<style>
+iframe {
+  background-color: transparent;
+  border: 0;
+}
+</style>
