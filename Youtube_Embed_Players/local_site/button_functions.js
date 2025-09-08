@@ -31,17 +31,17 @@ function buttonFlexGroup(i,icons,buttonsLocation){
 		intInput[j].min = 0;
 		intInput[j].value = 0;
 		intInput[j].placeholder = inputarray[j];
-		if(j == 1){
+		intInput[j].step = 0.05;
+		if(j == 1){ // playerSpeed
 			intInput[j].max = 2;
 			intInput[j].min = 0.25;
-			intInput[j].step = 0.05;
 			intInput[j].value = 1;
 		} 
-		if(j == 3){
+		if(j == 3){ // Jump To Time
 			intInput[j].max = 600;
 			intInput[j].step = .2;
 		}
-		if(j == 2){
+		if(j == 2){ // Vol
 			intInput[j].max = 100;
 			intInput[j].value = 20;
 			intInput[j].step = 5;
@@ -147,8 +147,8 @@ function looper(){
 			localStorage.removeItem(itemName);
 		}
 		// Update title cards
-		if(ls_titlecards && ls_titlecards.Contents[i] && ls_titlecards.Contents[i].length >= 1 && ls_titlecards.Contents[i] != "YouTube video player"){
-			thisDiv.children[0].innerHTML = " ID = " + (ls_titlecards.Contents[i][3]+1) + " | " + ls_titlecards.Contents[i][0] ;
+		if(last_ls_titlecards && last_ls_titlecards.Contents[i] && last_ls_titlecards.Contents[i].thisIndex && last_ls_titlecards.Contents[i].title != "YouTube video player"){
+			thisDiv.children[0].innerHTML = timeFormat(last_ls_titlecards.Contents[i].playerTime,0) + " ID = " + (last_ls_titlecards.Contents[i].indexValue+1) + " | " + last_ls_titlecards.Contents[i].title ;
 		} else if (ls_titlecards || thisDiv.children[0].innerHTML == "undefined" || thisDiv.children[0].innerHTML == ""){
 			thisDiv.children[0].innerHTML = array[0] + "_" + tempInteger;				
 		}
@@ -170,8 +170,8 @@ function looper(){
 		thisDiv.children[0].innerHTML = "[" + (YT[0].playerIndex) + "] " + clonDiv.children[0].innerHTML + " ";
 	}
 	if(last_ls_titlecards && last_ls_titlecards.Contents.length > YT[0].playerIndex && last_ls_titlecards.Contents[YT[0].playerIndex-1] ){
-		document.title =  "[" + (YT[0].playerIndex) + "] " + last_ls_titlecards.Contents[YT[0].playerIndex-1][0] + " ";
-	}
+		document.title =  "[" + (YT[0].playerIndex) + "] " + last_ls_titlecards.Contents[YT[0].playerIndex-1].title + " ";
+	} 
 	for(let i=0;i<playerCount;i++){
 		let thisDiv = document.getElementById("buttonHost").children[1].children[i];
 		if(thisDiv.children[0].innerHTML.charAt(0)!=" "){
@@ -183,9 +183,9 @@ function looper(){
 			thisDiv2.children[0].innerHTML = "  " + thisDiv2.children[0].innerHTML
 		
 	}
-	if(thisDiv2.children[0].innerHTML.charAt(5)==' '){
-		thisDiv2.children[0].innerHTML = thisDiv2.children[0].innerHTML.substring(0,5) + " " + thisDiv2.children[0].innerHTML.substring(8,99) //substring
-	}
+//	if(thisDiv2.children[0].innerHTML.charAt(5)==' '){
+//		thisDiv2.children[0].innerHTML = thisDiv2.children[0].innerHTML.substring(0,5) + " " + thisDiv2.children[0].innerHTML.substring(8,99) //substring
+//	}
 
 
 	const videos_html_ls = ["buttons_html","buttons_titles"];
@@ -203,7 +203,9 @@ function looper(){
     for (let i = 0; i < buttonClassElements.length; i++) {
 		if(document.body.clientWidth > 800){
 			buttonClassElements[i].classList.add('buttonsMaxWidth'); // Adds the new styles
-			if(document.body.clientWidth > 1200 && ls_playerCount > 2){
+			var maxWide = 3,
+				minWidth = 290;
+			if(document.body.clientWidth > maxWide*minWidth && (ls_playerCount-1)%maxWide > maxWide*(maxWide-1)/(1+ls_playerCount)){
 				document.documentElement.style.setProperty('--buttonsMaxWidth', 'calc(33.3333% - 11px)'); // Changes the variable's value
 			} else {
 				document.documentElement.style.setProperty('--buttonsMaxWidth', 'calc(50% - 11px)'); // Changes the variable's value
