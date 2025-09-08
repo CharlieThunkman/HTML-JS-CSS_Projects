@@ -139,8 +139,9 @@ iframe {
 p {
 	color: #d0d0dd;
 	margin: 0;
-	max-height: 20;
+	max-height: 18px;
 	overflow:hidden;
+	text-align: center;
 }
 .replay{
 	overflow: hidden;
