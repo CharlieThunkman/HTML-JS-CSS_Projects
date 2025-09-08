@@ -1,0 +1,89 @@
+@font-face {
+    font-family: 'neonderthawregular';
+    src: url('../Fonts/Neonderthaw/webfontkit/neonderthaw-regular-webfont.woff2') format('woff2'),
+         url('../Fonts/Neonderthaw/webfontkit/neonderthaw-regular-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+
+}
+body {
+	background-color: #06600050;
+}
+/*#ct1 {
+	font-family: 'Neonderthaw';
+	color: lime;	
+	font-size: 48px;
+	font-weight: 600;
+	margin: auto;
+	padding: 0;
+}
+#ct2 {
+	font-family: 'Algerian';
+	color: lime;	
+	font-size: 32px;
+	font-weight: 600;
+	margin: auto;
+	padding: 0;
+
+}*/
+.ct0 {
+	font-family: 'Algerian';
+	color: lime;	
+	font-size: 0px;
+	font-weight: 600;
+	margin: auto;
+	padding: 0;
+
+}
+.ct1 {
+	font-family: 'neonderthawregular';
+	color: lime;	
+	font-size: 48px;
+	font-weight: 600;
+	margin: auto;
+	margin-left : 4px;
+	padding: 0;
+}
+.ct2 {
+	font-family: 'Algerian';
+	color: orange;	
+	font-size: 32px;
+	font-weight: 600;
+	margin: auto;
+	padding: 0;
+
+}
+.button {
+  border: none;
+  color: white;
+  padding: 16px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  transition-duration: 0.4s;
+  cursor: pointer;
+}
+
+.button1 {
+  background-color: white;
+  color: black;
+  border: 2px solid #4CAF50;
+}
+
+.button1:hover {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.button2 {
+  background-color: white;
+  color: black;
+  border: 2px solid #008CBA;
+}
+
+.button2:hover {
+  background-color: #008CBA;
+  color: white;
+}
