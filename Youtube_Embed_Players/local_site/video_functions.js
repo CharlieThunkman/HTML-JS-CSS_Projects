@@ -1,51 +1,38 @@
 // Function to check body dimensions on load
 console.log(document.body.clientHeight,document.body.clientWidth);
 
-// Polling function for the myFrame1 element
-function pollDOM () {
-	var el = document.getElementById('myFrame1');
-	
-	if (el) {
-		// Do something with el
-	} else {
-		setTimeout(pollDOM, 3000); // try again in 300 milliseconds
-	}
-}
-pollDOM();
-
 // Main YouTube player and DOM manipulation logic
 var source = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=PLuXaDdOtKhFdgYYaZ5SmkxqHntujrS73k&key=AIzaSyDI5nYD54CtFM3GjiP1fm2J59LmGJDH-7g&maxResults=50"
 var url = window.location.href;
 let allowFS = 0;
-
-function myFrame(){
-	let iframe = document.createElement("iFrame");
-	let textblip1 = document.createElement("span");
-	let textblip2 = document.createElement("span");
-	let div = document.createElement("div");
-	div.appendChild(iframe);
-	div.appendChild(textblip1);
-	div.appendChild(textblip2);
-	return div;
-}
-
+// global variable for the player
+var player;
+var running=0;
+let indexSPC = 0;
+const storageArray = ["YT_Player_1","YT_Player_2","YT_Player_4","YT_Player_8"];
+var thisReadState = [];
+var adSense = [];
+var vid2ls_old = [4];
+var muteMaster = [0,0,0,0];
+var replayMaster = [0,0,0,0];
+let showPlayerCount = 0;
 let myFrameBase = "https://www.youtube.com/embed/videoseries?enablejsapi=1";
 let myFrameHolder = [myFrame(),myFrame(),myFrame(),myFrame()];
-let hidePlayerInt = Math.pow(2,myFrameHolder.length)-1;
 const playlist_IDs = ["PLuXaDdOtKhFcytpEqQ6fay1KF4eSZI-eq","PLuXaDdOtKhFdgYYaZ5SmkxqHntujrS73k","PL07iBthz24JBwDqSScgUCH_XpCxd72-WC","PLuXaDdOtKhFeu-eIaEG63-qVwt2DUO8tA"]
+let hidePlayerInt = Math.pow(2,myFrameHolder.length)-1;
+
+
 // Load only players if designated by url params
 if(getAllUrlParams(url)["showplayer"] && parseInt(getAllUrlParams(url)["showplayer"]) >= 0){
 	hidePlayerInt = parseInt(getAllUrlParams(url)["showplayer"]);
 }
-
 let hidePlayerBin = int2bin(hidePlayerInt,playlist_IDs.length);
-let showPlayerCount = 0;
+pollDOM();
 
 for(i=0;i<playlist_IDs.length;i++){
 	showPlayerCount += parseInt(hidePlayerBin.charAt(i));
 }
 
-let indexSPC = 0;
 console.log(getAllUrlParams(url)["showplayer"],hidePlayerInt,hidePlayerBin,showPlayerCount)
 console.log(hidePlayerBin.charAt(3),hidePlayerBin.charAt(2),hidePlayerBin.charAt(1),hidePlayerBin.charAt(0));
 
@@ -60,12 +47,6 @@ for(var i=0;i<myFrameHolder.length;i++){ // Load SELECTED players only, all play
 	}
 }
 updateLocalStorage("buttons_html",hidePlayerBin);
-
-function updateLocalStorage(key,valueObject,expire = 10){
-	const exp = (Date.now()+expire*1000); // Expires in seconds
-	localStorage.setItem(key, JSON.stringify({Contents: valueObject, Expire: exp}));
-	this.currentIndex = 0;
-}
 
 if(getAllUrlParams(url)["allowfullscreen"]){
 	allowFS = 1;
@@ -107,40 +88,75 @@ for(i=0;i<playlist_IDs.length;i++){
 	}
 }
 
-// global variable for the player
-var player;
-var running=0;
+// Inject YouTube API script
+var tag = document.createElement('script');
+tag.src = "https://www.youtube.com/player_api";
+var firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+// Polling function for the myFrame1 element
+function pollDOM () {
+	var el = document.getElementById('myFrame1');
+	
+	if (el) {
+		// Do something with el
+	} else {
+		setTimeout(pollDOM, 3000); // try again in 300 milliseconds
+	}
+}
+
+function myFrame(){
+	let iframe = document.createElement("iFrame");
+	let textblip1 = document.createElement("span");
+	let textblip2 = document.createElement("span");
+	let div = document.createElement("div");
+	div.appendChild(iframe);
+	div.appendChild(textblip1);
+	div.appendChild(textblip2);
+	return div;
+}
+
+function updateLocalStorage(key,valueObject,expire = 10){
+	const exp = (Date.now()+expire*1000); // Expires in seconds
+	localStorage.setItem(key, JSON.stringify({Contents: valueObject, Expire: exp}));
+	this.currentIndex = 0;
+}
 
 // this function gets called when API is ready to use
 function onYouTubePlayerAPIReady() {
 	// create the global player from the specific iframe (#video)
 	player = [new YT.Player(myFrameHolder[0].children[0], {
-		events: {
-			// call this function when each player is ready to use
-			'onReady': onPlayerReady
-		}
-	}),	
-	new YT.Player(myFrameHolder[1].children[0], {
-		events: {
-			'onReady': onPlayerReady2
-		}
-	}),	
-	new YT.Player(myFrameHolder[2].children[0], {
-		events: {
-			'onReady': onPlayerReady4
-		}
-	}),
-	new YT.Player(myFrameHolder[3].children[0], {
-		events: {
-			'onReady': onPlayerReady8
-		}
-	})
+			events: {
+				// call this function when each player is ready to use
+				'onReady': onPlayerReady,
+				'onError': onPlayerError,
+				'onAutoplayBlocked': onPlayerAutoplayBlocked
+			}
+		}),	
+		new YT.Player(myFrameHolder[1].children[0], {
+			events: {
+				'onReady': onPlayerReady2,
+				'onError': onPlayerError2,
+				'onAutoplayBlocked': onPlayerAutoplayBlocked
+			}
+		}),	
+		new YT.Player(myFrameHolder[2].children[0], {
+			events: {
+				'onReady': onPlayerReady4,
+				'onError': onPlayerError4,
+				'onAutoplayBlocked': onPlayerAutoplayBlocked
+			}
+		}),
+		new YT.Player(myFrameHolder[3].children[0], {
+			events: {
+				'onReady': onPlayerReady8,
+				'onError': onPlayerError8,
+				'onAutoplayBlocked': onPlayerAutoplayBlocked
+			}
+		})
 	];
 }
 
-const storageArray = ["YT_Player_1","YT_Player_2","YT_Player_4","YT_Player_8"];
-var thisReadState = [];
-var adSense = [];
 function onPlayerReady(event) {
 	console.log("Player1 is ready.");
 	timeUpdate();
@@ -165,9 +181,45 @@ function onPlayerReady8(event) {
 	running = running + 8;
 }
 
-var vid2ls_old = [4];
-var muteMaster = [0,0,0,0];
-var replayMaster = [0,0,0,0];
+const onPlayerErrorCodes = {
+	'Error': "Unidentified Error. Error message is not encoded in this script yet. Visit https://developers.google.com/youtube/iframe_api_reference#Events for more information",
+	2: "The request contains an invalid parameter value. For example, this error occurs if you specify a video ID that does not have 11 characters, or if the video ID contains invalid characters, such as exclamation points or asterisks.",
+	5: "The requested content cannot be played in an HTML5 player or another error related to the HTML5 player has occurred.",
+	100: "The video requested was not found. This error occurs when a video has been removed (for any reason) or has been marked as private.",
+	101: "The owner of the requested video does not allow it to be played in embedded players.",
+	150: "This error is the same as 101. The owner of the requested video does not allow it to be played in embedded players.",
+	153: "The request does not include the HTTP Referer header or equivalent API Client identification. See API Client Identity and Credentials for more information}"
+}
+function onPlayerError(event) {
+	console.error("Player1 is in error code:",event.data,onPlayerErrorCodes[event.data] ?? onPlayerErrorCodes['Error'],event.target);
+//	player[0].nextVideo();
+	timeUpdate();
+}
+
+function onPlayerError2(event) {
+	console.error("Player2 is in error code:",event.data,onPlayerErrorCodes[event.data] ?? onPlayerErrorCodes['Error'],event.target);
+//	player[1].nextVideo();
+	timeUpdate();
+}
+
+function onPlayerError4(event) {
+	console.error("Player4 is in error code:",event.data,onPlayerErrorCodes[event.data] ?? onPlayerErrorCodes['Error'],event.target);
+//	player[2].nextVideo();
+	timeUpdate();
+}
+
+function onPlayerAutoplayBlocked(event) {
+	console.error("Youtube Embed Player has autoplay blocked. Click on the player to verify you are a human.",event);
+//	player[3].nextVideo();
+	timeUpdate();
+}
+
+function onPlayerError8(event) {
+	console.error("Player8 is in error code:",event.data,onPlayerErrorCodes[event.data] ?? onPlayerErrorCodes['Error'],event.target);
+//	player[3].nextVideo();
+	timeUpdate();
+}
+
 
 // Main update loop
 function looper(){
@@ -181,7 +233,7 @@ function looper(){
 			lastReadState_LS[i].Expire = lastReadState_LS[i].Expire%100000000 - 20;
 		}
 		// adSense disable function, triggers every tick ad is detected from the previous tick
-				if(adSense[i]){if(adSense[i] == 1){adSense[i]++;}else if(muteMaster[i]=0){player[i].unMute(); adSense[i]=0;}}
+				if(adSense[i]){if(adSense[i] == 1){adSense[i]++;}else if(muteMaster[i]==0){player[i].unMute(); adSense[i]=0;}}
 		// if request sent, request is either skimState or new, and request sent to a loaded player
 		if(ls && (ls.Buttons.skimState != 0 || ls.Expire%100000000!=lastReadState_LS[i].Expire%100000000) && hidePlayerBin.charAt(playlist_IDs.length - i - 1) == "1"){
 			console.log(lastReadState_LS[i], ls, ls.Expire%100000000, lastReadState_LS[i].Expire%100000000, Date.now()%100000000); // Background Debugging purposes
@@ -256,14 +308,22 @@ function looper(){
 			}
 			let currentVolume = player[i].getVolume();
 			myFrameHolder[i].children[1].innerHTML = myFrameHolder[i].children[0].title;
-			let prevIndex=null,nextIndex=null;
+			let prevIndex=null,nextIndex=null,thisIndex=null;
 			if(player[i].getPlaylistIndex()>1){
 				prevIndex = player[i].getPlaylist()[player[i].getPlaylistIndex()-1];
 				}
-			if(player[i].getPlaylistIndex()<player[i].getPlaylist().length){
+			if(player[i].getPlaylist() && player[i].getPlaylistIndex()<player[i].getPlaylist().length){
 				nextIndex = player[i].getPlaylist()[player[i].getPlaylistIndex()+1]
 			}
-			vid2ls[i] = [myFrameHolder[i].children[0].title.slice(0,63),prevIndex,nextIndex,player[i].getPlaylistIndex()];
+			thisIndex = player[i].getPlaylist()[player[i].getPlaylistIndex()]
+			//vid2ls[i] = [myFrameHolder[i].children[0].title.slice(0,63),prevIndex,nextIndex,player[i].getPlaylistIndex()];
+			vid2ls[i] = {title:myFrameHolder[i].children[0].title.slice(0,127),
+				prevIndex:prevIndex,
+				nextIndex:nextIndex,
+				thisIndex:thisIndex,
+				indexValue:player[i].getPlaylistIndex(),
+				playerTime: currentTime};
+
 			if(!isEqual(vid2ls[i],vid2ls_old[i])){
 				vid2ls_dif = true;
 			}
@@ -282,7 +342,7 @@ function looper(){
 	}
 	if(vid2ls_dif){
 		updateLocalStorage("buttons_titles",vid2ls,15);
-		console.log(vid2ls,vid2ls_old);
+		//console.log(vid2ls,vid2ls_old);
 	}
 	vid2ls_old = vid2ls;
 	lastReadState_LS = thisReadState;
@@ -294,12 +354,6 @@ function timeUpdate(){
 	var refresh=100; // Refresh rate in milli seconds
 	mytime=setTimeout('looper()',refresh,lastReadState_LS)
 }		
-
-// Inject YouTube API script
-var tag = document.createElement('script');
-tag.src = "https://www.youtube.com/player_api";
-var firstScriptTag = document.getElementsByTagName('script')[0];
-firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 function getAllUrlParams(url) {
 	var queryString = url ? url.split('?')[1] : window.location.search.slice(1);
