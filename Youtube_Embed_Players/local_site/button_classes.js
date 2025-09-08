@@ -31,7 +31,7 @@ class ButtonPanel { // IDs of buttons
 		this.re = 0 	// replay boolean - skips back to beginning of video a few seconds before end
 		this.confirm = false;
 		this.isMuted = 0;
-		this.currentIndex = 1;
+		this.currentIndex = 0;
 		this.storage = thisArray[0] + "_" + index;
 		
 	//			console.log("May26Test", thisArray, index, this.isMuteButton,thisArray[9]	+ "-" + index);
@@ -146,8 +146,8 @@ class ButtonPanel { // IDs of buttons
 			that.d = old_d;
 		});
 		that.delayValue.addEventListener("change", function() {
-			that.d = that.delayValue.value * 1000;
-			console.log("Delay value now " + that.d/1000 + " second(s)", that);
+			that.d = that.delayValue.value * 1000 * 60;
+			console.log("Delay value now " + that.d/1000 + " minute(s)", that);
 		});
 	}
 	
