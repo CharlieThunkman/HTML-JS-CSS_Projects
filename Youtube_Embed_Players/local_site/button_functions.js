@@ -4,7 +4,7 @@ function buttonFlexGroup(i,icons,buttonsLocation){
 	var div = document.createElement("div");
 	div.classList.add("buttons","YT".concat(tempInteger));
 	var title = document.createElement("p");
-	title.innerHTML = array[0] + "_" + tempInteger;
+	title.innerHTML = buttonConfig.storage + "_" + tempInteger;
 	if(i==-1){
 		title.innerHTML = "OPTIONS TEMPLATE";
 	}
@@ -17,55 +17,91 @@ function buttonFlexGroup(i,icons,buttonsLocation){
 	if(tempInteger){tempVar00998642 = 2}
 	
 	// button Inputs (function)
-	buttonFlexSubgroup(1,["play",	"pause","stop",	"prev",	"back",	"skip",	"next",	"mute"],icons,div,tempInteger);
+	buttonFlexSubgroup(1,["play",	"pause","stop",	"prev",	"back",	"skip",	"next",	"mute"],div,tempInteger);
 	
-	const inputarray = ["delay","speed","vol","time"]
-	var intInput = [];
-	for(let j=0;j<inputarray.length;j++){ // adds numerical inputs
-		intInput[j] = document.createElement("input");
-		intInput[j].type = "number";
-		intInput[j].classList.add("textInput",inputarray[j] + "Value");
-		intInput[j].id = inputarray[j] + "-value-" + tempInteger;
-		intInput[j].style.marginRight = "1px";
-//		intInput[j].onchange = function(){newTimeoutLength(i,this);}
-		intInput[j].min = 0;
-		intInput[j].value = 0;
-		intInput[j].placeholder = inputarray[j];
-		intInput[j].step = 0.05;
-		if(j == 1){ // playerSpeed
-			intInput[j].max = 2;
-			intInput[j].min = 0.25;
-			intInput[j].value = 1;
-		} 
-		if(j == 3){ // Jump To Time
-			intInput[j].max = 600;
-			intInput[j].step = .2;
-		}
-		if(j == 2){ // Vol
-			intInput[j].max = 100;
-			intInput[j].value = 20;
-			intInput[j].step = 5;
-			if(i==-1){intInput[j].value = "";}
-			div.insertBefore(intInput[j],div.lastChild.previousSibling.previousSibling);
-		} else {
-			if(i==-1){intInput[j].value = "";}
-//			div.insertBefore(intInput[j],div.firstChild.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling);
-			div.appendChild(intInput[j]);
-		}
+const inputarray = ["delay", "speed", "vol", "time"];
+const settings = {}; // This is the object our Class will use
+
+for (let j = 0; j < inputarray.length; j++) {
+    const inputName = inputarray[j];
+    const inputElement = document.createElement("input");
+    const fullId = `${inputName}-value-${tempInteger}`;
+
+    // 1. Set standard attributes
+    inputElement.type = "number";
+    inputElement.classList.add("textInput", `${inputName}Value`);
+    inputElement.id = fullId;
+    inputElement.style.marginRight = "1px";
+    inputElement.min = 0;
+    inputElement.value = 0;
+    inputElement.placeholder = inputName;
+    inputElement.step = 0.05;
+
+    // 2. Add to our Settings Object
+    // This maps 'delay' to 'delayId', 'speed' to 'speedId', etc.
+    settings[`${inputName}Id`] = fullId;
+
+    // 3. Specific Logic for Speed
+    if (inputName === "speed") {
+        inputElement.max = 2;
+        inputElement.min = 0.25;
+        inputElement.value = 1;
+    } 
+
+    // 4. Specific Logic for Jump To Time
+    if (inputName === "time") {
+        inputElement.max = 600;
+        inputElement.step = 0.2;
+    }
+
+    // 5. Specific Logic for Volume
+    if (inputName === "vol") {
+        inputElement.max = 100;
+        inputElement.value = 20;
+        inputElement.step = 5;
+        
+        if (i === -1) inputElement.value = "";
+        
+        // Insert at specific position if volume
+        div.insertBefore(inputElement, div.lastChild.previousSibling.previousSibling);
+    } else {
+        if (i === -1) inputElement.value = "";
+        div.appendChild(inputElement);
+    }
+}
+
+// Now you can pass 'settings' into your class!
+// const panel = new ButtonPanel(tempInteger, buttonConfig, settings);
+/*	// video Quality levels // THEORETICAL, broken since 2019
+	var dropdown = document.createElement("select");
+	dropdown.id = "quality-dropdown-" + tempInteger;
+	dropdown.innerHTML = "";
+	var ddoption = document.createElement("option")
+	if(i!=-1){
+		ddoption.textContent = "NULL";
+	} else {
+		ddoption.textContent = "Resolution";
 	}
-	buttonFlexSubgroup(9,["time","replay"],icons,div,tempInteger);
+	ddoption.value = -1;
+	dropdown.appendChild(ddoption)
+	dropdown.classList.add("dropdown")
+	dropdown.style.minWidth = 50
+	div.insertBefore(dropdown,div.lastChild.previousSibling.previousSibling);
+	*/
+
+	buttonFlexSubgroup(9,["time","replay","hidden"],div,tempInteger);
 
 	var timeReadOnly = document.createElement("p");
 	timeReadOnly.innerHTML = "0:00:00";
 	timeReadOnly.id = "time-value-READ_ONLY-" + tempInteger;
 	timeReadOnly.style.width = "80px";
 	timeReadOnly.classList.add("textInput","timeValue");
-	div.insertBefore(timeReadOnly,div.lastChild);
+	div.insertBefore(timeReadOnly,div.lastChild.previousSibling);
 	
 	// group buttons by category in seperate divs
 	var newDiv = document.createElement("div");
 	newDiv.appendChild(div.childNodes[0]);
-	let jGroups = [3,4,2,1,1,4];
+	let jGroups = [3,4,2,1,1,3,2];
 	for(let k=0;k<jGroups.length;k++){
 		var tempDiv = document.createElement("div");
 		tempDiv.classList.add("buttonSubgroup");
@@ -76,7 +112,7 @@ function buttonFlexGroup(i,icons,buttonsLocation){
 		newDiv.appendChild(tempDiv);
 	}
 	if(i==0){
-		buttonFlexSubgroup(11,["up",	"down"],icons,div,tempInteger);
+		buttonFlexSubgroup(12,["up",	"down"],div,tempInteger);
 		text = document.createElement("p");
 		text.style.margin = "5px 5px 12px 5px";
 		text.innerHTML = "|";  
@@ -91,28 +127,44 @@ function buttonFlexGroup(i,icons,buttonsLocation){
 	newDiv.classList.add("buttons","YT".concat(i));
 	if(i){	buttonsLocation.appendChild(newDiv);}
 	else{	buttonsLocation.insertBefore(newDiv,div.firstChildElement);}
-	return intInput;
+	return settings;
 }
 
-function buttonFlexSubgroup(indexOne,typeArray,icons,div,tempInteger){
-	for(let j=0;j<typeArray.length;j++){
-		var button = document.createElement("button");
-		var type = typeArray[j];
-		var text;
-		button.innerHTML = icons[indexOne+j-1];
-		if(type=="mute"||type=="time"){button.style.padding = "8px 5px 10px 10px";}
-		if(type=="down"){button.style.top="19px";}
+/**
+ * Generates button elements dynamically and appends them to a container.
+ * * @param {number} startIndex - The starting index in CONTROLS_METADATA.
+ * @param {Array} typeArray - CSS class types (e.g., ["mute", "time"]).
+ * @param {HTMLElement} parentDiv - The container for the buttons.
+ * @param {number} playerIndex - The index of the specific player instance.
+ */
+function buttonFlexSubgroup(startIndex, typeArray, parentDiv, playerIndex) {
+    for (let j = 0; j < typeArray.length; j++) {
+        // 1. Get the relevant metadata for this specific button
+        const metadataIndex = startIndex + j;
+        const metadata = CONTROLS_METADATA[metadataIndex];
+        
+        if (!metadata) {
+            console.error(`No metadata found for index: ${metadataIndex}`);
+            continue;
+        }
 
-		if(type!="up"&&type!="down"){
-			button.style.marginRight = "1px";
-		}
-		button.classList.add("button",type);
-		button.id = array[j+indexOne] + "-" + tempInteger;
-		div.appendChild(button);
-		if(text){div.appendChild(text);}
-		if(type=="mute"){}
-		if(type=="replay"){}
-	}	
+        // 2. Create the button element
+        const button = document.createElement("button");
+        const type = typeArray[j];
+        
+        // 3. Use metadata for the icon
+        button.innerHTML = metadata.icon;
+
+        // 4. Use buttonConfig and metadata.name for the ID
+        const baseId = buttonConfig[metadata.name];
+        button.id = `${baseId}-${playerIndex}`;
+
+        // 5. Styling Logic (keeping your existing layout logic)
+        button.classList.add("button", type);
+
+        // 6. Append to the DOM
+        parentDiv.appendChild(button);
+    }
 }
 
 // =============================================================================================
@@ -141,7 +193,7 @@ function looper(){
 	}
 	for(let i=0;i<playerCount;i++){
 		let thisDiv = document.getElementById("buttonHost").children[1].children[i];
-		const itemName = array[0] + "_" + tempInteger;
+		const itemName = buttonConfig.storage + "_" + tempInteger;
 		const ls = JSON.parse(localStorage.getItem(itemName));
 		if(ls && Date.now()>ls.Expire){
 			localStorage.removeItem(itemName);
@@ -150,7 +202,7 @@ function looper(){
 		if(last_ls_titlecards && last_ls_titlecards.Contents[i] && last_ls_titlecards.Contents[i].thisIndex && last_ls_titlecards.Contents[i].title != "YouTube video player"){
 			thisDiv.children[0].innerHTML = timeFormat(last_ls_titlecards.Contents[i].playerTime,0) + " ID = " + (last_ls_titlecards.Contents[i].indexValue+1) + " | " + last_ls_titlecards.Contents[i].title ;
 		} else if (ls_titlecards || thisDiv.children[0].innerHTML == "undefined" || thisDiv.children[0].innerHTML == ""){
-			thisDiv.children[0].innerHTML = array[0] + "_" + tempInteger;				
+			thisDiv.children[0].innerHTML = buttonConfig.storage + "_" + tempInteger;				
 		}
 		
 		// Hide buttons not used in video.html instance (assumes only one instance per browser)
@@ -217,3 +269,5 @@ function looper(){
 	// console.log(array);
 	timeUpdate();
 }
+
+
