@@ -4,7 +4,7 @@ console.log(document.body.clientHeight,document.body.clientWidth);
 // Main YouTube player and DOM manipulation logic
 var source = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=PLuXaDdOtKhFdgYYaZ5SmkxqHntujrS73k&key=AIzaSyDI5nYD54CtFM3GjiP1fm2J59LmGJDH-7g&maxResults=50"
 var url = window.location.href;
-let allowFS = 0;
+let allowFS = "";
 // global variable for the player
 var player;
 var running=0;
@@ -36,45 +36,56 @@ for(i=0;i<playlist_IDs.length;i++){
 console.log(getAllUrlParams(url)["showplayer"],hidePlayerInt,hidePlayerBin,showPlayerCount)
 console.log(hidePlayerBin.charAt(3),hidePlayerBin.charAt(2),hidePlayerBin.charAt(1),hidePlayerBin.charAt(0));
 
-for(var i=0;i<myFrameHolder.length;i++){ // Load SELECTED players only, all players set further down
-	if(hidePlayerBin.charAt(playlist_IDs.length - i - 1) == "1"){ // if 1 is showing, indicated by EVEN number
-		myFrameHolder[i].children[0].src = myFrameBase + "&list=" + playlist_IDs[i];
-		myFrameHolder[i].style.position = "fixed";
-		myFrameHolder[i].width= 100.0 / showPlayerCount + "%";
-		myFrameHolder[i].children[0].style.width= 100.0 / showPlayerCount + "%";
-		myFrameHolder[i].children[0].style.left= 100 * (indexSPC++ / showPlayerCount) + "%";
-		console.log("modified index " + i);
-	}
+if(getAllUrlParams(url)["allowfullscreen"]){
+} else {
+	allowFS = "&fs=0";
+}
+
+// Clear the count for fresh calculation
+let activePlayers = 0;
+
+for (var i = 0; i < myFrameHolder.length; i++) {
+    let wrapper = myFrameHolder[i];
+    let isVisible = hidePlayerBin.charAt(playlist_IDs.length - i - 1) == "1";
+
+    if (isVisible) {
+        activePlayers++;
+        // Remove manual positioning styles so Flexbox can take over
+        wrapper.style.position = ""; 
+        wrapper.style.left = "";
+        wrapper.style.right = "";
+        wrapper.classList.remove("hidden");
+
+        // Set the source only if it's empty to prevent unnecessary reloading
+        let iframe = wrapper.querySelector("iframe");
+        if (!iframe.src || iframe.src === "") {
+            iframe.src = myFrameBase + "&list=" + playlist_IDs[i] + "" + allowFS;
+            iframe.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
+        }
+        
+        // Handle Placeholder Text/Time (Titles)
+        wrapper.children[1].innerHTML = "Playlist " + (i + 1);
+        wrapper.children[2].innerHTML = "00:00";
+		
+		wrapper.children[1].style.justifyContent = "center";
+
+		} else {
+        wrapper.classList.add("hidden");
+    }
+}
+
+// Update the container once
+let myFrameDiv = document.getElementById("myFrameDiv");
+if (myFrameDiv.children.length === 0) {
+    for (i = 0; i < playlist_IDs.length; i++) {
+        myFrameDiv.appendChild(myFrameHolder[i]);
+    }
 }
 updateLocalStorage("buttons_html",hidePlayerBin);
 
-if(getAllUrlParams(url)["allowfullscreen"]){
-	allowFS = 1;
-	console.log(allowFS)
-} else {
-	for(var i=0;i<myFrameHolder.length;i++){
-		myFrameHolder[i].children[0].src = myFrameHolder[i].children[0].src + "&fs=0";
-	}
-}
 
-// Video Titles and constantly visible time clock
-indexSPC = 0;
-for(var i=0;i<myFrameHolder.length;i++){
-	if(hidePlayerBin.charAt(playlist_IDs.length - i - 1) == "1"){ // if 1 is showing, indicated by EVEN number
-		myFrameHolder[i].children[1].innerHTML = "Placeholder Text";
-		myFrameHolder[i].children[2].innerHTML = "Placeholder Time";
-		myFrameHolder[i].children[1].style.left= "calc(" + 100 * (indexSPC / showPlayerCount) + "% + 2px)";
-		myFrameHolder[i].children[2].style.left= "calc(" + 100 * (indexSPC / showPlayerCount) + "% + 2px)";
-		indexSPC++;
-		myFrameHolder[i].children[1].style.right= 100 * ((showPlayerCount - indexSPC) / showPlayerCount) + "%";
-		myFrameHolder[i].children[2].style.right= 100 * ((showPlayerCount - indexSPC) / showPlayerCount) + "%";
-		myFrameHolder[i].children[1].style.top= "calc(100% - 40px)";
-		myFrameHolder[i].children[2].style.top= "calc(100% - 20px)";
-		myFrameHolder[i].children[1].style.justifyContent = "center";
-	}
-}
 
-let myFrameDiv = document.getElementById("myFrameDiv");
+
 for(i=0;i<playlist_IDs.length;i++){
 	if(getAllUrlParams(url)["showplayer"] && parseInt(getAllUrlParams(url)["showplayer"]) >= 0){
 		let hidePlayerBin = int2bin(hidePlayerInt,playlist_IDs.length);
@@ -106,13 +117,14 @@ function pollDOM () {
 }
 
 function myFrame(){
-	let iframe = document.createElement("iFrame");
-	let textblip1 = document.createElement("span");
-	let textblip2 = document.createElement("span");
 	let div = document.createElement("div");
+	let iframe = document.createElement("iFrame");
 	div.appendChild(iframe);
-	div.appendChild(textblip1);
-	div.appendChild(textblip2);
+	for(let i=0;i<2;i++){
+		let textblip = document.createElement("span");
+		div.appendChild(textblip);
+	}
+	div.classList.add("frame-wrapper")
 	return div;
 }
 
@@ -274,6 +286,13 @@ function looper(){
 			
 			// Replay initiate
 			replayMaster[i]=ls.Buttons.replayBool;
+			
+			// hidePlayerDynamic
+			if(ls.Buttons.hiddenBool){
+				myFrameHolder[i].classList.add('hidden');
+			} else {
+				myFrameHolder[i].classList.remove('hidden');
+			}
 
 			
 			// store saved state
@@ -322,7 +341,8 @@ function looper(){
 				nextIndex:nextIndex,
 				thisIndex:thisIndex,
 				indexValue:player[i].getPlaylistIndex(),
-				playerTime: currentTime};
+				playerTime: currentTime,
+				qualities: player[i].getAvailableQualityLevels()};
 
 			if(!isEqual(vid2ls[i],vid2ls_old[i])){
 				vid2ls_dif = true;
