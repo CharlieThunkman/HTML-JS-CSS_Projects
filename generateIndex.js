@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const ALLOWED_EXTENSIONS = ['.html', '.htm', '.pdf', '.png', '.jpg', '.jpeg'];
+const ALLOWED_EXTENSIONS = ['.html', '.htm', '.pdf', '.png', '.jpg', '.jpeg', '.md', '.txt'];
 const BYPASS_FOLDERS = ['bypass', 'node_modules', '.git'];
 
 function getGitDate(filePath) {
@@ -233,3 +233,4 @@ const rootHTML = `
 </html>`;
 
 fs.writeFileSync('index.html', rootHTML);
+
