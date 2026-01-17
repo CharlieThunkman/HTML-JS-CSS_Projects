@@ -29,7 +29,7 @@ jobs:
 
       # 3. Run your index generation script
       - name: Run Index Generator
-        run: node generate_tree.js
+        run: node generateIndex.js
 
       # 4. Commit and Push the generated index.html files back to the repo
       - name: Commit and Push Changes
