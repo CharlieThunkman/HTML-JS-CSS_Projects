@@ -4,6 +4,8 @@ const path = require('path');
 const ALLOWED_EXTENSIONS = ['.html', '.htm', '.pdf', '.png', '.jpg', '.jpeg'];
 const BYPASS_FOLDERS = ['bypass', 'node_modules', '.git'];
 
+const { execSync } = require('child_process');
+
 function buildTree(dir, isRoot = false) {
     const folderName = path.basename(dir);
     if (BYPASS_FOLDERS.includes(folderName)) return null;
@@ -39,26 +41,30 @@ function buildTree(dir, isRoot = false) {
         return ALLOWED_EXTENSIONS.includes(path.extname(item).toLowerCase());
     });
 
-    validItems.forEach(item => {
-        const fullPath = path.join(dir, item);
-        const stats = fs.statSync(fullPath);
-        if (stats.isDirectory()) {
-            const childBranch = buildTree(fullPath, false);
-            if (childBranch) branch.children.push(childBranch);
-        } else {
-            branch.files.push({
-                name: item,
-                mtime: stats.mtime.toISOString() // Capture timestamp
-            });
-        }
-    });
-
-    // Sort: index.html first, then alphabetical
-    branch.files.sort((a, b) => {
-        if (a.name.toLowerCase() === 'index.html') return -1;
-        if (b.name.toLowerCase() === 'index.html') return 1;
-        return a.name.localeCompare(b.name);
-    });
+	validItems.forEach(item => {
+		const fullPath = path.join(dir, item);
+		const stats = fs.statSync(fullPath);
+		
+		if (stats.isDirectory()) {
+			const childBranch = buildTree(fullPath, false);
+			if (childBranch) branch.children.push(childBranch);
+		} else {
+			// GET THE ACCURATE GIT TIMESTAMP
+			let gitTime;
+			try {
+				// This command asks Git for the timestamp of the last commit involving this file
+				gitTime = execSync(`git log -1 --format=%ai -- "${fullPath}"`).toString().trim();
+			} catch (e) {
+				// Fallback to file system if Git fails (e.g., untracked files)
+				gitTime = stats.mtime.toISOString();
+			}
+	
+			branch.files.push({
+				name: item,
+				mtime: gitTime || stats.mtime.toISOString()
+			});
+		}
+	});
 
     branch.children.sort((a, b) => a.name.localeCompare(b.name));
     return branch;
