@@ -1,28 +1,37 @@
 const fs = require('fs');
 const path = require('path');
 
-// 1. CONFIGURATION
 const ALLOWED_EXTENSIONS = ['.html', '.htm', '.pdf', '.png', '.jpg', '.jpeg'];
-// ADD YOUR FOLDER NAME TO THIS ARRAY
-const BYPASS_FOLDERS = ['Live-Stream-Web-Plugins-master', 'node_modules', '.git', 'private_assets']; 
-
-
+const BYPASS_FOLDERS = ['bypass', 'node_modules', '.git'];
 
 function buildTree(dir, isRoot = false) {
     const folderName = path.basename(dir);
     if (BYPASS_FOLDERS.includes(folderName)) return null;
 
     const items = fs.readdirSync(dir);
+    
+    // Check for README files
+    const readmeFile = items.find(f => f.toLowerCase() === 'readme.md' || f.toLowerCase() === 'readme.txt');
+    let readmeData = { content: "", type: "", mtime: null };
+
+    if (readmeFile) {
+        const fullPath = path.join(dir, readmeFile);
+        readmeData.content = fs.readFileSync(fullPath, 'utf8');
+        readmeData.type = path.extname(readmeFile).toLowerCase();
+        readmeData.mtime = fs.statSync(fullPath).mtime.toISOString();
+    }
+
     const branch = {
         name: folderName || 'Root',
         path: path.relative(__dirname, dir).replace(/\\/g, '/') || '.',
         isRoot: isRoot,
+        readme: readmeData,
         files: [],
         children: []
     };
 
     const validItems = items.filter(item => {
-        if (item === 'generate_tree.js') return false;
+        if (item === 'generate_tree.js' || item === 'README.md' || item === 'README.txt') return false;
         if (isRoot && item === 'index.html') return false;
         const fullPath = path.join(dir, item);
         const stats = fs.statSync(fullPath);
@@ -32,18 +41,23 @@ function buildTree(dir, isRoot = false) {
 
     validItems.forEach(item => {
         const fullPath = path.join(dir, item);
-        if (fs.statSync(fullPath).isDirectory()) {
+        const stats = fs.statSync(fullPath);
+        if (stats.isDirectory()) {
             const childBranch = buildTree(fullPath, false);
             if (childBranch) branch.children.push(childBranch);
         } else {
-            branch.files.push(item);
+            branch.files.push({
+                name: item,
+                mtime: stats.mtime.toISOString() // Capture timestamp
+            });
         }
     });
 
+    // Sort: index.html first, then alphabetical
     branch.files.sort((a, b) => {
-        if (a.toLowerCase() === 'index.html') return -1;
-        if (b.toLowerCase() === 'index.html') return 1;
-        return a.localeCompare(b);
+        if (a.name.toLowerCase() === 'index.html') return -1;
+        if (b.name.toLowerCase() === 'index.html') return 1;
+        return a.name.localeCompare(b.name);
     });
 
     branch.children.sort((a, b) => a.name.localeCompare(b.name));
@@ -54,22 +68,41 @@ function renderTreeHTML(node) {
     const isCollapsed = node.isRoot ? "" : "collapsed";
     const statusLabel = node.isRoot ? "" : "(closed)";
 
+    let readmeHTML = "";
+    if (node.readme.content) {
+        const isMarkdown = node.readme.type === '.md';
+        readmeHTML = `
+            <div class="readme-box">
+                <div class="readme-header">
+                    <span>${node.readme.type === '.md' ? 'README.md' : 'README.txt'}</span>
+                    <span class="time-ago" data-time="${node.readme.mtime}"></span>
+                </div>
+                <div class="${isMarkdown ? 'markdown-body' : 'plain-text'}">${node.readme.content}</div>
+            </div>`;
+    }
+
     let fileListHTML = node.files.map(file => {
-        const link = `${node.path}/${file}`;
-        const isIndex = file.toLowerCase() === 'index.html';
-        return `<li class="file-item ${isIndex ? 'index-highlight' : ''}" data-name="${file.toLowerCase()}">
-            📄 <a href="./${link}">${file}</a>
+        const link = `${node.path}/${file.name}`;
+        const isIndex = file.name.toLowerCase() === 'index.html';
+        return `
+        <li class="file-item ${isIndex ? 'index-highlight' : ''}" data-name="${file.name.toLowerCase()}">
+            <div class="file-row">
+                <span>📄 <a href="./${link}">${file.name}</a></span>
+                <span class="time-ago" data-time="${file.mtime}"></span>
+            </div>
         </li>`;
     }).join('\n');
 
     let childrenHTML = node.children.map(child => renderTreeHTML(child)).join('\n');
 
-    return `<li class="folder-item" data-name="${node.name.toLowerCase()}">
+    return `
+    <li class="folder-item" data-name="${node.name.toLowerCase()}">
         <span class="folder-toggle" onclick="toggleFolder(this)">
             <span class="icon">📁</span> <span class="name">${node.name}</span> 
-            <span class="status-text" style="color: #64748b; font-size: 0.8rem; margin-left: 8px;">${statusLabel}</span>
+            <span class="status-text">${statusLabel}</span>
         </span>
         <ul class="nested ${isCollapsed}">
+            ${readmeHTML}
             ${fileListHTML}
             ${childrenHTML}
         </ul>
@@ -83,35 +116,40 @@ const rootHTML = `
 <html>
 <head>
     <title>Server Map & Debugger</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', system-ui, sans-serif; padding: 40px; background: #f1f5f9; color: #1e293b; }
-        .tree-container { background: white; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .tree-container { background: white; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; }
         ul { list-style-type: none; padding-left: 20px; }
-        li { margin: 6px 0; }
+        li { margin: 8px 0; }
         .folder-toggle { cursor: pointer; display: inline-flex; align-items: center; user-select: none; }
         .folder-toggle .name { color: #b45309; font-weight: 600; }
         .nested { border-left: 1px solid #cbd5e1; margin-left: 10px; padding-left: 15px; }
         .collapsed { display: none; }
-        .index-highlight a { color: #059669; font-weight: bold; border-bottom: 1px solid #059669; }
-        a { color: #3b82f6; text-decoration: none; }
-        .file-item { color: #64748b; font-size: 0.95rem; }
         
-        /* Search UI */
-        .controls { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-        .search-wrapper { position: relative; }
-        #searchBar { padding: 10px 15px; border-radius: 6px; border: 1px solid #cbd5e1; width: 300px; font-size: 14px; outline: none; }
-        #matchCount { font-size: 0.85rem; color: #64748b; font-weight: 500; min-width: 100px; }
-        button { padding: 8px 16px; cursor: pointer; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; color: #475569; font-weight: 500; }
+        /* File Row Layout */
+        .file-row { display: flex; justify-content: space-between; align-items: center; max-width: 800px; }
+        .time-ago { font-size: 0.75rem; color: #94a3b8; font-family: monospace; }
+        
+        .index-highlight a { color: #059669; font-weight: bold; }
+        a { color: #3b82f6; text-decoration: none; }
+        
+        /* README Styling */
+        .readme-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; margin: 10px 0 20px 0; max-width: 800px; }
+        .readme-header { display: flex; justify-content: space-between; padding: 8px 12px; background: #f1f5f9; border-bottom: 1px solid #e2e8f0; font-size: 0.75rem; font-weight: bold; color: #64748b; }
+        .markdown-body, .plain-text { padding: 15px; font-size: 0.9rem; }
+        .plain-text { white-space: pre-wrap; font-family: monospace; }
+
+        .controls { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
+        #searchBar { padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; width: 300px; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
     <h1>Project Architecture Explorer</h1>
     <div class="controls">
-        <div class="search-wrapper">
-            <input type="text" id="searchBar" placeholder="Search files or folders..." onkeyup="filterTree()">
-        </div>
-        <span id="matchCount"></span>
+        <input type="text" id="searchBar" placeholder="Search files..." onkeyup="filterTree()">
+        <span id="matchCount" style="font-size: 0.85rem; color: #64748b;"></span>
         <button onclick="expandAll()">Expand All</button>
         <button onclick="collapseAll()">Collapse All</button>
     </div>
@@ -120,6 +158,30 @@ const rootHTML = `
     </div>
 
     <script>
+        // Convert ISO dates to "Time Ago" format
+        function formatTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+            
+            if (diffInSeconds < 60) return 'just now';
+            if (diffInSeconds < 3600) return Math.floor(diffInSeconds / 60) + 'm ago';
+            if (diffInSeconds < 86400) return Math.floor(diffInSeconds / 3600) + 'h ago';
+            if (diffInSeconds < 2592000) return Math.floor(diffInSeconds / 86400) + 'd ago';
+            return date.toLocaleDateString();
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // Render Markdown
+            document.querySelectorAll('.markdown-body').forEach(box => {
+                box.innerHTML = marked.parse(box.innerHTML);
+            });
+            // Update Timestamps
+            document.querySelectorAll('.time-ago').forEach(el => {
+                el.innerText = formatTimeAgo(el.getAttribute('data-time'));
+            });
+        });
+
         function toggleFolder(element) {
             const nestedList = element.parentElement.querySelector(".nested");
             const statusText = element.querySelector(".status-text");
@@ -137,67 +199,32 @@ const rootHTML = `
                 fileItems.forEach(el => el.classList.remove('hidden'));
                 folderItems.forEach(el => el.classList.remove('hidden'));
                 matchCountEl.innerText = "";
-                collapseAll();
-                const rootNested = document.querySelector('#mainTree > .folder-item > .nested');
-                const rootStatus = document.querySelector('#mainTree > .folder-item .status-text');
-                rootNested.classList.remove('collapsed');
-                rootStatus.innerText = '';
                 return;
             }
 
             let matches = 0;
-
-            // First, hide everything
             fileItems.forEach(el => el.classList.add('hidden'));
             folderItems.forEach(el => el.classList.add('hidden'));
 
-            // Show matching files and their parent folders
             fileItems.forEach(file => {
                 if (file.getAttribute('data-name').includes(query)) {
                     file.classList.remove('hidden');
                     matches++;
-                    
-                    let parent = file.parentElement.closest('.folder-item');
-                    while (parent) {
-                        parent.classList.remove('hidden');
-                        parent.querySelector('.nested').classList.remove('collapsed');
-                        parent.querySelector('.status-text').innerText = '';
-                        parent = parent.parentElement.closest('.folder-item');
+                    let p = file.parentElement.closest('.folder-item');
+                    while (p) {
+                        p.classList.remove('hidden');
+                        p.querySelector('.nested').classList.remove('collapsed');
+                        p = p.parentElement.closest('.folder-item');
                     }
                 }
             });
-
-            // Show matching folders and their parent folders
-            folderItems.forEach(folder => {
-                if (folder.getAttribute('data-name').includes(query)) {
-                    folder.classList.remove('hidden');
-                    matches++;
-                    
-                    let parent = folder.parentElement.closest('.folder-item');
-                    while (parent) {
-                        parent.classList.remove('hidden');
-                        parent.querySelector('.nested').classList.remove('collapsed');
-                        parent.querySelector('.status-text').innerText = '';
-                        parent = parent.parentElement.closest('.folder-item');
-                    }
-                }
-            });
-
             matchCountEl.innerText = matches + " match(es) found";
         }
-
-        function expandAll() {
-            document.querySelectorAll('.nested').forEach(el => el.classList.remove('collapsed'));
-            document.querySelectorAll('.status-text').forEach(el => el.innerText = '');
-        }
-
-        function collapseAll() {
-            document.querySelectorAll('.nested').forEach(el => el.classList.add('collapsed'));
-            document.querySelectorAll('.status-text').forEach(el => el.innerText = '(closed)');
-        }
+        
+        function expandAll() { document.querySelectorAll('.nested').forEach(el => el.classList.remove('collapsed')); }
+        function collapseAll() { document.querySelectorAll('.nested').forEach(el => el.classList.add('collapsed')); }
     </script>
 </body>
 </html>`;
 
 fs.writeFileSync('index.html', rootHTML);
-console.log('✅ Final version built: Search with Match Count and Root-Only Exclusion.');
