@@ -1,0 +1,17 @@
+name: Generate Indices
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+      - run: node generate_tree.js
+      - name: Commit and Push
+        run: |
+          git config --global user.name 'Index Bot'
+          git config --global user.email 'bot@noreply.github.com'
+          git add .
+          git commit -m "Generated Indices" || echo "No changes to commit"
+          git push
