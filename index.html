@@ -13,23 +13,18 @@
         .folder-toggle .name { color: #b45309; font-weight: 600; }
         .nested { border-left: 1px solid #cbd5e1; margin-left: 10px; padding-left: 15px; }
         .collapsed { display: none; }
-        
-        /* File Row Layout */
         .file-row { display: flex; justify-content: space-between; align-items: center; max-width: 800px; }
         .time-ago { font-size: 0.75rem; color: #94a3b8; font-family: monospace; }
-        
         .index-highlight a { color: #059669; font-weight: bold; }
         a { color: #3b82f6; text-decoration: none; }
-        
-        /* README Styling */
-        .readme-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; margin: 10px 0 20px 0; max-width: 800px; }
+        .readme-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; margin: 10px 0 20px 0; max-width: 800px; overflow: hidden; }
         .readme-header { display: flex; justify-content: space-between; padding: 8px 12px; background: #f1f5f9; border-bottom: 1px solid #e2e8f0; font-size: 0.75rem; font-weight: bold; color: #64748b; }
-        .markdown-body, .plain-text { padding: 15px; font-size: 0.9rem; }
+        .markdown-body, .plain-text { padding: 15px; font-size: 0.9rem; line-height: 1.6; }
         .plain-text { white-space: pre-wrap; font-family: monospace; }
-
         .controls { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
         #searchBar { padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; width: 300px; }
         .hidden { display: none !important; }
+        button { padding: 8px 14px; cursor: pointer; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; color: #475569; font-size: 0.85rem; }
     </style>
 </head>
 <body>
@@ -52,7 +47,7 @@
             <div class="readme-box">
                 <div class="readme-header">
                     <span>README.md</span>
-                    <span class="time-ago" data-time="2026-01-17T20:01:42.557Z"></span>
+                    <span class="time-ago" data-time="2026-01-12 07:07:23 -0500"></span>
                 </div>
                 <div class="markdown-body"># HTML-JS-CSS_Projects
 For any website based contraptions, like the YouTube API
@@ -119,7 +114,7 @@ Visit [https://charliethunkman.github.io/HTML-JS-CSS_Projects/[insert_filename_H
             <div class="readme-box">
                 <div class="readme-header">
                     <span>README.md</span>
-                    <span class="time-ago" data-time="2026-01-17T20:01:42.558Z"></span>
+                    <span class="time-ago" data-time="2024-06-13 03:39:08 -0400"></span>
                 </div>
                 <div class="markdown-body"># HTML-JS-CSS_Projects
 Instructions on how to customize your experience.
@@ -270,7 +265,7 @@ Instructions on how to customize your experience.
             <div class="readme-box">
                 <div class="readme-header">
                     <span>README.md</span>
-                    <span class="time-ago" data-time="2026-01-17T20:01:42.558Z"></span>
+                    <span class="time-ago" data-time="2024-02-19 17:00:46 -0500"></span>
                 </div>
                 <div class="markdown-body"># HTML-JS-CSS_Projects
 Instructions on how to customize your experience.
@@ -305,27 +300,24 @@ Instructions on how to customize your experience.
         </ul>
     </li></ul>
     </div>
-
     <script>
-        // Convert ISO dates to "Time Ago" format
         function formatTimeAgo(dateString) {
+            if (!dateString) return '';
             const date = new Date(dateString);
             const now = new Date();
-            const diffInSeconds = Math.floor((now - date) / 1000);
-            
-            if (diffInSeconds < 60) return 'just now';
-            if (diffInSeconds < 3600) return Math.floor(diffInSeconds / 60) + 'm ago';
-            if (diffInSeconds < 86400) return Math.floor(diffInSeconds / 3600) + 'h ago';
-            if (diffInSeconds < 2592000) return Math.floor(diffInSeconds / 86400) + 'd ago';
+            const diff = Math.floor((now - date) / 1000);
+            if (diff < 60) return 'just now';
+            if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+            if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+            if (diff < 2592000) return Math.floor(diff / 86400) + 'd ago';
+            if (diff < 31536000) return Math.floor(diff / 2592000) + 'mo ago';
             return date.toLocaleDateString();
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-            // Render Markdown
             document.querySelectorAll('.markdown-body').forEach(box => {
                 box.innerHTML = marked.parse(box.innerHTML);
             });
-            // Update Timestamps
             document.querySelectorAll('.time-ago').forEach(el => {
                 el.innerText = formatTimeAgo(el.getAttribute('data-time'));
             });
@@ -334,8 +326,8 @@ Instructions on how to customize your experience.
         function toggleFolder(element) {
             const nestedList = element.parentElement.querySelector(".nested");
             const statusText = element.querySelector(".status-text");
-            const isNowCollapsed = nestedList.classList.toggle("collapsed");
-            statusText.innerText = isNowCollapsed ? "(closed)" : "";
+            const isCollapsed = nestedList.classList.toggle("collapsed");
+            statusText.innerText = isCollapsed ? "(closed)" : "";
         }
 
         function filterTree() {
@@ -369,9 +361,8 @@ Instructions on how to customize your experience.
             });
             matchCountEl.innerText = matches + " match(es) found";
         }
-        
-        function expandAll() { document.querySelectorAll('.nested').forEach(el => el.classList.remove('collapsed')); }
-        function collapseAll() { document.querySelectorAll('.nested').forEach(el => el.classList.add('collapsed')); }
+        function expandAll() { document.querySelectorAll('.nested').forEach(el => { el.classList.remove('collapsed'); el.previousElementSibling.querySelector('.status-text').innerText = ''; }); }
+        function collapseAll() { document.querySelectorAll('.nested').forEach(el => { el.classList.add('collapsed'); el.previousElementSibling.querySelector('.status-text').innerText = '(closed)'; }); }
     </script>
 </body>
 </html>
