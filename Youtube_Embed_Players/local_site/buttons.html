@@ -1,5 +1,6 @@
 <html>
 	<head>
+	<meta charset="UTF-8">
 	</head>
 	<link rel="stylesheet" href="buttons.css"/>
 	<body>
@@ -13,56 +14,107 @@
 		var player;
 		// the IFRAME API REFERENCE
 		// https://developers.google.com/youtube/iframe_api_reference
-		
+	/*	
 		// this function gets called when API is ready to use
-	//	function onYouTubePlayerAPIReady() {
-	//		// create the global player from the specific iframe (#video)
-	//		player = new YT.Player('video1', {
-	//			events: {
-	//				// call this function when player is ready to use
-	//				'onReady': onPlayerReady
-	//			}
-	//		});
-	//	}
-	//	
-	//	function onPlayerReady(event) {
-	//	seperatedVersion(); // comment out to test class version
-
+		function onYouTubePlayerAPIReady() {
+			// create the global player from the specific iframe (#video)
+			player = new YT.Player('video1', {
+				events: {
+					// call this function when player is ready to use
+					'onReady': onPlayerReady
+				}
+			});
+		}
 		
-		const array = ["YT_Player","play-button","pause-button","stop-button","prev-button","back-button","skip-button","next-button","isMuted","timeConfirm","replay-button","prev-player","next-player"];
-		const arrayTypes = ["play",	"pause","stop",	"prev",	"back",	"skip",	"next",	"mute",	"time", "replay",	"up",	"down",	];
-		const arrayIcons = [ "►",	 "‖",	 "■",	 "«",	 "‹",	 "›",	 "»",	 "🔊",	 "✅",	 "→",   	 "▲",	 "▼"	];
+		function onPlayerReady(event) {
+		seperatedVersion(); // comment out to test class version
+	*/
+
+		const CONTROLS_METADATA = [
+    { name: "storage",     arrayType:"null",	label: "Storage",   icon: "💾" }, // Index 0: Placeholder for storage
+    { name: "play",        arrayType:"play",	label: "Play",      icon: "▶️" }, // Index 1
+    { name: "pause",       arrayType:"pause",	label: "Pause",     icon: "‖" }, // Index 2
+    { name: "stop",        arrayType:"stop",	label: "Stop",      icon: "■" }, // Index 3
+    { name: "prev",        arrayType:"prev",	label: "Previous",  icon: "«" }, // Index 4
+    { name: "back",        arrayType:"back",	label: "Rewind",    icon: "‹" }, // Index 5
+    { name: "skip",        arrayType:"skip",	label: "Fast Fwd",  icon: "›" }, // Index 6
+    { name: "next",        arrayType:"next",	label: "Next",      icon: "»"  }, // Index 7
+    { name: "ismute",      arrayType:"mute",	label: "Mute",      icon: "🔊" }, // Index 8
+    { name: "timeConfirm", arrayType:"time", 	label: "Confirm",   icon: "✅" }, // Index 9
+    { name: "replay",      arrayType:"replay",	label: "Replay",    icon: "→" }, // Index 10
+    { name: "hide",        arrayType:"hide",	label: "Hide",      icon: "👁️" }, // Index 11
+    { name: "prevPlayer",  arrayType:"up",		label: "Prev Ch",   icon: "▲" }, // Index 12
+    { name: "nextPlayer",  arrayType:"down",	label: "Next Ch",   icon: "▼" }  // Index 13
+];
+
+	function getUIComponents(metadata, mode) {
+		// .map() creates a new array containing only the property you asked for
+		return metadata.map(item => item[mode]);
+	}
+	
+	const buttonConfig = {
+		storage:     "YT_Player",
+		play:        "play-button",
+		pause:       "pause-button",
+		stop:        "stop-button",
+		prev:        "prev-button",
+		back:        "back-button",
+		skip:        "skip-button",
+		next:        "next-button",
+		ismute:      "isMuted",
+		timeConfirm: "timeConfirm",
+		replay:      "replay-button",
+		hide:        "hide-button",
+		prevPlayer:  "prev-player",
+		nextPlayer:  "next-player"
+	};
 
 	</script>
 	<script>
 //		console.log(array.length,array[1].length);
 		let YT = []
+		
+		const allArrayTypes = getUIComponents(CONTROLS_METADATA, 'arrayType');
+		const allIcons  = getUIComponents(CONTROLS_METADATA, 'icon');
+	
 		window.onload = () => {
 			var divLoc = document.getElementById("buttonHost");
 			let intInput = []
-			intInput[0] = buttonFlexGroup(0,arrayIcons,divLoc);
-			YT[0] = new compoundButtonPanel(0,array,intInput[0])
+			intInput[0] = buttonFlexGroup(0,allIcons,divLoc);
+			YT[0] = new compoundButtonPanel(0,buttonConfig,intInput[0])
 			YT[0].setButtonLinksCompound(); // Initialize to Player 1 by default
 			var div = document.createElement("div");
 			for(let i=0;i<4;i++){
-				intInput[i] = buttonFlexGroup(i+1,arrayIcons,div);
+				intInput[i] = buttonFlexGroup(i+1,allIcons,div);
 			}
 			div.style.display = "inline-block";
 			divLoc.appendChild(div); // display:inline-block
 			for(let i=0;i<4;i++){
-				YT[i+1] = new ButtonPanel(Math.pow(2,i),array,intInput[i]);
+				YT[i+1] = new ButtonPanel(Math.pow(2,i),buttonConfig,intInput[i]);
 				YT[i+1].setButtonLinks();
 			}
-			buttonFlexGroup(-1,arrayTypes,document.getElementById("extraInfo"));
+			buttonFlexGroup(-1,allArrayTypes,document.getElementById("extraInfo"));
 			timeUpdate()
+			
+			const observer = new ResizeObserver(entries => {
+				for (let entry of entries) {
+					// Send the height of the content to the parent
+					window.parent.postMessage({
+						type: 'RESIZE_DOCK',
+						newHeight: entry.target.scrollHeight
+					}, '*');
+				}
+			});
+			
+			observer.observe(divLoc);
 		}
 		
 //		const YT1 = new ButtonPanel("YT_Player_1","play-button","pause-button","stop-button","back-button","skip-button").setButtonLinks();
 //		const YT2 = new ButtonPanel("YT_Player_2","play-button","pause-button","stop-button","back-button","skip-button").setButtonLinks();
 	</script>
 	<script src="extended_js_functions.js"></script>
-	<script src="button_classes.js"></script>
-	<script src="button_functions.js"></script>
+	<script src="button_classes.js" charset="UTF-8"></script>
+	<script src="button_functions.js" charset="UTF-8"></script>
 	<!--h2>Res2ults below are from a test script</h2>
 
 
