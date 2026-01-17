@@ -1,0 +1,240 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Server Map & Debugger</title>
+    <style>
+        body { font-family: 'Segoe UI', system-ui, sans-serif; padding: 40px; background: #f1f5f9; color: #1e293b; }
+        .tree-container { background: white; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        ul { list-style-type: none; padding-left: 20px; }
+        li { margin: 6px 0; }
+        .folder-toggle { cursor: pointer; display: inline-flex; align-items: center; user-select: none; }
+        .folder-toggle .name { color: #b45309; font-weight: 600; }
+        .nested { border-left: 1px solid #cbd5e1; margin-left: 10px; padding-left: 15px; }
+        .collapsed { display: none; }
+        .index-highlight a { color: #059669; font-weight: bold; border-bottom: 1px solid #059669; }
+        a { color: #3b82f6; text-decoration: none; }
+        .file-item { color: #64748b; font-size: 0.95rem; }
+        
+        /* Search UI */
+        .controls { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .search-wrapper { position: relative; }
+        #searchBar { padding: 10px 15px; border-radius: 6px; border: 1px solid #cbd5e1; width: 300px; font-size: 14px; outline: none; }
+        #matchCount { font-size: 0.85rem; color: #64748b; font-weight: 500; min-width: 100px; }
+        button { padding: 8px 16px; cursor: pointer; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; color: #475569; font-weight: 500; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <h1>Project Architecture Explorer</h1>
+    <div class="controls">
+        <div class="search-wrapper">
+            <input type="text" id="searchBar" placeholder="Search files or folders..." onkeyup="filterTree()">
+        </div>
+        <span id="matchCount"></span>
+        <button onclick="expandAll()">Expand All</button>
+        <button onclick="collapseAll()">Collapse All</button>
+    </div>
+    <div class="tree-container">
+        <ul id="mainTree"><li class="folder-item" data-name="html-js-css_projects">
+        <span class="folder-toggle" onclick="toggleFolder(this)">
+            <span class="icon">📁</span> <span class="name">HTML-JS-CSS_Projects</span> 
+            <span class="status-text" style="color: #64748b; font-size: 0.8rem; margin-left: 8px;"></span>
+        </span>
+        <ul class="nested ">
+            <li class="file-item " data-name="[insert_filename_here].html">
+            📄 <a href="././[insert_filename_here].html">[insert_filename_here].html</a>
+        </li>
+            <li class="folder-item" data-name=".github">
+        <span class="folder-toggle" onclick="toggleFolder(this)">
+            <span class="icon">📁</span> <span class="name">.github</span> 
+            <span class="status-text" style="color: #64748b; font-size: 0.8rem; margin-left: 8px;">(closed)</span>
+        </span>
+        <ul class="nested collapsed">
+            
+            <li class="folder-item" data-name="workflows">
+        <span class="folder-toggle" onclick="toggleFolder(this)">
+            <span class="icon">📁</span> <span class="name">workflows</span> 
+            <span class="status-text" style="color: #64748b; font-size: 0.8rem; margin-left: 8px;">(closed)</span>
+        </span>
+        <ul class="nested collapsed">
+            
+            
+        </ul>
+    </li>
+        </ul>
+    </li>
+<li class="folder-item" data-name="content_sharer">
+        <span class="folder-toggle" onclick="toggleFolder(this)">
+            <span class="icon">📁</span> <span class="name">content_sharer</span> 
+            <span class="status-text" style="color: #64748b; font-size: 0.8rem; margin-left: 8px;">(closed)</span>
+        </span>
+        <ul class="nested collapsed">
+            <li class="file-item " data-name="generic.html">
+            📄 <a href="./content_sharer/generic.html">generic.html</a>
+        </li>
+            
+        </ul>
+    </li>
+<li class="folder-item" data-name="offline_projects">
+        <span class="folder-toggle" onclick="toggleFolder(this)">
+            <span class="icon">📁</span> <span class="name">Offline_Projects</span> 
+            <span class="status-text" style="color: #64748b; font-size: 0.8rem; margin-left: 8px;">(closed)</span>
+        </span>
+        <ul class="nested collapsed">
+            <li class="file-item " data-name="countdown_iframe.html">
+            📄 <a href="./Offline_Projects/Countdown_iFrame.html">Countdown_iFrame.html</a>
+        </li>
+            <li class="folder-item" data-name="countdown">
+        <span class="folder-toggle" onclick="toggleFolder(this)">
+            <span class="icon">📁</span> <span class="name">Countdown</span> 
+            <span class="status-text" style="color: #64748b; font-size: 0.8rem; margin-left: 8px;">(closed)</span>
+        </span>
+        <ul class="nested collapsed">
+            <li class="file-item " data-name="clock.png">
+            📄 <a href="./Offline_Projects/Countdown/clock.png">clock.png</a>
+        </li>
+            
+        </ul>
+    </li>
+        </ul>
+    </li>
+<li class="folder-item" data-name="youtube_embed_players">
+        <span class="folder-toggle" onclick="toggleFolder(this)">
+            <span class="icon">📁</span> <span class="name">Youtube_Embed_Players</span> 
+            <span class="status-text" style="color: #64748b; font-size: 0.8rem; margin-left: 8px;">(closed)</span>
+        </span>
+        <ul class="nested collapsed">
+            <li class="file-item " data-name="index - copy3.html">
+            📄 <a href="./Youtube_Embed_Players/index - Copy3.html">index - Copy3.html</a>
+        </li>
+<li class="file-item " data-name="same_site_buttons.html">
+            📄 <a href="./Youtube_Embed_Players/same_site_buttons.html">same_site_buttons.html</a>
+        </li>
+            <li class="folder-item" data-name="images">
+        <span class="folder-toggle" onclick="toggleFolder(this)">
+            <span class="icon">📁</span> <span class="name">images</span> 
+            <span class="status-text" style="color: #64748b; font-size: 0.8rem; margin-left: 8px;">(closed)</span>
+        </span>
+        <ul class="nested collapsed">
+            <li class="file-item " data-name="red play button.png">
+            📄 <a href="./Youtube_Embed_Players/images/Red Play Button.png">Red Play Button.png</a>
+        </li>
+            
+        </ul>
+    </li>
+<li class="folder-item" data-name="local_site">
+        <span class="folder-toggle" onclick="toggleFolder(this)">
+            <span class="icon">📁</span> <span class="name">local_site</span> 
+            <span class="status-text" style="color: #64748b; font-size: 0.8rem; margin-left: 8px;">(closed)</span>
+        </span>
+        <ul class="nested collapsed">
+            <li class="file-item " data-name="buttons-videos.html">
+            📄 <a href="./Youtube_Embed_Players/local_site/buttons-videos.html">buttons-videos.html</a>
+        </li>
+<li class="file-item " data-name="buttons.html">
+            📄 <a href="./Youtube_Embed_Players/local_site/buttons.html">buttons.html</a>
+        </li>
+<li class="file-item " data-name="videos.html">
+            📄 <a href="./Youtube_Embed_Players/local_site/videos.html">videos.html</a>
+        </li>
+            
+        </ul>
+    </li>
+<li class="folder-item" data-name="url_playlist">
+        <span class="folder-toggle" onclick="toggleFolder(this)">
+            <span class="icon">📁</span> <span class="name">url_playlist</span> 
+            <span class="status-text" style="color: #64748b; font-size: 0.8rem; margin-left: 8px;">(closed)</span>
+        </span>
+        <ul class="nested collapsed">
+            <li class="file-item " data-name="video.html">
+            📄 <a href="./Youtube_Embed_Players/url_playlist/video.html">video.html</a>
+        </li>
+            
+        </ul>
+    </li>
+        </ul>
+    </li>
+        </ul>
+    </li></ul>
+    </div>
+
+    <script>
+        function toggleFolder(element) {
+            const nestedList = element.parentElement.querySelector(".nested");
+            const statusText = element.querySelector(".status-text");
+            const isNowCollapsed = nestedList.classList.toggle("collapsed");
+            statusText.innerText = isNowCollapsed ? "(closed)" : "";
+        }
+
+        function filterTree() {
+            const query = document.getElementById('searchBar').value.toLowerCase();
+            const fileItems = document.querySelectorAll('.file-item');
+            const folderItems = document.querySelectorAll('.folder-item');
+            const matchCountEl = document.getElementById('matchCount');
+
+            if (query === "") {
+                fileItems.forEach(el => el.classList.remove('hidden'));
+                folderItems.forEach(el => el.classList.remove('hidden'));
+                matchCountEl.innerText = "";
+                collapseAll();
+                const rootNested = document.querySelector('#mainTree > .folder-item > .nested');
+                const rootStatus = document.querySelector('#mainTree > .folder-item .status-text');
+                rootNested.classList.remove('collapsed');
+                rootStatus.innerText = '';
+                return;
+            }
+
+            let matches = 0;
+
+            // First, hide everything
+            fileItems.forEach(el => el.classList.add('hidden'));
+            folderItems.forEach(el => el.classList.add('hidden'));
+
+            // Show matching files and their parent folders
+            fileItems.forEach(file => {
+                if (file.getAttribute('data-name').includes(query)) {
+                    file.classList.remove('hidden');
+                    matches++;
+                    
+                    let parent = file.parentElement.closest('.folder-item');
+                    while (parent) {
+                        parent.classList.remove('hidden');
+                        parent.querySelector('.nested').classList.remove('collapsed');
+                        parent.querySelector('.status-text').innerText = '';
+                        parent = parent.parentElement.closest('.folder-item');
+                    }
+                }
+            });
+
+            // Show matching folders and their parent folders
+            folderItems.forEach(folder => {
+                if (folder.getAttribute('data-name').includes(query)) {
+                    folder.classList.remove('hidden');
+                    matches++;
+                    
+                    let parent = folder.parentElement.closest('.folder-item');
+                    while (parent) {
+                        parent.classList.remove('hidden');
+                        parent.querySelector('.nested').classList.remove('collapsed');
+                        parent.querySelector('.status-text').innerText = '';
+                        parent = parent.parentElement.closest('.folder-item');
+                    }
+                }
+            });
+
+            matchCountEl.innerText = matches + " match(es) found";
+        }
+
+        function expandAll() {
+            document.querySelectorAll('.nested').forEach(el => el.classList.remove('collapsed'));
+            document.querySelectorAll('.status-text').forEach(el => el.innerText = '');
+        }
+
+        function collapseAll() {
+            document.querySelectorAll('.nested').forEach(el => el.classList.add('collapsed'));
+            document.querySelectorAll('.status-text').forEach(el => el.innerText = '(closed)');
+        }
+    </script>
+</body>
+</html>
