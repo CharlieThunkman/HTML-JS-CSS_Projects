@@ -33,7 +33,7 @@ body {
 	margin-left: -10px;
 }
 .button, .textInput {
-	padding: 10px 10px 10px 15px;
+	padding: 10px 7px 10px 12px;
 	font-weight: bold;
 	letter-spacing: 5px;
 	outline: none;
@@ -55,7 +55,9 @@ textInput,
 	font-size: 18px;
 	padding: 6px 3px 8px 6px;
 	width: 90px;
-	background-color: #a0a8a8
+	background-color: #a0a8a8;
+	margin-right: 1px;
+
 }
 .speedValue, .timeValue{
 	width: 60px;
@@ -67,14 +69,14 @@ textInput,
 	background-color: #708080;
 }
 .play {
-	padding: 10px 9px 10px 14px;
+	padding: 10px 4px 10px 11px;
 	background-color: #2ECC71;
 }
 .play:hover {
 	background-color: #27AE60;
 }
 .pause {
-	padding: 10px 12px 10px 17px;
+	padding: 10px 9px 10px 14px;
 	background-color: #E67E22;
 }
 .pause:hover {
@@ -87,14 +89,14 @@ textInput,
 	background-color: #C0392B;
 }
 .prev, .next {
-	padding: 10px 4px 10px 9px;
+	padding: 10px 3px 10px 8px;
 	background-color: #7f8c8dc0;
 }
 .prev:hover, .next:hover {
 	background-color: #708080c0;
 }
 .back, .skip {
-	padding: 10px 12px 10px 17px;
+	padding: 10px 9px 10px 14px;
 }
 .up, .down {
 	position: relative;
@@ -157,4 +159,28 @@ div.buttons:after {
 }
 .buttonsMaxWidth.YT0, .buttonsMaxWidth.YT-1{
 	max-width: fit-content;
+}
+
+/* Base styles for all player buttons */
+.button {
+    margin-right: 1px;
+    /* transition for smooth icon swaps */
+    transition: all 0.2s ease;
+}
+
+/* Specific padding for wider icons */
+.button.mute, 
+.button.time {
+    padding: 8px 5px 10px 10px;
+}
+
+/* Offset positioning for up/down buttons */
+.button.down {
+    top: 19px;
+}
+
+/* Remove margins for buttons that act as a single unit */
+.button.up, 
+.button.down {
+    margin-right: 0;
 }
