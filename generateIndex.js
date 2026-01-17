@@ -1,10 +1,20 @@
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 const ALLOWED_EXTENSIONS = ['.html', '.htm', '.pdf', '.png', '.jpg', '.jpeg'];
 const BYPASS_FOLDERS = ['bypass', 'node_modules', '.git'];
 
-const { execSync } = require('child_process');
+function getGitDate(filePath) {
+    try {
+        // We use the full absolute path to ensure Git identifies the file correctly
+        const gitTime = execSync(`git log -1 --format=%ai -- "${filePath}"`).toString().trim();
+        return gitTime || fs.statSync(filePath).mtime.toISOString();
+    } catch (e) {
+        // Fallback if Git isn't initialized or file is untracked
+        return fs.statSync(filePath).mtime.toISOString();
+    }
+}
 
 function buildTree(dir, isRoot = false) {
     const folderName = path.basename(dir);
@@ -20,7 +30,7 @@ function buildTree(dir, isRoot = false) {
         const fullPath = path.join(dir, readmeFile);
         readmeData.content = fs.readFileSync(fullPath, 'utf8');
         readmeData.type = path.extname(readmeFile).toLowerCase();
-        readmeData.mtime = fs.statSync(fullPath).mtime.toISOString();
+        readmeData.mtime = getGitDate(fullPath); // Fix: Explicitly use Git date for README
     }
 
     const branch = {
@@ -41,35 +51,32 @@ function buildTree(dir, isRoot = false) {
         return ALLOWED_EXTENSIONS.includes(path.extname(item).toLowerCase());
     });
 
-	validItems.forEach(item => {
-		const fullPath = path.join(dir, item);
-		const stats = fs.statSync(fullPath);
-		
-		if (stats.isDirectory()) {
-			const childBranch = buildTree(fullPath, false);
-			if (childBranch) branch.children.push(childBranch);
-		} else {
-			// GET THE ACCURATE GIT TIMESTAMP
-			let gitTime;
-			try {
-				// This command asks Git for the timestamp of the last commit involving this file
-				gitTime = execSync(`git log -1 --format=%ai -- "${fullPath}"`).toString().trim();
-			} catch (e) {
-				// Fallback to file system if Git fails (e.g., untracked files)
-				gitTime = stats.mtime.toISOString();
-			}
-	
-			branch.files.push({
-				name: item,
-				mtime: gitTime || stats.mtime.toISOString()
-			});
-		}
-	});
+    validItems.forEach(item => {
+        const fullPath = path.join(dir, item);
+        const stats = fs.statSync(fullPath);
+        if (stats.isDirectory()) {
+            const childBranch = buildTree(fullPath, false);
+            if (childBranch) branch.children.push(childBranch);
+        } else {
+            branch.files.push({
+                name: item,
+                mtime: getGitDate(fullPath) // Get Git date for every file
+            });
+        }
+    });
+
+    // Sort: index.html first, then others
+    branch.files.sort((a, b) => {
+        if (a.name.toLowerCase() === 'index.html') return -1;
+        if (b.name.toLowerCase() === 'index.html') return 1;
+        return a.name.localeCompare(b.name);
+    });
 
     branch.children.sort((a, b) => a.name.localeCompare(b.name));
     return branch;
 }
 
+// RENDER FUNCTION (Browser-side Logic)
 function renderTreeHTML(node) {
     const isCollapsed = node.isRoot ? "" : "collapsed";
     const statusLabel = node.isRoot ? "" : "(closed)";
@@ -115,6 +122,7 @@ function renderTreeHTML(node) {
     </li>`;
 }
 
+// Execution
 const fullTree = buildTree(__dirname, true);
 
 const rootHTML = `
@@ -132,23 +140,18 @@ const rootHTML = `
         .folder-toggle .name { color: #b45309; font-weight: 600; }
         .nested { border-left: 1px solid #cbd5e1; margin-left: 10px; padding-left: 15px; }
         .collapsed { display: none; }
-        
-        /* File Row Layout */
         .file-row { display: flex; justify-content: space-between; align-items: center; max-width: 800px; }
         .time-ago { font-size: 0.75rem; color: #94a3b8; font-family: monospace; }
-        
         .index-highlight a { color: #059669; font-weight: bold; }
         a { color: #3b82f6; text-decoration: none; }
-        
-        /* README Styling */
-        .readme-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; margin: 10px 0 20px 0; max-width: 800px; }
+        .readme-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; margin: 10px 0 20px 0; max-width: 800px; overflow: hidden; }
         .readme-header { display: flex; justify-content: space-between; padding: 8px 12px; background: #f1f5f9; border-bottom: 1px solid #e2e8f0; font-size: 0.75rem; font-weight: bold; color: #64748b; }
-        .markdown-body, .plain-text { padding: 15px; font-size: 0.9rem; }
+        .markdown-body, .plain-text { padding: 15px; font-size: 0.9rem; line-height: 1.6; }
         .plain-text { white-space: pre-wrap; font-family: monospace; }
-
         .controls { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
         #searchBar { padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; width: 300px; }
         .hidden { display: none !important; }
+        button { padding: 8px 14px; cursor: pointer; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; color: #475569; font-size: 0.85rem; }
     </style>
 </head>
 <body>
@@ -162,27 +165,24 @@ const rootHTML = `
     <div class="tree-container">
         <ul id="mainTree">${renderTreeHTML(fullTree)}</ul>
     </div>
-
     <script>
-        // Convert ISO dates to "Time Ago" format
         function formatTimeAgo(dateString) {
+            if (!dateString) return '';
             const date = new Date(dateString);
             const now = new Date();
-            const diffInSeconds = Math.floor((now - date) / 1000);
-            
-            if (diffInSeconds < 60) return 'just now';
-            if (diffInSeconds < 3600) return Math.floor(diffInSeconds / 60) + 'm ago';
-            if (diffInSeconds < 86400) return Math.floor(diffInSeconds / 3600) + 'h ago';
-            if (diffInSeconds < 2592000) return Math.floor(diffInSeconds / 86400) + 'd ago';
+            const diff = Math.floor((now - date) / 1000);
+            if (diff < 60) return 'just now';
+            if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+            if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+            if (diff < 2592000) return Math.floor(diff / 86400) + 'd ago';
+            if (diff < 31536000) return Math.floor(diff / 2592000) + 'mo ago';
             return date.toLocaleDateString();
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-            // Render Markdown
             document.querySelectorAll('.markdown-body').forEach(box => {
                 box.innerHTML = marked.parse(box.innerHTML);
             });
-            // Update Timestamps
             document.querySelectorAll('.time-ago').forEach(el => {
                 el.innerText = formatTimeAgo(el.getAttribute('data-time'));
             });
@@ -191,8 +191,8 @@ const rootHTML = `
         function toggleFolder(element) {
             const nestedList = element.parentElement.querySelector(".nested");
             const statusText = element.querySelector(".status-text");
-            const isNowCollapsed = nestedList.classList.toggle("collapsed");
-            statusText.innerText = isNowCollapsed ? "(closed)" : "";
+            const isCollapsed = nestedList.classList.toggle("collapsed");
+            statusText.innerText = isCollapsed ? "(closed)" : "";
         }
 
         function filterTree() {
@@ -226,9 +226,8 @@ const rootHTML = `
             });
             matchCountEl.innerText = matches + " match(es) found";
         }
-        
-        function expandAll() { document.querySelectorAll('.nested').forEach(el => el.classList.remove('collapsed')); }
-        function collapseAll() { document.querySelectorAll('.nested').forEach(el => el.classList.add('collapsed')); }
+        function expandAll() { document.querySelectorAll('.nested').forEach(el => { el.classList.remove('collapsed'); el.previousElementSibling.querySelector('.status-text').innerText = ''; }); }
+        function collapseAll() { document.querySelectorAll('.nested').forEach(el => { el.classList.add('collapsed'); el.previousElementSibling.querySelector('.status-text').innerText = '(closed)'; }); }
     </script>
 </body>
 </html>`;
