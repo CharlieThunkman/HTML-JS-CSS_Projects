@@ -7,7 +7,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Use Node.js
         uses: actions/setup-node@v2
-      - run: node generate_tree.js
+      - run: node generateIndex.js
       - name: Commit and Push
         run: |
           git config --global user.name 'Index Bot'
