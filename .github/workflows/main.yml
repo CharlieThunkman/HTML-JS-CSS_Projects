@@ -1,17 +1,42 @@
 name: Generate Indices
-on: [push]
+
+on:
+  push:
+    branches:
+      - main  # Adjust this if your default branch is named 'master'
+
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js
-        uses: actions/setup-node@v2
-      - run: node generateIndex.js
-      - name: Commit and Push
+      # 1. Checkout the repository
+      # fetch-depth: 0 is crucial to pull the git history for accurate timestamps
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # 2. Set up Node.js environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 3. Run your index generation script
+      - name: Run Index Generator
+        run: node generate_tree.js
+
+      # 4. Commit and Push the generated index.html files back to the repo
+      - name: Commit and Push Changes
         run: |
-          git config --global user.name 'Index Bot'
-          git config --global user.email 'bot@noreply.github.com'
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add .
-          git commit -m "Generated Indices" || echo "No changes to commit"
+          # We use || true so the workflow doesn't fail if there are no new changes
+          git commit -m "Automated Index Update [skip ci]" || echo "No changes to commit"
           git push
