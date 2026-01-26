@@ -89,7 +89,7 @@ for (let j = 0; j < inputarray.length; j++) {
 	div.insertBefore(dropdown,div.lastChild.previousSibling.previousSibling);
 	*/
 
-	buttonFlexSubgroup(9,["time","replay","hidden"],div,tempInteger);
+	buttonFlexSubgroup(9,["time","replay","hidden-player"],div,tempInteger);
 
 	var timeReadOnly = document.createElement("p");
 	timeReadOnly.innerHTML = "0:00:00";
@@ -221,7 +221,7 @@ function looper(){
 			clonDiv = document.getElementById("buttonHost").children[1].children[YT[0].playerIndex-1];
 		thisDiv.children[0].innerHTML = "[" + (YT[0].playerIndex) + "] " + clonDiv.children[0].innerHTML + " ";
 	}
-	if(last_ls_titlecards && last_ls_titlecards.Contents.length > YT[0].playerIndex && last_ls_titlecards.Contents[YT[0].playerIndex-1] ){
+	if(last_ls_titlecards && last_ls_titlecards.Contents.length >= YT[0].playerIndex && last_ls_titlecards.Contents[YT[0].playerIndex-1] ){
 		document.title =  "[" + (YT[0].playerIndex) + "] " + last_ls_titlecards.Contents[YT[0].playerIndex-1].title + " ";
 	} 
 	for(let i=0;i<playerCount;i++){
@@ -253,7 +253,7 @@ function looper(){
 	
 	const buttonClassElements = document.getElementsByClassName('buttons'); 
     for (let i = 0; i < buttonClassElements.length; i++) {
-		if(document.body.clientWidth > 800){
+		if(document.body.clientWidth > 800 && ls_playerCount>1){
 			buttonClassElements[i].classList.add('buttonsMaxWidth'); // Adds the new styles
 			var maxWide = 3,
 				minWidth = 290;
@@ -266,8 +266,99 @@ function looper(){
 		}
         // buttonClassElements[i].classList.toggle('active'); // Toggles a class
 	}
+	// Check if exactly one player is active
+	if (ls_hidePlayerBin && ls_playerCount === 1) {
+		let activeIndex = -1;
+		
+		// Find the index of the '1' in the binary string
+		// charAt(4 - i - 1) logic suggests 4 is the total possible players
+		for (let i = 0; i < playerCount; i++) {
+			if (ls_hidePlayerBin.Contents.charAt(4 - i - 1) === "1") {
+				activeIndex = i; // This matches the 0-based index of your ls_titlecards.Contents
+				break;
+			}
+		}
+	
+		// Overwrite the title and the YT[0] index to point to this single active player
+		if (activeIndex !== -1 && last_ls_titlecards && last_ls_titlecards.Contents[activeIndex]) {
+			const singleTitle = last_ls_titlecards.Contents[activeIndex].title;
+			
+			// Update the document title
+			//document.title = "{" + (activeIndex + 1) + "} " + singleTitle + " ";
+			
+			// Sync YT[0] index so other functions know which player is the "primary"
+			if (YT[0]) {
+				YT[0].playerIndex = activeIndex + 1;
+			}
+		}
+	}
+
+	if(ls_playerCount == 1){
+		let thisDiv = document.getElementById("buttonHost").children[0];
+		thisDiv.classList.add('hide-button-panel');
+	} else {
+		let thisDiv = document.getElementById("buttonHost").children[0];
+		thisDiv.classList.remove('hide-button-panel');
+		
+	}
 	// console.log(array);
 	timeUpdate();
 }
 
 
+(function() {
+  // 1. Define your features here
+  const features = [
+    {
+      label: 'BG Color',
+      // Internal state specific to this feature
+      colors: ['#ffffff', '#00000000', '#f0f0f0', '#222222', '#ffeb3b', '#2B2E38'],
+      index: 0,
+      action: function(btn) {
+        const newColor = this.colors[this.index];
+        console.log("Background is now", newColor);
+        this.index = (this.index + 1) % this.colors.length;
+        document.body.style.backgroundColor = newColor;
+      }
+    },
+    {
+      label: 'Opacity',
+      opacity: 1,
+      action: function(btn) {
+        this.opacity = this.opacity === 1 ? 0.5 : 1;
+        document.body.style.opacity = this.opacity;
+      }
+    },
+    {
+      label: 'Enable Scroll',
+      isScrollEnabled: false,
+      action: function(btn) {
+        this.isScrollEnabled = !this.isScrollEnabled;
+        document.body.style.overflow = this.isScrollEnabled ? 'auto' : 'hidden';
+        btn.innerText = this.isScrollEnabled ? 'Disable Scroll' : 'Enable Scroll';
+      }
+    }
+  ];
+
+  // 2. Create the control panel
+  const controls = document.createElement('div');
+  controls.style.cssText = `
+    position: fixed; top: -4px; right: -4px; z-index: 99999;
+    display: flex; flex-direction: column; gap: 6px;
+    background: rgba(0, 0, 0, 0.7); padding: 10px; border-radius: 25%;
+  `;
+
+  // 3. The Loop
+  features.forEach(feature => {
+    const btn = document.createElement('button');
+    btn.innerText = feature.label;
+    btn.style.cssText = 'padding: 2px; cursor: pointer; border: none; border-radius: 14px; font-weight: bold; font-size: xx-small;' ;
+    
+    // Bind the action to the feature object so 'this' works correctly
+    btn.onclick = () => feature.action(btn);
+    
+    controls.appendChild(btn);
+  });
+
+  document.body.appendChild(controls);
+})();
