@@ -1,0 +1,111 @@
+body, html { 
+	margin: 0; padding: 0; height: 100vh; 
+	background: #000; overflow: hidden; 
+	font-family: sans-serif;
+}
+
+#wrapper {
+	display: flex;
+	flex-direction: column;
+	height: 100vh;
+	width: 100vw;
+}
+
+/* Site V: The Player */
+#site-v {
+	flex: 1; /* Automatically takes remaining space */
+	width: 100%;
+	border: none;
+	transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+	z-index: 80;
+}
+
+/* Site B Container: The Dynamic Dock */
+#site-b-container {
+	height: 50px; /* The 'Peek' height */
+	width: 100%;
+	background: transparent;
+	border-top: 2px solid #444;
+	display: flex;
+	justify-content: center;
+	z-index: 100;
+	transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+
+}
+
+@media (hover: hover) {
+	#site-b-container {
+		transition: height 1s ease;
+		transition-delay: 1.5s;
+		overflow: hidden;
+	}
+}
+@media (hover: none) and (orientation: portrait) {
+	#site-b-container, #site-b-container.active {
+		height: 210px !important;
+		zoom: 2;
+		z-index: 100;
+	}
+}
+@media (hover: none) and (orientation: landscape) {
+	#wrapper {
+        display: block; /* Break the flexbox */
+        position: relative;
+    }
+
+    #site-v {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100vh !important;
+        width: 100vw !important;
+    }
+	#site-b-container {
+		position: absolute;
+		opacity:0;
+		height:0;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        /* Your active class will now control height over the video */
+        background: rgba(0, 0, 0, 0); /* Start fully transparent */
+        border-top: none; 
+        pointer-events: none; /* Allow clicks to pass to video by default */
+		z-index: 85;
+		zoom: 1.3;
+	}
+	#site-b-container.active {
+		background: rgba(0, 0, 0, 0.4); /* Darken slightly when active */
+        pointer-events: auto; /* Enable buttons when menu is up */
+		opacity: 0.8;
+		height: 33vh !important;
+		z-index: 100;
+		zoom: 1.3;
+	}
+}
+
+#site-b {
+	width: 100%;
+	height: 100%;
+	border: none;
+}
+
+/* This class is toggled by JS when the screen is tapped */
+#site-b-container.active {
+	height: 100px; 
+	border-top: 2px solid #444;
+}
+
+#ui-shield {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 90; /* Just below the menu, but above the videos */
+	pointer-events: none;
+}
+
+#ui-shield.activated {
+    pointer-events: auto; /* Now it catches taps to toggle the menu */
+}
