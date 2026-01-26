@@ -1,5 +1,5 @@
 body {
-	background-color: 2B2E38;
+	background-color: #2B2E38;
 	overflow:hidden;
 }
 .buttons {
@@ -136,7 +136,6 @@ iframe {
 	float: left;
 	clear: both;
 	display: block;
-	background-color: #eee;
 }
 p {
 	color: #d0d0dd;
@@ -183,4 +182,25 @@ div.buttons:after {
 .button.up, 
 .button.down {
     margin-right: 0;
+}
+
+/* Styling for Replay Button */
+.replay::after {
+    padding-right: 0px;
+    content: "→";
+}
+
+.replay.active::after {
+    padding-right: .5px;
+    content: "⟳";
+}
+
+/* Styling for Hide Button */
+.hidden-player::after { content: "👁️"; }
+.hidden-player.hidden-mode::after { content: "🚫"; }
+
+.hide-button-panel{
+	height: 0;
+	margin: 0;
+	opacity: 0;
 }
