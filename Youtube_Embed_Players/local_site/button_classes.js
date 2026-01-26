@@ -1,33 +1,33 @@
 class ButtonPanel { // IDs of buttons
 	constructor(index, config = {}, settings = {}) {
-        /**
-         * config: { storage, play, pause, stop, prev, back, skip, next, ismute, timeConfirm, replay, hide }
-         * settings: { delayId, speedId, volId, timeId }
-         */
-        this.index = index;
-        
-        // Mapping elements using IDs from the config object
-		this.playButton    = document.getElementById(`${config.play}-${index}`);
+		/**
+		 * config: { storage, play, pause, stop, prev, back, skip, next, ismute, timeConfirm, replay, hide }
+		 * settings: { delayId, speedId, volId, timeId }
+		 */
+		this.index = index;
+		
+		// Mapping elements using IDs from the config object
+		this.playButton	= document.getElementById(`${config.play}-${index}`);
 		this.pauseButton   = document.getElementById(`${config.pause}-${index}`);
-		this.stopButton    = document.getElementById(`${config.stop}-${index}`);
-		this.backButton    = document.getElementById(`${config.back}-${index}`);
-		this.skipButton    = document.getElementById(`${config.skip}-${index}`);
-		this.prevButton    = document.getElementById(`${config.prev}-${index}`);
-		this.nextButton    = document.getElementById(`${config.next}-${index}`);
+		this.stopButton	= document.getElementById(`${config.stop}-${index}`);
+		this.backButton	= document.getElementById(`${config.back}-${index}`);
+		this.skipButton	= document.getElementById(`${config.skip}-${index}`);
+		this.prevButton	= document.getElementById(`${config.prev}-${index}`);
+		this.nextButton	= document.getElementById(`${config.next}-${index}`);
 		this.isMuteButton  = document.getElementById(`${config.ismute}-${index}`);
-		this.timeButton    = document.getElementById(`${config.timeConfirm}-${index}`);
+		this.timeButton	= document.getElementById(`${config.timeConfirm}-${index}`);
 		this.replayButton  = document.getElementById(`${config.replay}-${index}`);
-		this.hideButton    = document.getElementById(`${config.hide}-${index}`);
+		this.hideButton	= document.getElementById(`${config.hide}-${index}`);
 
 		this.volumeValue   = document.getElementById(settings.volId);
-		this.delayValue    = document.getElementById(settings.delayId);
-		this.speedValue    = document.getElementById(settings.speedId);
-		this.timeValue     = document.getElementById(settings.timeId);
+		this.delayValue	= document.getElementById(settings.delayId);
+		this.speedValue	= document.getElementById(settings.speedId);
+		this.timeValue	 = document.getElementById(settings.timeId);
 		
 		this.qualityButton = document.getElementById(`quality-dropdown-${index}`);
 		this.timeDisplay   = document.getElementById(`time-value-READ_ONLY-${index}`);
 
-        // Internal State
+		// Internal State
 		this.p = 2; 	// play state (running / paused / stopped)
 		this.n = 0; 	// tells which direction to seek in +- (and scale) (temp acceleration)
 		this.s = 1; 	// perm time acceleration
@@ -44,13 +44,97 @@ class ButtonPanel { // IDs of buttons
 		
 	//			console.log("May26Test", thisArray, index, this.isMuteButton,thisArray[9]	+ "-" + index);
 	}
+	
+	setButtonLinks() {
+	// 1. Helper for simple state-setting buttons
+	const stateMap = [
+		{ btn: this.playButton,  key: 'p', val: 1 },//	player.playVideo(); // command sent to other URL
+		{ btn: this.pauseButton, key: 'p', val: 2 },//	player.pauseVideo(); // command sent to other URL
+		{ btn: this.stopButton,  key: 'p', val: 0 },//	player.stopVideo(); // command sent to other URL
+		{ btn: this.prevButton,  key: 'currentIndex', val: -1 },
+		{ btn: this.nextButton,  key: 'currentIndex', val: 1 }
+	];
+
+	stateMap.forEach(({ btn, key, val }) => {
+		btn.addEventListener("click", () => {
+			this[key] = val;
+			this.queueUpdate();
+		});
+	});
+
+	// 2. Continuous Seek Buttons (Back/Skip)
+	const handleSeek = (val) => {
+		this.n = val;
+		this.queueUpdate();
+	};
+	this.backButton.addEventListener("mousedown", () => handleSeek(-0.75));
+	this.skipButton.addEventListener("mousedown", () => handleSeek(0.75));
+	[this.backButton, this.skipButton].forEach(btn => {
+		btn.addEventListener("mouseup", () => handleSeek(0));
+	});
+
+	// 3. Toggles (Mute, Replay, Hide)
+	const setupToggle = (btn, key, updateUIFunc) => {
+		btn.addEventListener("click", () => {
+			this[key] = (this[key] + 1) % 2;
+			if (updateUIFunc) updateUIFunc();
+			this.queueUpdate();
+		});
+	};
+
+	setupToggle(this.isMuteButton, 'isMuted', () => {
+		const [icon, state] = this.updateMuteStatus(this.v, parseInt(this.volumeValue.value), this.isMuted);
+		this.isMuted = state;
+		this.isMuteButton.innerHTML = icon;
+	});
+
+	setupToggle(this.replayButton, 're', () => {
+		this.replayButton.classList.toggle('active', this.re);
+	});
+
+	setupToggle(this.hideButton, 'h', () => {
+		this.hideButton.classList.toggle('hidden-mode', this.h);
+	});
+
+	// 4. Numeric Inputs (Assume min/max are set in HTML)
+	this.volumeValue.addEventListener("change", () => {
+		this.v = Math.min(100, Math.max(0, this.volumeValue.value));
+	//	this.v = Number(this.volumeValue.value);
+		const [icon, state] = this.updateMuteStatus(this.v, this.v, this.isMuted);
+		this.isMuteButton.innerHTML = icon;
+		this.queueUpdate();
+	});
+
+	this.speedValue.addEventListener("change", () => {
+			this.s = Math.min(2.5, Math.max(.25, this.speedValue.value));
+	//	this.s = Number(this.speedValue.value);
+		this.queueUpdate();
+	});
+
+	// 5. Specialized Inputs (Time/Delay)
+	this.timeValue.addEventListener("change", () => {
+		this.j = this.timeValue.value * 60;
+		this.timeDisplay.innerHTML = timeFormat(this.j);
+	});
+
+	this.timeButton.addEventListener("click", () => {
+		this.confirm = true;
+		this.updateLocalStorage(); // Immediate call bypasses delay logic
+	});
+
+	this.delayValue.addEventListener("change", () => {
+		this.d = this.delayValue.value * 60000;
+	});
+}
+	/*
+	======================================================================================================================================
 	setButtonLinks(){
 		// bind events
 		this.playButton.addEventListener("click", () => {
-            this.p = 1;
+			this.p = 1;
 //					player.playVideo(); // command sent to other URL
-            this.queueUpdate();
-        });
+			this.queueUpdate();
+		});
 	
 		this.pauseButton.addEventListener("click", () => {
 			this.p = 2;
@@ -168,6 +252,7 @@ class ButtonPanel { // IDs of buttons
 			console.log("Delay value now " + this.d/1000 + " minute(s)", that);
 		});
 	}
+	*/
 	
 	updateMuteStatus(newVol, oldVol, isMuted) {
 		let icon = (isMuted === 0 || newVol > oldVol) ? "🔊" : "🔇";
@@ -179,7 +264,7 @@ class ButtonPanel { // IDs of buttons
 	queueUpdate() {
 		// Use an arrow function to keep 'this' context without needing 'let that = this'
 		setTimeout(() => this.updateLocalStorage(), this.d);
-    }
+	}
 	
 	updateLocalStorage() {
 		const timeJumpValue = this.confirm ? this.j : -1;
@@ -209,55 +294,55 @@ class ButtonPanel { // IDs of buttons
 } // exit class
 
 class compoundButtonPanel extends ButtonPanel {
-    constructor(index, config = {}, settings = {}) {
-        // Pass the index, config object, and settings object to the parent ButtonPanel
-        // Note: Your original code passed '0' as the index to super
-        super(0, config, settings);
+	constructor(index, config = {}, settings = {}) {
+		// Pass the index, config object, and settings object to the parent ButtonPanel
+		// Note: Your original code passed '0' as the index to super
+		super(0, config, settings);
 
-        // Map the specific 'player' navigation buttons using the object keys
-        this.prevPlayer = document.getElementById(`${config.prevPlayer}-0`);
-        this.nextPlayer = document.getElementById(`${config.nextPlayer}-0`);
-        
-        this.playerIndex = 1;
-        this.baseStorageName = config.storage; // Keep base name for easy updates
-        
-        // Initialize the unique storage key
-        this.updateCompoundStorageKey();
-    }
+		// Map the specific 'player' navigation buttons using the object keys
+		this.prevPlayer = document.getElementById(`${config.prevPlayer}-0`);
+		this.nextPlayer = document.getElementById(`${config.nextPlayer}-0`);
+		
+		this.playerIndex = 1;
+		this.baseStorageName = config.storage; // Keep base name for easy updates
+		
+		// Initialize the unique storage key
+		this.updateCompoundStorageKey();
+	}
 
-    /**
-     * Updates the storage key based on the current playerIndex calculation.
-     * Uses the pattern: baseName_2^(index-1)
-     */
-    updateCompoundStorageKey() {
-        const calculatedIndex = Math.pow(2, this.playerIndex - 1);
-        this.storageKey = `${this.baseStorageName}_${calculatedIndex}`;
-        console.log("Storage Key Updated:", this.storageKey);
-    }
+	/**
+	 * Updates the storage key based on the current playerIndex calculation.
+	 * Uses the pattern: baseName_2^(index-1)
+	 */
+	updateCompoundStorageKey() {
+		const calculatedIndex = Math.pow(2, this.playerIndex - 1);
+		this.storageKey = `${this.baseStorageName}_${calculatedIndex}`;
+		console.log("Storage Key Updated:", this.storageKey);
+	}
 
-    setButtonLinksCompound() {
-        // Initialize the standard button listeners from the parent class
-        this.setButtonLinks();
+	setButtonLinksCompound() {
+		// Initialize the standard button listeners from the parent class
+		this.setButtonLinks();
 
-        // Previous Player Listener
-        this.prevPlayer.addEventListener("click", () => {
-            this.playerIndex -= 1;
-            if (this.playerIndex < 1) {
-                this.playerIndex = 4;
-            }
-            this.updateCompoundStorageKey();
-            // If you want to trigger a save immediately after switching players:
-            // this.queueUpdate(); 
-        });
+		// Previous Player Listener
+		this.prevPlayer.addEventListener("click", () => {
+			this.playerIndex -= 1;
+			if (this.playerIndex < 1) {
+				this.playerIndex = 4;
+			}
+			this.updateCompoundStorageKey();
+			// If you want to trigger a save immediately after switching players:
+			// this.queueUpdate(); 
+		});
 
-        // Next Player Listener
-        this.nextPlayer.addEventListener("click", () => {
-            this.playerIndex += 1;
-            if (this.playerIndex > 4) {
-                this.playerIndex = 1;
-            }
-            this.updateCompoundStorageKey();
-            // this.queueUpdate();
-        });
-    }
+		// Next Player Listener
+		this.nextPlayer.addEventListener("click", () => {
+			this.playerIndex += 1;
+			if (this.playerIndex > 4) {
+				this.playerIndex = 1;
+			}
+			this.updateCompoundStorageKey();
+			// this.queueUpdate();
+		});
+	}
 }
