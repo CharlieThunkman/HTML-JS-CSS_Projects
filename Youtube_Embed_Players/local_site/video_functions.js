@@ -142,28 +142,32 @@ function onYouTubePlayerAPIReady() {
 				// call this function when each player is ready to use
 				'onReady': onPlayerReady,
 				'onError': onPlayerError,
-				'onAutoplayBlocked': onPlayerAutoplayBlocked
+				'onAutoplayBlocked': onPlayerAutoplayBlocked,
+				'onStateChange': onPlayerStateChange
 			}
 		}),	
 		new YT.Player(myFrameHolder[1].children[0], {
 			events: {
 				'onReady': onPlayerReady2,
 				'onError': onPlayerError2,
-				'onAutoplayBlocked': onPlayerAutoplayBlocked
+				'onAutoplayBlocked': onPlayerAutoplayBlocked,
+				'onStateChange': onPlayerStateChange
 			}
 		}),	
 		new YT.Player(myFrameHolder[2].children[0], {
 			events: {
 				'onReady': onPlayerReady4,
 				'onError': onPlayerError4,
-				'onAutoplayBlocked': onPlayerAutoplayBlocked
+				'onAutoplayBlocked': onPlayerAutoplayBlocked,
+				'onStateChange': onPlayerStateChange
 			}
 		}),
 		new YT.Player(myFrameHolder[3].children[0], {
 			events: {
 				'onReady': onPlayerReady8,
 				'onError': onPlayerError8,
-				'onAutoplayBlocked': onPlayerAutoplayBlocked
+				'onAutoplayBlocked': onPlayerAutoplayBlocked,
+				'onStateChange': onPlayerStateChange
 			}
 		})
 	];
@@ -230,6 +234,15 @@ function onPlayerError8(event) {
 	console.error("Player8 is in error code:",event.data,onPlayerErrorCodes[event.data] ?? onPlayerErrorCodes['Error'],event.target);
 //	player[3].nextVideo();
 	timeUpdate();
+}
+
+function onPlayerStateChange(event) {
+    if (event.data == YT.PlayerState.PLAYING) {
+        // Direct access to the parent's function
+        if (window.parent.activateUIControls) {
+            window.parent.activateUIControls();
+        }
+    }
 }
 
 
