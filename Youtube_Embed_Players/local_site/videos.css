@@ -32,7 +32,7 @@ iFrame {
     min-width: 0;           /* Allows collapsing */
 	display:flex;
 	flex-direction: column;
-	height: 100vh;
+	height: 100dvh;
 }
 
 /* When this class is added via JS */
@@ -47,8 +47,8 @@ pointer-events: none; /* Prevents interaction while hidden */
 #myFrameDiv {
     display: flex;
 flex-direction: row; /* Ensure they stay side-by-side */
-    width: 100vw;
-    height: 100vh;
+    width: 100dvw;
+    height: 100dvh;
     margin: 0;
     padding: 0;
     overflow: hidden;
@@ -80,3 +80,4 @@ flex-direction: row; /* Ensure they stay side-by-side */
 body {
 margin: 0;
 }
+
