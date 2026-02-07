@@ -1,5 +1,5 @@
 body, html { 
-	margin: 0; padding: 0; height: 100vh; 
+	margin: 0; padding: 0; height: 100dvh; 
 	background: #000; overflow: hidden; 
 	font-family: sans-serif;
 }
@@ -7,8 +7,8 @@ body, html {
 #wrapper {
 	display: flex;
 	flex-direction: column;
-	height: 100vh;
-	width: 100vw;
+	height: 100dvh;
+	width: 100dvw;
 }
 
 /* Site V: The Player */
@@ -57,8 +57,8 @@ body, html {
         position: absolute;
         top: 0;
         left: 0;
-        height: 100vh !important;
-        width: 100vw !important;
+        height: 100dvh !important;
+        width: 100dvw !important;
     }
 	#site-b-container {
 		position: absolute;
@@ -78,7 +78,7 @@ body, html {
 		background: rgba(0, 0, 0, 0.4); /* Darken slightly when active */
         pointer-events: auto; /* Enable buttons when menu is up */
 		opacity: 0.8;
-		height: 33vh !important;
+		height: 33dvh !important;
 		z-index: 100;
 		zoom: 1.3;
 	}
@@ -100,8 +100,8 @@ body, html {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100dvw;
+    height: 100dvh;
     z-index: 90; /* Just below the menu, but above the videos */
 	pointer-events: none;
 }
