@@ -354,8 +354,8 @@ function looper(){
 				nextIndex:nextIndex,
 				thisIndex:thisIndex,
 				indexValue:player[i].getPlaylistIndex(),
-				playerTime: currentTime,
-				qualities: player[i].getAvailableQualityLevels()};
+				//qualities: player[i].getAvailableQualityLevels()} //Not changable in current version
+				playerTime: Math.floor(currentTime);
 
 			if(!isEqual(vid2ls[i],vid2ls_old[i])){
 				vid2ls_dif = true;
@@ -439,3 +439,4 @@ window.addEventListener('DOMContentLoaded', function(e) {
 	}
 } );
 */
+
