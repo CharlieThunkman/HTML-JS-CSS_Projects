@@ -252,7 +252,7 @@ function looper(){
 	for(let i=0;i<storageArray.length;i++){
 		const rawLs = localStorage.getItem(storageArray[i]);
 		if(!rawLs) continue;
-		if(!lastReadState_LS[i] || lastReadState_LS[i] !== rawLs) continue;
+		if(lastReadState_LS[i] && lastReadState_LS[i] == rawLs) continue; // breaks loop if BOTH ls has history AND ls matches ls history
 		const ls = JSON.parse(rawLs);
 		if(!lastReadState_LS[i] && rawLs){
 			lastReadState_LS[i] = rawLs;
