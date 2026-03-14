@@ -321,7 +321,7 @@ function looper(){
 			if(!isEqual(vid2ls[i],vid2ls_old[i])){
 				vid2ls_dif = true;
 			}
-			let spaceCount = Math.floor((duration*currentBufferFrac-currentTime*1.05)+1);
+			let spaceCount = Math.max(1,Math.floor((duration*currentBufferFrac-currentTime*1.05)+1));
 			let aspace = " ".repeat(spaceCount); // = alt+1279
 			let newStatusBar = timeFormat(currentTime) + " / " + timeFormat(duration) + " " + prefix + " " + aspace + " " + player[i].getVolume() + "% (" + timeFormat(bufferTime,false) + ")";
 
