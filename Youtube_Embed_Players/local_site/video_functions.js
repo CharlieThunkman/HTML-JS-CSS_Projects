@@ -252,14 +252,15 @@ function looper(){
 	for(let i=0;i<storageArray.length;i++){
 		const rawLs = localStorage.getItem(storageArray[i]);
 		if(!rawLs) continue;
-		if(!lastReadState_LS || lastReadState !== rawLs) {
-			const ls = JSON.parse(rawLs);
-		}
+		if(!lastReadState_LS[i] || lastReadState_LS[i] !== rawLs) continue;
+		const ls = JSON.parse(rawLs);
 		if(!lastReadState_LS[i] && rawLs){
 			lastReadState_LS[i] = rawLs;
 			console.log("Set " + i + " to", lastReadState_LS[i]);
 			lastReadState_LS[i].Expire = lastReadState_LS[i].Expire%100000000 - 20;
 		}
+
+		
 		// adSense disable function, triggers every tick ad is detected from the previous tick
 				if(adSense[i]){if(adSense[i] == 1){adSense[i]++;}else if(muteMaster[i]==0){player[i].unMute(); adSense[i]=0;}}
 		// if request sent, request is either skimState or new, and request sent to a loaded player
