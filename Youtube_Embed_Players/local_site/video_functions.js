@@ -8,7 +8,6 @@ let allowFS = "";
 // global variable for the player
 var player;
 var running=0;
-let indexSPC = 0;
 const storageArray = ["YT_Player_1","YT_Player_2","YT_Player_4","YT_Player_8"];
 var thisReadState = [];
 var adSense = [];
@@ -251,9 +250,13 @@ function looper(){
 	if(running != hidePlayerInt){ return; }
 	let hidePlayerBin = int2bin(hidePlayerInt,playlist_IDs.length);
 	for(let i=0;i<storageArray.length;i++){
-		const ls = JSON.parse(localStorage.getItem(storageArray[i]));
-		if(!lastReadState_LS[i] && ls){
-			lastReadState_LS[i] = ls;
+		const rawLs = localStorage.getItem(storageArray[i]);
+		if(!rawLs) continue;
+		if(!lastReadState_LS || lastReadState !== rawLs) {
+			const ls = JSON.parse(rawLs);
+		}
+		if(!lastReadState_LS[i] && rawLs){
+			lastReadState_LS[i] = rawLs;
 			console.log("Set " + i + " to", lastReadState_LS[i]);
 			lastReadState_LS[i].Expire = lastReadState_LS[i].Expire%100000000 - 20;
 		}
@@ -265,60 +268,16 @@ function looper(){
 			if(Date.now()>ls.Expire){
 				//localStorage.removeItem(storageArray[i]);
 			}
-			// playState
-				 if(ls.Buttons.playState == 1){player[i].playVideo(); /*console.log("1",i);*/}
-			else if(ls.Buttons.playState == 0){player[i].stopVideo(); /*console.log("0",i);*/}
-			else if(ls.Buttons.playState == 2){player[i].pauseVideo(); /*console.log("2",i);*/}
-			// skimState
-			if(ls.Buttons.skimState != 0){
-				var currentTime = player[i].getCurrentTime();
-				player[i].seekTo(currentTime+ls.Buttons.skimState, true);
-				player[i].pauseVideo();
-				/*console.log("1",i);*/
-			}
-			// timeJumpTo_sec
-			if(ls.Buttons.timeJumpTo_sec >= 0 ){
-				player[i].seekTo(ls.Buttons.timeJumpTo_sec, true);
-				/*console.log("1",i);*/
-			}
-			// volumeState
-			player[i].setVolume(ls.Buttons.volState);
-			// isMuted
-			if(ls.Buttons.isMuted){player[i].mute();muteMaster[i]=1;}
-			else{player[i].unMute();muteMaster[i]=0;}
-			// playbackSpeedState
-			if(ls.Buttons.playbackSpeedState != player[i].getPlaybackRate()){
-	//			console.log(player[i].getAvailablePlaybackRates(),ls.Buttons.playbackSpeedState);
-				player[i].setPlaybackRate(ls.Buttons.playbackSpeedState);
-			}
-			
-			// skipState - seeking through the playlist
-			
-				 if(ls.Buttons.skipState == -1 && lastReadState_LS[i].Expire%100000000 != ls.Expire%100000000){player[i].previousVideo(); /*console.log("1",i);*/}
-			else if(ls.Buttons.skipState == 1 && lastReadState_LS[i].Expire%100000000 != ls.Expire%100000000){player[i].nextVideo(); /*console.log("0",i);*/}
-			
-			// Replay initiate
-			replayMaster[i]=ls.Buttons.replayBool;
-			
-			// hidePlayerDynamic
-			if(ls.Buttons.hiddenBool){
-				myFrameHolder[i].classList.add('hidden');
-			} else {
-				myFrameHolder[i].classList.remove('hidden');
-			}
-
-			
-			// store saved state
-			thisReadState[i] = ls;
+	// API calls	
+			processAPIcalls(i,ls)
 		}
-		
 	}
 	// edit span Text
-	let showPlayerCount = 0, indexSPC = 0;
+/*	let showPlayerCount = 0;
 	for(i=0;i<playlist_IDs.length;i++){
 		showPlayerCount += parseInt(hidePlayerBin.charAt(i));
-	}
-	var vid2ls = [4];
+	} */
+	var vid2ls = [];
 	var vid2ls_dif=false;
 	for(i=0;i<playlist_IDs.length;i++){
 		if(hidePlayerBin.charAt(playlist_IDs.length - i - 1) == "1"){ // if 1 is showing, indicated by EVEN number
@@ -331,7 +290,7 @@ function looper(){
 			if(getAllUrlParams(url)["muteads"]){
 				if(duration*currentBufferFrac-currentTime < 0 || bufferTime > 180){
 					prefix = "ad?? ";
-					if(duration*currentBufferFrac-currentTime < -0.1 || bufferTime > 700){
+					if(duration*currentBufferFrac-currentTime < -0.2 || bufferTime > 700){
 						// Definite ad detected, muted player and send request to unmute from volumeState above
 						adSense[i] = 1;
 						player[i].mute();
@@ -339,7 +298,7 @@ function looper(){
 				}
 			}
 			let currentVolume = player[i].getVolume();
-			myFrameHolder[i].children[1].innerHTML = myFrameHolder[i].children[0].title;
+			myFrameHolder[i].children[1].innerText = myFrameHolder[i].children[0].title;
 			let prevIndex=null,nextIndex=null,thisIndex=null;
 			if(player[i].getPlaylistIndex()>1){
 				prevIndex = player[i].getPlaylist()[player[i].getPlaylistIndex()-1];
@@ -364,7 +323,7 @@ function looper(){
 			for(let j=0;j<duration*currentBufferFrac-currentTime;j=Math.floor((j*1.05)+1)){
 				aspace += " "; // = alt+1279
 			}
-			myFrameHolder[i].children[2].innerHTML = timeFormat(currentTime) + " / " + timeFormat(duration) + " " + prefix + " " + aspace + " " + currentVolume + "% (" + timeFormat(bufferTime,false) + ") ";
+			myFrameHolder[i].children[2].innerText = timeFormat(currentTime) + " / " + timeFormat(duration) + " " + prefix + " " + aspace + " " + currentVolume + "% (" + timeFormat(bufferTime,false) + ") ";
     //			console.log("."+aspace+".",myFrameHolder[i].children[2].innerHTML,timeFormat(duration) + " " + aspace + " (" + timeFormat(Math.max(0,duration*currentBuffer-currentTime),false));
 
 			// Video Looper
@@ -385,6 +344,7 @@ function looper(){
 
 function timeUpdate(){
 	var refresh=100; // Refresh rate in milli seconds
+	clearTimeout(window.looerTimer);
 	mytime=setTimeout('looper()',refresh,lastReadState_LS)
 }		
 
@@ -440,5 +400,50 @@ window.addEventListener('DOMContentLoaded', function(e) {
 } );
 */
 
+function processAPIcalls(i,ls){
+				// playState
+				 if(ls.Buttons.playState == 1){player[i].playVideo(); /*console.log("1",i);*/}
+			else if(ls.Buttons.playState == 0){player[i].stopVideo(); /*console.log("0",i);*/}
+			else if(ls.Buttons.playState == 2){player[i].pauseVideo(); /*console.log("2",i);*/}
+			// skimState
+			if(ls.Buttons.skimState != 0){
+				var currentTime = player[i].getCurrentTime();
+				player[i].seekTo(currentTime+ls.Buttons.skimState, true);
+				player[i].pauseVideo();
+				/*console.log("1",i);*/
+			}
+			// timeJumpTo_sec
+			if(ls.Buttons.timeJumpTo_sec >= 0 ){
+				player[i].seekTo(ls.Buttons.timeJumpTo_sec, true);
+				/*console.log("1",i);*/
+			}
+			// volumeState
+			player[i].setVolume(ls.Buttons.volState);
+			// isMuted
+			if(ls.Buttons.isMuted){player[i].mute();muteMaster[i]=1;}
+			else{player[i].unMute();muteMaster[i]=0;}
+			// playbackSpeedState
+			if(ls.Buttons.playbackSpeedState != player[i].getPlaybackRate()){
+	//			console.log(player[i].getAvailablePlaybackRates(),ls.Buttons.playbackSpeedState);
+				player[i].setPlaybackRate(ls.Buttons.playbackSpeedState);
+			}
+			
+			// skipState - seeking through the playlist
+			
+				 if(ls.Buttons.skipState == -1 && lastReadState_LS[i].Expire%100000000 != ls.Expire%100000000){player[i].previousVideo(); /*console.log("1",i);*/}
+			else if(ls.Buttons.skipState == 1 && lastReadState_LS[i].Expire%100000000 != ls.Expire%100000000){player[i].nextVideo(); /*console.log("0",i);*/}
+			
+			// Replay initiate
+			replayMaster[i]=ls.Buttons.replayBool;
+			
+			// hidePlayerDynamic
+			if(ls.Buttons.hiddenBool){
+				myFrameHolder[i].classList.add('hidden');
+			} else {
+				myFrameHolder[i].classList.remove('hidden');
+			}
 
+			// store saved state
+			thisReadState[i] = rawLs;
+}
 
