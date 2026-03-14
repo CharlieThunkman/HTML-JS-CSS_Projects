@@ -270,7 +270,7 @@ function looper(){
 				//localStorage.removeItem(storageArray[i]);
 			}
 	// API calls
-			processAPIcalls(i,ls)
+			muteMaster = processAPIcalls(i,ls)
 		}
 		thisReadState[i] = rawLs;
 	}
@@ -323,7 +323,7 @@ function looper(){
 			}
 			let spaceCount = Math.floor((duration*currentBufferFrac-currentTime*1.05)+1);
 			let aspace = " ".repeat(spaceCount); // = alt+1279
-			let newStatusBar = timeFormat(currentTime) + " / " + timeFormat(duration) + " " + prefix + " " + aspace + " " + player[i].getVolume() + "%";
+			let newStatusBar = timeFormat(currentTime) + " / " + timeFormat(duration) + " " + prefix + " " + aspace + " " + player[i].getVolume() + "% (" + timeFormat(bufferTime,false) + ")";
 
 			// 2. CRITICAL MEMORY SAVER: Only touch DOM if text changed
 			if(lastStatusBar[i] !== newStatusBar) {
@@ -405,7 +405,7 @@ window.addEventListener('DOMContentLoaded', function(e) {
 } );
 */
 
-function processAPIcalls(i,ls){
+function processAPIcalls(i,ls,muteMaster){
 				// playState
 				 if(ls.Buttons.playState == 1){player[i].playVideo(); /*console.log("1",i);*/}
 			else if(ls.Buttons.playState == 0){player[i].stopVideo(); /*console.log("0",i);*/}
@@ -448,6 +448,7 @@ function processAPIcalls(i,ls){
 				myFrameHolder[i].classList.remove('hidden');
 			}
 
-			// store saved state
+			// return data
+		return muteMaster;
 }
 
