@@ -270,7 +270,7 @@ function looper(){
 				//localStorage.removeItem(storageArray[i]);
 			}
 	// API calls
-			muteMaster = processAPIcalls(i,ls)
+			muteMaster = processAPIcalls(i,ls,player,muteMaster)
 		}
 		thisReadState[i] = rawLs;
 	}
@@ -405,7 +405,7 @@ window.addEventListener('DOMContentLoaded', function(e) {
 } );
 */
 
-function processAPIcalls(i,ls,muteMaster){
+function processAPIcalls(i,ls,player,muteMaster){
 				// playState
 				 if(ls.Buttons.playState == 1){player[i].playVideo(); /*console.log("1",i);*/}
 			else if(ls.Buttons.playState == 0){player[i].stopVideo(); /*console.log("0",i);*/}
