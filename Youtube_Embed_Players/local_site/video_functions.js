@@ -269,8 +269,8 @@ function looper(){
 			if(Date.now()>ls.Expire){
 				//localStorage.removeItem(storageArray[i]);
 			}
-	// API calls	
-			processAPIcalls(i,ls)
+	// API calls
+			thisReadState[i] = processAPIcalls(i,ls)
 		}
 	}
 	// edit span Text
@@ -445,6 +445,6 @@ function processAPIcalls(i,ls){
 			}
 
 			// store saved state
-			thisReadState[i] = rawLs;
+			return rawLs;
 }
 
