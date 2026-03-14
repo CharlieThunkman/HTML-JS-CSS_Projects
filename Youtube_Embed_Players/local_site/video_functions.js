@@ -270,8 +270,9 @@ function looper(){
 				//localStorage.removeItem(storageArray[i]);
 			}
 	// API calls
-			thisReadState[i] = processAPIcalls(i,ls)
+			processAPIcalls(i,ls)
 		}
+		thisReadState[i] = rawLs;
 	}
 	// edit span Text
 /*	let showPlayerCount = 0;
@@ -445,6 +446,5 @@ function processAPIcalls(i,ls){
 			}
 
 			// store saved state
-			return rawLs;
 }
 
