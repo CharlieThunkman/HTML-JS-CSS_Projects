@@ -323,7 +323,7 @@ function looper(){
 			}
 			let spaceCount = Math.floor((duration*currentBufferFrac-currentTime*1.05)+1);
 			let aspace = " ".repeat(spaceCount); // = alt+1279
-			let newStatusBar = timeFormat(currentTime) + " / " + timeFormat(duration) + " " + prefix + " " + aspace + " " + p.getVolume() + "%";
+			let newStatusBar = timeFormat(currentTime) + " / " + timeFormat(duration) + " " + prefix + " " + aspace + " " + player[i].getVolume() + "%";
 
 			// 2. CRITICAL MEMORY SAVER: Only touch DOM if text changed
 			if(lastStatusBar[i] !== newStatusBar) {
