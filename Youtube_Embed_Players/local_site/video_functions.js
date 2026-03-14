@@ -19,7 +19,7 @@ let myFrameBase = "https://www.youtube.com/embed/videoseries?enablejsapi=1";
 let myFrameHolder = [myFrame(),myFrame(),myFrame(),myFrame()];
 const playlist_IDs = ["PLuXaDdOtKhFcytpEqQ6fay1KF4eSZI-eq","PLuXaDdOtKhFdgYYaZ5SmkxqHntujrS73k","PL07iBthz24JBwDqSScgUCH_XpCxd72-WC","PLuXaDdOtKhFeu-eIaEG63-qVwt2DUO8tA"]
 let hidePlayerInt = Math.pow(2,myFrameHolder.length)-1;
-
+let lastStatusBar = ["","","",""]
 
 // Load only players if designated by url params
 if(getAllUrlParams(url)["showplayer"] && parseInt(getAllUrlParams(url)["showplayer"]) >= 0){
@@ -321,12 +321,15 @@ function looper(){
 			if(!isEqual(vid2ls[i],vid2ls_old[i])){
 				vid2ls_dif = true;
 			}
-			var aspace = "";
-			for(let j=0;j<duration*currentBufferFrac-currentTime;j=Math.floor((j*1.05)+1)){
-				aspace += " "; // = alt+1279
-			}
-			myFrameHolder[i].children[2].innerText = timeFormat(currentTime) + " / " + timeFormat(duration) + " " + prefix + " " + aspace + " " + currentVolume + "% (" + timeFormat(bufferTime,false) + ") ";
-    //			console.log("."+aspace+".",myFrameHolder[i].children[2].innerHTML,timeFormat(duration) + " " + aspace + " (" + timeFormat(Math.max(0,duration*currentBuffer-currentTime),false));
+			let spaceCount = Math.floor((duration*currentBufferFrac-currentTime*1.05)+1);
+			let aspace = " ".repeat(spaceCount); // = alt+1279
+			let newStatusBar = timeFormat(currentTime) + " / " + timeFormat(duration) + " " + prefix + " " + aspace + " " + p.getVolume() + "%";
+
+			// 2. CRITICAL MEMORY SAVER: Only touch DOM if text changed
+			if(lastStatusBar[i] !== newStatusBar) {
+				myFrameHolder[i].children[2].innerText = newStatusBar;
+				lastStatusBar[i] = newStatusBar;
+			}    //			console.log("."+aspace+".",myFrameHolder[i].children[2].innerHTML,timeFormat(duration) + " " + aspace + " (" + timeFormat(Math.max(0,duration*currentBuffer-currentTime),false));
 
 			// Video Looper
 			if(replayMaster[i] == 1 
@@ -346,7 +349,7 @@ function looper(){
 
 function timeUpdate(){
 	var refresh=100; // Refresh rate in milli seconds
-	clearTimeout(window.looerTimer);
+	clearTimeout(window.looperTimer);
 	mytime=setTimeout('looper()',refresh,lastReadState_LS)
 }		
 
