@@ -11,7 +11,9 @@ var running=0;
 const storageArray = ["YT_Player_1","YT_Player_2","YT_Player_4","YT_Player_8"];
 var thisReadState = [];
 var adSense = [];
-var vid2ls_old = [4];
+var vid2ls = [{}, {}, {}, {}]; // Pre-allocate objects
+var vid2ls_old = [{}, {}, {}, {}];
+var lastReadState_LS = ["", "", "", ""]; 
 var muteMaster = [0,0,0,0];
 var replayMaster = [0,0,0,0];
 let showPlayerCount = 0;
@@ -19,7 +21,7 @@ let myFrameBase = "https://www.youtube.com/embed/videoseries?enablejsapi=1";
 let myFrameHolder = [myFrame(),myFrame(),myFrame(),myFrame()];
 const playlist_IDs = ["PLuXaDdOtKhFcytpEqQ6fay1KF4eSZI-eq","PLuXaDdOtKhFdgYYaZ5SmkxqHntujrS73k","PL07iBthz24JBwDqSScgUCH_XpCxd72-WC","PLuXaDdOtKhFeu-eIaEG63-qVwt2DUO8tA"]
 let hidePlayerInt = Math.pow(2,myFrameHolder.length)-1;
-let lastStatusBar = ["","","",""]
+let lastStatusBar = ["","","",""];
 
 // Load only players if designated by url params
 if(getAllUrlParams(url)["showplayer"] && parseInt(getAllUrlParams(url)["showplayer"]) >= 0){
@@ -28,11 +30,11 @@ if(getAllUrlParams(url)["showplayer"] && parseInt(getAllUrlParams(url)["showplay
 let hidePlayerBin = int2bin(hidePlayerInt,playlist_IDs.length);
 pollDOM();
 
-for(i=0;i<playlist_IDs.length;i++){
+for(let i=0;i<playlist_IDs.length;i++){
 	showPlayerCount += parseInt(hidePlayerBin.charAt(i));
 }
 
-console.log(getAllUrlParams(url)["showplayer"],hidePlayerInt,hidePlayerBin,showPlayerCount)
+console.log(getAllUrlParams(url)["showplayer"],hidePlayerInt,hidePlayerBin,showPlayerCount);
 console.log(hidePlayerBin.charAt(3),hidePlayerBin.charAt(2),hidePlayerBin.charAt(1),hidePlayerBin.charAt(0));
 
 if(getAllUrlParams(url)["allowfullscreen"]){
@@ -83,9 +85,7 @@ if (myFrameDiv.children.length === 0) {
 updateLocalStorage("buttons_html",hidePlayerBin);
 
 
-
-
-for(i=0;i<playlist_IDs.length;i++){
+for(let i=0;i<playlist_IDs.length;i++){
 	if(getAllUrlParams(url)["showplayer"] && parseInt(getAllUrlParams(url)["showplayer"]) >= 0){
 		let hidePlayerBin = int2bin(hidePlayerInt,playlist_IDs.length);
 		if(hidePlayerBin.charAt(playlist_IDs.length - i - 1) == "1"){ // if 1 is showing, indicated by EVEN number
@@ -123,7 +123,7 @@ function myFrame(){
 		let textblip = document.createElement("span");
 		div.appendChild(textblip);
 	}
-	div.classList.add("frame-wrapper")
+	div.classList.add("frame-wrapper");
 	return div;
 }
 
@@ -247,7 +247,7 @@ function onPlayerStateChange(event) {
 
 // Main update loop
 function looper(){
-	if(running != hidePlayerInt){ return; }
+	if(running !== hidePlayerInt){ timeUpdate(); return; }
 	let hidePlayerBin = int2bin(hidePlayerInt,playlist_IDs.length);
 	for(let i=0;i<storageArray.length;i++){
 		const rawLs = localStorage.getItem(storageArray[i]);
@@ -276,12 +276,11 @@ function looper(){
 	}
 	// edit span Text
 /*	let showPlayerCount = 0;
-	for(i=0;i<playlist_IDs.length;i++){
+	for(let i=0;i<playlist_IDs.length;i++){
 		showPlayerCount += parseInt(hidePlayerBin.charAt(i));
 	} */
-	var vid2ls = [];
 	var vid2ls_dif=false;
-	for(i=0;i<playlist_IDs.length;i++){
+	for(let i=0;i<playlist_IDs.length;i++){
 		if(hidePlayerBin.charAt(playlist_IDs.length - i - 1) == "1"){ // if 1 is showing, indicated by EVEN number
 			let duration = player[i].getDuration();
 			let currentTime = player[i].getCurrentTime();
@@ -300,7 +299,9 @@ function looper(){
 				}
 			}
 			let currentVolume = player[i].getVolume();
-			myFrameHolder[i].children[1].innerText = myFrameHolder[i].children[0].title;
+			if(myFrameHolder[i].children[1].innerText!==myFrameHolder[i].children[0].title){
+				myFrameHolder[i].children[1].innerText = myFrameHolder[i].children[0].title;
+			}
 			let prevIndex=null,nextIndex=null,thisIndex=null;
 			if(player[i].getPlaylistIndex()>1){
 				prevIndex = player[i].getPlaylist()[player[i].getPlaylistIndex()-1];
@@ -343,14 +344,14 @@ function looper(){
 	}
 	vid2ls_old = vid2ls;
 	lastReadState_LS = thisReadState;
-	timeUpdate()
+	timeUpdate();
 	return;
 }
 
 function timeUpdate(){
-	var refresh=100; // Refresh rate in milli seconds
+	var refresh=200; // Refresh rate in milli seconds
 	clearTimeout(window.looperTimer);
-	mytime=setTimeout('looper()',refresh,lastReadState_LS)
+	mytime=setTimeout(looper,refresh,lastReadState_LS)
 }		
 
 function getAllUrlParams(url) {
