@@ -281,6 +281,30 @@ function looper(){
 	} */
 	var vid2ls_dif=false;
 	for(let i=0;i<playlist_IDs.length;i++){
+		const currentState = player[i].getPlayerState();
+
+        // CHECK IF PAUSED
+        if (currentState === YT.PlayerState.PAUSED) {
+            if (!isPaused[i]) {
+                isPaused[i] = true;
+                pauseStartTime[i] = Date.now();
+            }
+            
+            // If paused for more than 30 seconds, stop processing this player entirely
+            if (Date.now() - pauseStartTime[i] > 30000) {
+                continue; 
+            }
+        }
+
+        // RESET ON PLAY
+        if (currentState === YT.PlayerState.PLAYING && isPaused[i]) {
+            console.log(`Player ${i} resumed. Performing Memory Reset.`);
+            isPaused[i] = false;
+            lastStatusBar[i] = ""; // Force a clean redraw
+            lastSavedMetadata[i] = ""; 
+            // This prevents the script from trying to "catch up" on 30 minutes of missed math
+        }
+		
 		if(hidePlayerBin.charAt(playlist_IDs.length - i - 1) == "1"){ // if 1 is showing, indicated by EVEN number
 			let duration = player[i].getDuration();
 			let currentTime = player[i].getCurrentTime();
