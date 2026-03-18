@@ -281,7 +281,7 @@ function looper(){
 	} */
 	var vid2ls_dif=false;
 	for(let i=0;i<playlist_IDs.length;i++){
-		const currentState = player[i].getPlayerState();
+/*		const currentState = player[i].getPlayerState();
 
         // CHECK IF PAUSED
         if (currentState === YT.PlayerState.PAUSED) {
@@ -304,6 +304,7 @@ function looper(){
             lastSavedMetadata[i] = ""; 
             // This prevents the script from trying to "catch up" on 30 minutes of missed math
         }
+		*/
 		
 		if(hidePlayerBin.charAt(playlist_IDs.length - i - 1) == "1"){ // if 1 is showing, indicated by EVEN number
 			let duration = player[i].getDuration();
