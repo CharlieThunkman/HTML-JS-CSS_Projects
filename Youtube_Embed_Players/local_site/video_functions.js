@@ -311,7 +311,8 @@ function looper(){
 			}
 			thisIndex = player[i].getPlaylist()[player[i].getPlaylistIndex()]
 			//vid2ls[i] = [myFrameHolder[i].children[0].title.slice(0,63),prevIndex,nextIndex,player[i].getPlaylistIndex()];
-			vid2ls[i] = {title:myFrameHolder[i].children[0].title.slice(0,127),
+			vid2ls[i] = {
+				title:myFrameHolder[i].children[0].title.slice(0,127),
 				prevIndex:prevIndex,
 				nextIndex:nextIndex,
 				thisIndex:thisIndex,
@@ -322,7 +323,7 @@ function looper(){
 			if(!isEqual(vid2ls[i],vid2ls_old[i])){
 				vid2ls_dif = true;
 			}
-			let spaceCount = Math.max(1,Math.floor((duration*currentBufferFrac-currentTime*1.05)+1));
+			let spaceCount = Math.max(1, Math.floor(23 * Math.log(0.065 * bufferTime + 1)));
 			let aspace = " ".repeat(spaceCount); // = alt+1279
 			let newStatusBar = timeFormat(currentTime) + " / " + timeFormat(duration) + " " + prefix + " " + aspace + " " + player[i].getVolume() + "% (" + timeFormat(bufferTime,false) + ")";
 
@@ -338,14 +339,16 @@ function looper(){
 				&& duration-currentTime <= 30){player[i].seekTo(0); /*console.log("1",i);*/}
 		}
 	}
-	if(vid2ls_dif){
-		updateLocalStorage("buttons_titles",vid2ls,15);
-		//console.log(vid2ls,vid2ls_old);
-	}
-	vid2ls_old = vid2ls;
-	lastReadState_LS = thisReadState;
-	timeUpdate();
-	return;
+	if (vid2ls_dif) {
+        updateLocalStorage("buttons_titles", vid2ls, 15);
+    }
+
+    // FIX: Create a real copy, not just a reference
+    vid2ls_old = structuredClone(vid2ls); 
+
+    lastReadState_LS = [...thisReadState]; // Use spread operator to clone this array too
+    timeUpdate();
+    return;
 }
 
 function timeUpdate(){
