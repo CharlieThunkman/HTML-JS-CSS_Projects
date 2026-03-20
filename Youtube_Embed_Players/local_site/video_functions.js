@@ -370,13 +370,7 @@ function looper(){
     lastReadState_LS = [...thisReadState]; // Use spread operator to clone this array too
     timeUpdate();
     return;
-}
-
-function timeUpdate(){
-	var refresh=200; // Refresh rate in milli seconds
-	clearTimeout(window.looperTimer);
-	mytime=setTimeout(looper,refresh,lastReadState_LS)
-}		
+}	
 
 function getAllUrlParams(url) {
 	var queryString = url ? url.split('?')[1] : window.location.search.slice(1);
