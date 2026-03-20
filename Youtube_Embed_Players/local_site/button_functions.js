@@ -326,11 +326,16 @@ function looper() {
 })();
 
 
-window.onWorkerMessageReceived = function(key, data) {
-    // 1. Direct update to our RAM state
+sharedWorker.port.onmessage = function(e) {
+    const { key, data } = e.data;
+    
+    // Update the RAM state
     window.globalState[key] = data;
+    
+    // DEBUG: This should pop up in Site-B console every time a title changes
+    console.log("Site-B RECEIVED UPDATE:", key, data);
 
-    // 2. Debug Log (Check Site-B console to see this fire in real-time!)
-    console.log(`Worker Update: ${key} is now synced.`);
-
+    if (window.onWorkerMessageReceived) {
+        window.onWorkerMessageReceived(key, data);
+    }
 };
