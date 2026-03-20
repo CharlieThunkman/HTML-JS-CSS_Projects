@@ -1,15 +1,18 @@
 // worker.js
-const connections = [];
+const ports = new Set();
 
-onconnect = function (e) {
+onconnect = function(e) {
     const port = e.ports[0];
-    connections.push(port);
+    ports.add(port);
 
-    port.onmessage = function (msg) {
-        // When any site sends a message, broadcast it to EVERYONE ELSE
-        connections.forEach(conn => {
-            if (conn !== port) {
-                conn.postMessage(msg.data);
+    port.onmessage = function(msg) {
+        // Broadcaster: Send to EVERY port in the Set
+        ports.forEach(p => {
+            try {
+                p.postMessage(msg.data);
+            } catch (e) {
+                // If a port is dead (tab closed), remove it
+                ports.delete(p);
             }
         });
     };
