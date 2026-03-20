@@ -367,7 +367,8 @@ function looper(){
 	}
 	if (vid2ls_dif) {
         updateLocalStorage("buttons_titles", vid2ls, 15);
-    }
+		console.log("Site-V: Broadcasting titles to Worker...");
+	}
 
     // FIX: Create a real copy, not just a reference
     vid2ls_old = structuredClone(vid2ls); 
