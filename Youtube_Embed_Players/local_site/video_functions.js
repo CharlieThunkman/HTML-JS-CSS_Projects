@@ -435,67 +435,82 @@ window.addEventListener('DOMContentLoaded', function(e) {
 } );
 */
 
-function processAPIcalls(i,ls,player,muteMaster){
-				// playState
-				 if(ls.Buttons.playState == 1){player[i].playVideo(); /*console.log("1",i);*/}
-			else if(ls.Buttons.playState == 0){player[i].stopVideo(); /*console.log("0",i);*/}
-			else if(ls.Buttons.playState == 2){player[i].pauseVideo(); /*console.log("2",i);*/}
-			// skimState
-			if(ls.Buttons.skimState != 0){
-				var currentTime = player[i].getCurrentTime();
-				player[i].seekTo(currentTime+ls.Buttons.skimState, true);
-				player[i].pauseVideo();
-				/*console.log("1",i);*/
-			}
-			// timeJumpTo_sec
-			if(ls.Buttons.timeJumpTo_sec >= 0 ){
-				player[i].seekTo(ls.Buttons.timeJumpTo_sec, true);
-				/*console.log("1",i);*/
-			}
-			// volumeState
-			player[i].setVolume(ls.Buttons.volState);
-			// isMuted
-			if(ls.Buttons.isMuted){player[i].mute();muteMaster[i]=1;}
-			else{player[i].unMute();muteMaster[i]=0;}
-			// playbackSpeedState
-			if(ls.Buttons.playbackSpeedState != player[i].getPlaybackRate()){
-	//			console.log(player[i].getAvailablePlaybackRates(),ls.Buttons.playbackSpeedState);
-				player[i].setPlaybackRate(ls.Buttons.playbackSpeedState);
-			}
-			
-			// skipState - seeking through the playlist
-			
-				 if(ls.Buttons.skipState == -1 && lastReadState_LS[i].Expire%100000000 != ls.Expire%100000000){player[i].previousVideo(); /*console.log("1",i);*/}
-			else if(ls.Buttons.skipState == 1 && lastReadState_LS[i].Expire%100000000 != ls.Expire%100000000){player[i].nextVideo(); /*console.log("0",i);*/}
-			
-			// Replay initiate
-			replayMaster[i]=ls.Buttons.replayBool;
-			
-			// hidePlayerDynamic
-			if(ls.Buttons.hiddenBool){
-				myFrameHolder[i].classList.add('hidden');
-			} else {
-				myFrameHolder[i].classList.remove('hidden');
-			}
+function processAPIcalls(i, ls, player, muteMaster) {
+    const buttons = ls.Buttons; // Shortcut for readability
 
-			// return data
-		return muteMaster;
+    // playState
+    if (buttons.playState === 1) { player[i].playVideo(); }
+    else if (buttons.playState === 0) { player[i].stopVideo(); }
+    else if (buttons.playState === 2) { player[i].pauseVideo(); }
+
+    // skimState
+    if (buttons.skimState !== 0) {
+        var currentTime = player[i].getCurrentTime();
+        player[i].seekTo(currentTime + buttons.skimState, true);
+        player[i].pauseVideo();
+    }
+
+    // timeJumpTo_sec
+    if (buttons.timeJumpTo_sec >= 0) {
+        player[i].seekTo(buttons.timeJumpTo_sec, true);
+    }
+
+    // volumeState
+    player[i].setVolume(buttons.volState);
+
+    // isMuted
+    if (buttons.isMuted) {
+        player[i].mute();
+        muteMaster[i] = 1;
+    } else {
+        player[i].unMute();
+        muteMaster[i] = 0;
+    }
+
+    // playbackSpeedState
+    if (buttons.playbackSpeedState !== player[i].getPlaybackRate()) {
+        player[i].setPlaybackRate(buttons.playbackSpeedState);
+    }
+
+    // skipState - The Worker trigger ensures this only runs ONCE per click
+    if (buttons.skipState === -1) {
+        player[i].previousVideo();
+    } else if (buttons.skipState === 1) {
+        player[i].nextVideo();
+    }
+
+    // Replay initiate
+    replayMaster[i] = buttons.replayBool;
+
+    // hidePlayerDynamic
+    if (buttons.hiddenBool) {
+        myFrameHolder[i].classList.add('hidden');
+    } else {
+        myFrameHolder[i].classList.remove('hidden');
+    }
+
+    return muteMaster;
 }
 
 /**
  * Site-V logic for when Site-B clicks a button
  */
+let lastProcessedExpire = [0, 0, 0, 0]; // Track the timestamp for each player (1, 2, 4, 8)
+
 window.onWorkerMessageReceived = function(key, data) {
     if (key.includes("YT_Player_")) {
-        // Map "YT_Player_4" -> index 2 (for example)
         const playerNum = parseInt(key.split("_")[2]);
         const idxMap = {1:0, 2:1, 4:2, 8:3}; 
-        const playerIdx = idxMap[playerNum];
+        const i = idxMap[playerNum];
 
-        if (playerIdx !== undefined && player[playerIdx]) {
-            // EXECUTE IMMEDIATELY - No looper required
-            muteMaster = processAPIcalls(playerIdx, data, player, muteMaster);
-            console.log(`Worker: Executed command for Player ${playerNum}`);
+        // CHECK: Is this a NEW message or a duplicate?
+        if (data.Expire !== lastProcessedExpire[i]) {
+            lastProcessedExpire[i] = data.Expire; // Update the "Last Seen" timestamp
+            
+            if (player[i]) {
+                muteMaster = processAPIcalls(i, data, player, muteMaster);
+                console.log(`Action executed for Player ${playerNum} via Worker.`);
+            }
         }
     }
 };
