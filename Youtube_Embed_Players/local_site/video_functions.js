@@ -127,12 +127,6 @@ function myFrame(){
 	return div;
 }
 
-function updateLocalStorage(key,valueObject,expire = 10){
-	const exp = (Date.now()+expire*1000); // Expires in seconds
-	localStorage.setItem(key, JSON.stringify({Contents: valueObject, Expire: exp}));
-	this.currentIndex = 0;
-}
-
 // this function gets called when API is ready to use
 function onYouTubePlayerAPIReady() {
 	// create the global player from the specific iframe (#video)
