@@ -175,134 +175,96 @@ function newTimeoutLength(index,that){
 
 let last_ls_titlecards;
 let ls_playerCount;
-function looper(){
-	//	console.log(JSON.parse(localStorage.getItem('YT_Player_1')));
-	//	console.log(JSON.parse(localStorage.getItem('YT_Player_1')).Expire);
-	let tempInteger = 1;
-	let playerCount = 4;
-	const ls_titlecards = JSON.parse(localStorage.getItem("buttons_titles"));
-	const ls_hidePlayerBin = JSON.parse(localStorage.getItem("buttons_html"));
-	if(ls_hidePlayerBin){	
-		ls_playerCount = 0;
-		for(let i=0; i<playerCount;i++){
-			ls_playerCount += parseInt(ls_hidePlayerBin.Contents.charAt(4 - i - 1));
-		}
-	}
-	if(ls_titlecards){
-		last_ls_titlecards = ls_titlecards;
-	}
-	for(let i=0;i<playerCount;i++){
-		let thisDiv = document.getElementById("buttonHost").children[1].children[i];
-		const itemName = buttonConfig.storage + "_" + tempInteger;
-		const ls = JSON.parse(localStorage.getItem(itemName));
-		if(ls && Date.now()>ls.Expire){
-			localStorage.removeItem(itemName);
-		}
-		// Update title cards
-		if(last_ls_titlecards && last_ls_titlecards.Contents[i] && last_ls_titlecards.Contents[i].thisIndex && last_ls_titlecards.Contents[i].title != "YouTube video player"){
-			thisDiv.children[0].innerHTML = timeFormat(last_ls_titlecards.Contents[i].playerTime,0) + " ID = " + (last_ls_titlecards.Contents[i].indexValue+1) + " | " + last_ls_titlecards.Contents[i].title ;
-		} else if (ls_titlecards || thisDiv.children[0].innerHTML == "undefined" || thisDiv.children[0].innerHTML == ""){
-			thisDiv.children[0].innerHTML = buttonConfig.storage + "_" + tempInteger;				
-		}
-		
-		// Hide buttons not used in video.html instance (assumes only one instance per browser)
-		if(ls_hidePlayerBin && ls_hidePlayerBin.Contents.charAt(4 - i - 1) == "1"){ // if 1 is showing, indicated by EVEN number
-			thisDiv.style.display = "block";
-		} else if(ls_hidePlayerBin){
-			thisDiv.style.display = "none";
-		}
 
-		tempInteger *= 2;
-	}
-	
-	// Update compound player info
-	if(YT[0]){
-		let thisDiv = document.getElementById("buttonHost").children[0],
-			clonDiv = document.getElementById("buttonHost").children[1].children[YT[0].playerIndex-1];
-		thisDiv.children[0].innerHTML = "[" + (YT[0].playerIndex) + "] " + clonDiv.children[0].innerHTML + " ";
-	}
-	if(last_ls_titlecards && last_ls_titlecards.Contents.length >= YT[0].playerIndex && last_ls_titlecards.Contents[YT[0].playerIndex-1] ){
-		document.title =  "[" + (YT[0].playerIndex) + "] " + last_ls_titlecards.Contents[YT[0].playerIndex-1].title + " ";
-	} 
-	for(let i=0;i<playerCount;i++){
-		let thisDiv = document.getElementById("buttonHost").children[1].children[i];
-		if(thisDiv.children[0].innerHTML.charAt(0)!=" "){
-			thisDiv.children[0].innerHTML = "  " + thisDiv.children[0].innerHTML
-		}
-	}
-	let thisDiv2 = document.getElementById("buttonHost").children[0];
-	if(thisDiv2.children[0].innerHTML.charAt(0)!=" "){
-			thisDiv2.children[0].innerHTML = "  " + thisDiv2.children[0].innerHTML
-		
-	}
-//	if(thisDiv2.children[0].innerHTML.charAt(5)==' '){
-//		thisDiv2.children[0].innerHTML = thisDiv2.children[0].innerHTML.substring(0,5) + " " + thisDiv2.children[0].innerHTML.substring(8,99) //substring
-//	}
+function looper() {
+    // 1. DATA RETRIEVAL: Use RAM (globalState) instead of Disk (localStorage)
+    // These are updated automatically by the worker in extended-js-functions.js
+    const ls_titlecards = window.globalState["buttons_titles"];
+    const ls_hidePlayerBin = window.globalState["buttons_html"];
+    
+    let playerCount = 4;
+    let tempInteger = 1;
 
+    // Calculate player count from the bin string in RAM
+    if (ls_hidePlayerBin && ls_hidePlayerBin.Contents) {
+        ls_playerCount = 0;
+        for (let i = 0; i < playerCount; i++) {
+            ls_playerCount += parseInt(ls_hidePlayerBin.Contents.charAt(4 - i - 1));
+        }
+    }
 
-	const videos_html_ls = ["buttons_html","buttons_titles"];
-	for(let i=0;i<videos_html_ls.length;i++){
-		const itemName = videos_html_ls[i];
-		const ls = JSON.parse(localStorage.getItem(itemName));
-		if(ls && Date.now()>ls.Expire){
-			localStorage.removeItem(itemName);
-		}
-	}
-	
-	// Resise Button elements
-	
-	const buttonClassElements = document.getElementsByClassName('buttons'); 
+    if (ls_titlecards) {
+        last_ls_titlecards = ls_titlecards;
+    }
+
+    for (let i = 0; i < playerCount; i++) {
+        let thisDiv = document.getElementById("buttonHost").children[1].children[i];
+        const itemName = buttonConfig.storage + "_" + tempInteger;
+        
+        // Get individual player state from RAM
+        const ls = window.globalState[itemName];
+
+        // Update title cards UI
+        if (last_ls_titlecards && last_ls_titlecards.Contents[i] && last_ls_titlecards.Contents[i].thisIndex && last_ls_titlecards.Contents[i].title != "YouTube video player") {
+            thisDiv.children[0].innerHTML = "  " + timeFormat(last_ls_titlecards.Contents[i].playerTime, 0) + " ID = " + (last_ls_titlecards.Contents[i].indexValue + 1) + " | " + last_ls_titlecards.Contents[i].title;
+        } else if (ls_titlecards || thisDiv.children[0].innerHTML == "undefined" || thisDiv.children[0].innerHTML == "") {
+            thisDiv.children[0].innerHTML = "  " + itemName;
+        }
+
+        // Visibility Toggle
+        if (ls_hidePlayerBin && ls_hidePlayerBin.Contents.charAt(4 - i - 1) == "1") {
+            thisDiv.style.display = "block";
+        } else if (ls_hidePlayerBin) {
+            thisDiv.style.display = "none";
+        }
+
+        tempInteger *= 2;
+    }
+
+    // Update Compound Player Info & Document Title
+    if (YT[0]) {
+        let thisDiv = document.getElementById("buttonHost").children[0];
+        let clonDiv = document.getElementById("buttonHost").children[1].children[YT[0].playerIndex - 1];
+        thisDiv.children[0].innerHTML = "  [" + (YT[0].playerIndex) + "] " + clonDiv.children[0].innerHTML.trim() + " ";
+        
+        if (last_ls_titlecards && last_ls_titlecards.Contents[YT[0].playerIndex - 1]) {
+            document.title = "[" + (YT[0].playerIndex) + "] " + last_ls_titlecards.Contents[YT[0].playerIndex - 1].title + " ";
+        }
+    }
+
+    // UI Panel Logic
+    let thisDiv2 = document.getElementById("buttonHost").children[0];
+    if (ls_playerCount === 1) {
+        thisDiv2.classList.add('hide-button-panel');
+        // Auto-sync YT[0] index if only one player exists
+        for (let i = 0; i < playerCount; i++) {
+            if (ls_hidePlayerBin && ls_hidePlayerBin.Contents.charAt(4 - i - 1) === "1") {
+                if (YT[0]) YT[0].playerIndex = i + 1;
+                break;
+            }
+        }
+    } else {
+        thisDiv2.classList.remove('hide-button-panel');
+    }
+
+    // Resizing Logic (Stays roughly the same, just using calculated ls_playerCount)
+    const buttonClassElements = document.getElementsByClassName('buttons');
     for (let i = 0; i < buttonClassElements.length; i++) {
-		if(document.body.clientWidth > 800 && ls_playerCount>1){
-			buttonClassElements[i].classList.add('buttonsMaxWidth'); // Adds the new styles
-			var maxWide = 3,
-				minWidth = 290;
-			if(document.body.clientWidth > maxWide*minWidth && (ls_playerCount-1)%maxWide > maxWide*(maxWide-1)/(1+ls_playerCount)){
-				document.documentElement.style.setProperty('--buttonsMaxWidth', 'calc(33.3333% - 11px)'); // Changes the variable's value
-			} else {
-				document.documentElement.style.setProperty('--buttonsMaxWidth', 'calc(50% - 11px)'); // Changes the variable's value
-			}
-        } else {buttonClassElements[i].classList.remove('buttonsMaxWidth'); // Removes an old class
-		}
-        // buttonClassElements[i].classList.toggle('active'); // Toggles a class
-	}
-	// Check if exactly one player is active
-	if (ls_hidePlayerBin && ls_playerCount === 1) {
-		let activeIndex = -1;
-		
-		// Find the index of the '1' in the binary string
-		// charAt(4 - i - 1) logic suggests 4 is the total possible players
-		for (let i = 0; i < playerCount; i++) {
-			if (ls_hidePlayerBin.Contents.charAt(4 - i - 1) === "1") {
-				activeIndex = i; // This matches the 0-based index of your ls_titlecards.Contents
-				break;
-			}
-		}
-	
-		// Overwrite the title and the YT[0] index to point to this single active player
-		if (activeIndex !== -1 && last_ls_titlecards && last_ls_titlecards.Contents[activeIndex]) {
-			const singleTitle = last_ls_titlecards.Contents[activeIndex].title;
-			
-			// Update the document title
-			//document.title = "{" + (activeIndex + 1) + "} " + singleTitle + " ";
-			
-			// Sync YT[0] index so other functions know which player is the "primary"
-			if (YT[0]) {
-				YT[0].playerIndex = activeIndex + 1;
-			}
-		}
-	}
+        if (document.body.clientWidth > 800 && ls_playerCount > 1) {
+            buttonClassElements[i].classList.add('buttonsMaxWidth');
+            let maxWide = 3;
+            let minWidth = 290;
+            if (document.body.clientWidth > maxWide * minWidth) {
+                document.documentElement.style.setProperty('--buttonsMaxWidth', 'calc(33.3333% - 11px)');
+            } else {
+                document.documentElement.style.setProperty('--buttonsMaxWidth', 'calc(50% - 11px)');
+            }
+        } else {
+            buttonClassElements[i].classList.remove('buttonsMaxWidth');
+        }
+    }
 
-	if(ls_playerCount == 1){
-		let thisDiv = document.getElementById("buttonHost").children[0];
-		thisDiv.classList.add('hide-button-panel');
-	} else {
-		let thisDiv = document.getElementById("buttonHost").children[0];
-		thisDiv.classList.remove('hide-button-panel');
-		
-	}
-	// console.log(array);
-	timeUpdate();
+    timeUpdate();
 }
 
 
@@ -362,3 +324,17 @@ function looper(){
 
   document.body.appendChild(controls);
 })();
+
+
+window.onWorkerMessageReceived = function(key, data) {
+    if (key === "buttons_titles") {
+        // The titles just updated! 
+        // Instead of a loop checking for changes, update the UI now.
+        refreshButtonDisplay(data.Contents);
+    }
+    
+    if (key === "buttons_html") {
+        // Handle showing/hiding players based on the bin string
+        syncPlayerVisibility(data.Contents);
+    }
+};
