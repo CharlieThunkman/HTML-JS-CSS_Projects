@@ -372,13 +372,6 @@ function looper(){
     return;
 }
 
-function timeUpdate() {
-    var refresh = 200; 
-    // Use a global ID to ensure we never have two loopers running at once
-    clearTimeout(window.looperTimer); 
-    window.looperTimer = setTimeout(looper, refresh);
-}	
-
 function getAllUrlParams(url) {
 	var queryString = url ? url.split('?')[1] : window.location.search.slice(1);
 	var obj = {};
