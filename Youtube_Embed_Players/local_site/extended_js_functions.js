@@ -1,6 +1,8 @@
 var lastReadState_LS = [];
-function timeUpdate(refresh = 100) {
-    window.looperTimer = setTimeout(() => looper(), refresh);
+function timeUpdate() {
+    var refresh = 200; 
+    clearTimeout(window.looperTimer); 
+    window.looperTimer = setTimeout(looper, refresh);
 }
 
 
