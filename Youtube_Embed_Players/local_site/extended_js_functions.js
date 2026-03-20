@@ -21,6 +21,10 @@ function timeFormat(f,h=true){
 		}
 }
 
+function isEqual(arr1, arr2){
+	return JSON.stringify(arr1) === JSON.stringify(arr2);
+}
+
 // Initialize the Hub
 window.sharedWorker = new SharedWorker('shared_worker.js');
 window.sharedWorker.port.start();
