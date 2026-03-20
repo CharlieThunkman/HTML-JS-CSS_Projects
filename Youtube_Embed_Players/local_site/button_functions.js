@@ -327,14 +327,10 @@ function looper() {
 
 
 window.onWorkerMessageReceived = function(key, data) {
-    if (key === "buttons_titles") {
-        // The titles just updated! 
-        // Instead of a loop checking for changes, update the UI now.
-        refreshButtonDisplay(data.Contents);
-    }
-    
-    if (key === "buttons_html") {
-        // Handle showing/hiding players based on the bin string
-        syncPlayerVisibility(data.Contents);
-    }
+    // 1. Direct update to our RAM state
+    window.globalState[key] = data;
+
+    // 2. Debug Log (Check Site-B console to see this fire in real-time!)
+    console.log(`Worker Update: ${key} is now synced.`);
+
 };
