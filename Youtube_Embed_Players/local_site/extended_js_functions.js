@@ -22,7 +22,7 @@ function timeFormat(f,h=true){
 }
 
 // Initialize the Hub
-window.sharedWorker = new SharedWorker('worker.js');
+window.sharedWorker = new SharedWorker('shared_worker.js');
 window.sharedWorker.port.start();
 
 // This object is the "Source of Truth" in RAM
