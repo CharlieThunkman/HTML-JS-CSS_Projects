@@ -202,7 +202,7 @@ function looper() {
         const itemName = buttonConfig.storage + "_" + tempInteger;
         
         // Get individual player state from RAM
-        const ls = window.globalState[itemName];
+		const ls = window.globalState[itemName] || { Buttons: {}, Expire: 0 };
 
         // Update title cards UI
         if (last_ls_titlecards && last_ls_titlecards.Contents[i] && last_ls_titlecards.Contents[i].thisIndex && last_ls_titlecards.Contents[i].title != "YouTube video player") {
