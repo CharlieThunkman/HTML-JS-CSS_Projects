@@ -365,11 +365,18 @@ function looper(){
 	}
 
     // FIX: Create a real copy, not just a reference
-    vid2ls_old = structuredClone(vid2ls); 
+    vid2ls_old = [...vid2ls]; 
 
     lastReadState_LS = [...thisReadState]; // Use spread operator to clone this array too
     timeUpdate();
     return;
+}
+
+function timeUpdate() {
+    var refresh = 200; 
+    // Use a global ID to ensure we never have two loopers running at once
+    clearTimeout(window.looperTimer); 
+    window.looperTimer = setTimeout(looper, refresh);
 }	
 
 function getAllUrlParams(url) {
