@@ -21,29 +21,58 @@ function timeFormat(f,h=true){
 		}
 }
 
-function isEqual(arr1, arr2){
-	return JSON.stringify(arr1) === JSON.stringify(arr2);
-}
+// Initialize the Hub
+window.sharedWorker = new SharedWorker('worker.js');
+window.sharedWorker.port.start();
 
-// Initialize Worker
-const sharedWorker = new SharedWorker('worker.js');
-sharedWorker.port.start();
+// This object is the "Source of Truth" in RAM
+window.globalState = {
+    buttons_titles: {},
+    buttons_html: "",
+    YT_Player_1: null,
+    YT_Player_2: null,
+    YT_Player_4: null,
+    YT_Player_8: null
+};
+
+// INITIAL LOAD: Sync from disk once on startup
+(function initData() {
+    const keys = Object.keys(window.globalState);
+    keys.forEach(k => {
+        const saved = localStorage.getItem(k);
+        if (saved) window.globalState[k] = JSON.parse(saved);
+    });
+})();
 
 /**
- * Replaces the old LocalStorage-only function.
- * Now broadcasts data via SharedWorker for instant cross-site sync.
+ * Replaces old localStorage logic. 
+ * Use this for ALL data updates on both sites.
  */
 function updateLocalStorage(key, valueObject, expire = 15) {
-    // 1. Maintain backward compatibility (Optional: keep writing to LS)
     const exp = Date.now() + (expire * 1000);
-    const data = { Contents: valueObject, Expire: exp, Buttons: valueObject }; 
-    localStorage.setItem(key, JSON.stringify(data));
+    const dataPackage = { 
+        Contents: valueObject, 
+        Expire: exp, 
+        Buttons: valueObject 
+    };
 
-    // 2. THE PERFORMANCE FIX: Broadcast via Worker
-    // This allows the other site to react INSTANTLY without a loop
-    sharedWorker.port.postMessage({
-        key: key,
-        data: data,
-        source: window.location.href // Helps debug which site sent it
-    });
+    // Update local RAM immediately
+    window.globalState[key] = dataPackage;
+
+    // Broadcast to the other site
+    window.sharedWorker.port.postMessage({ key, data: dataPackage });
+
+    // Save to disk as a background task
+    localStorage.setItem(key, JSON.stringify(dataPackage));
 }
+
+// Global Listener for the worker "Push"
+window.sharedWorker.port.onmessage = function(e) {
+    const { key, data } = e.data;
+    window.globalState[key] = data;
+
+    // Trigger specific site logic if functions exist
+    if (window.onWorkerMessageReceived) {
+        window.onWorkerMessageReceived(key, data);
+    }
+};
