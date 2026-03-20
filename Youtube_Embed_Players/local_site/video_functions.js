@@ -249,6 +249,7 @@ function onPlayerStateChange(event) {
 function looper(){
 	if(running !== hidePlayerInt){ timeUpdate(); return; }
 	let hidePlayerBin = int2bin(hidePlayerInt,playlist_IDs.length);
+	/* // LS version commented, now uses sharedWorker outside of looper
 	for(let i=0;i<storageArray.length;i++){
 		const rawLs = localStorage.getItem(storageArray[i]);
 		if(!rawLs) continue;
@@ -273,7 +274,7 @@ function looper(){
 			muteMaster = processAPIcalls(i,ls,player,muteMaster)
 		}
 		thisReadState[i] = rawLs;
-	}
+	}*/
 	// edit span Text
 /*	let showPlayerCount = 0;
 	for(let i=0;i<playlist_IDs.length;i++){
@@ -481,3 +482,23 @@ function processAPIcalls(i,ls,player,muteMaster){
 		return muteMaster;
 }
 
+/**
+ * Site-V logic for when Site-B clicks a button
+ */
+window.onWorkerMessageReceived = function(key, data) {
+    if (key.includes("YT_Player_")) {
+        // Map "YT_Player_4" -> index 2 (for example)
+        const playerNum = parseInt(key.split("_")[2]);
+        const idxMap = {1:0, 2:1, 4:2, 8:3}; 
+        const playerIdx = idxMap[playerNum];
+
+        if (playerIdx !== undefined && player[playerIdx]) {
+            // EXECUTE IMMEDIATELY - No looper required
+            muteMaster = processAPIcalls(playerIdx, data, player, muteMaster);
+            console.log(`Worker: Executed command for Player ${playerNum}`);
+        }
+    }
+};
+
+// Inside your looper, Site-V sends data back to Site-B:
+// updateLocalStorage("buttons_titles", vid2ls, 15);
