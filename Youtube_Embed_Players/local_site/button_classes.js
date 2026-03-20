@@ -268,7 +268,7 @@ class ButtonPanel { // IDs of buttons
 	
 	updateLocalStorage() {
 		const timeJumpValue = this.confirm ? this.j : -1;
-
+	
 		const buttons = {
 			playState: this.p,
 			skimState: this.n,
@@ -281,14 +281,14 @@ class ButtonPanel { // IDs of buttons
 			hiddenBool: this.h
 		};
 
-//				const exp = (Date.now()+604800000); // Expire in a week
-		const exp = Date.now() + 15000; // 15 second expiry
-		localStorage.setItem(this.storageKey, JSON.stringify({ Buttons: buttons, Expire: exp }));
-
+		// Call the global function from extended-js-functions.js
+	   	// This broadcasts 'Buttons' to Site-V via the Worker
+		updateLocalStorage(this.storageKey, buttons, 15);
+	
 		// Reset temporary states
 		this.currentIndex = 0;
 		this.confirm = false;
-		console.log("Storage Updated", buttons);
+		console.log("Worker Broadcast Sent:", buttons);
 	}
 	
 } // exit class
