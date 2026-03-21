@@ -60,7 +60,7 @@ function updateLocalStorage(key, valueObject, expire = 15) {
 
     window.globalState[key] = dataPackage;
     window.sharedWorker.port.postMessage({ key, data: dataPackage });
-    localStorage.setItem(key, JSON.stringify(dataPackage));
+//    localStorage.setItem(key, JSON.stringify(dataPackage));
 }
 
 // 6. The "Single Source" Listener
@@ -69,7 +69,7 @@ window.sharedWorker.port.addEventListener('message', function(e) {
     window.globalState[key] = data;
     
     // Debug line to confirm receipt
-    console.log(`%c [Worker] -> ${key} updated`, "color: #00ff00; font-weight: bold");
+ //   console.log(`%c [Worker] -> ${key} updated`, "color: #00ff00; font-weight: bold");
 
     if (typeof window.onWorkerMessageReceived === 'function') {
         window.onWorkerMessageReceived(key, data);
