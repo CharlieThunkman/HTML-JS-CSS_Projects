@@ -317,6 +317,10 @@ function looper(){
 						player[i].mute();
 					}
 				}
+				if(adSense[i] && bufferTime < 180){
+					adSense[i] = 0;
+					player[i].unmute();
+				}
 			}
 			let currentVolume = player[i].getVolume();
 			if(myFrameHolder[i].children[1].innerText!==myFrameHolder[i].children[0].title){
