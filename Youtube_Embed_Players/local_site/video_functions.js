@@ -319,7 +319,7 @@ function looper(){
 				}
 				if(adSense[i] && bufferTime < 180){
 					adSense[i] = 0;
-					player[i].unmute();
+					player[i].unMute();
 				}
 			}
 			let currentVolume = player[i].getVolume();
