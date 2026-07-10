@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Matrix Shifting Environment</title>
+	<style>
+		body {
+			font-family: monospace;
+			background: #111;
+			color: #fff;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			padding: 2px;
+			margin: 2px;
+			min-width: 514px;
+		}
+		h1, h4{
+			margin-block-start: 0.01em;
+			margin-block-end: 0.2em;
+		}
+		h99 {
+			font-size: 8px;
+			padding: 0px 50px;
+			text-align: center;
+			max-width: 800px;
+		}
+		p, #log {
+			margin-block-end: 0.1em;
+			margin-block-start: 0.1em;
+			width: 520px;
+			
+		}
+		#controls {
+			margin-bottom: 9px;
+			display: flex;
+			gap: 5px 8px;
+			flex-wrap: wrap;
+			background: #222;
+			padding: 5px 10px;
+			border-radius: 28px;
+			justify-content: center;
+			align-items: center;
+		}
+		button, select, label {
+			color: #fff;
+			cursor: pointer;
+			border-radius: 50px;
+			margin: 0px 0px 0px 5px;
+		}
+		button, select {
+			background: #333d;
+			border: 1px solid #555;
+			padding: 4px 8px;
+			margin: 2px;
+		}
+		button:hover { background: #444d; }
+		canvas {
+			border: 2px solid #444;
+			background: #000;
+		}
+		#log {
+			height: 160px;
+			width: 500px;
+			background: #000;
+			border: 1px solid #333;
+			padding: 9px;
+			overflow-y: auto;
+			font-size: 12px;
+			color: #00ff00;
+		}
+		.control-group {
+			display: flex;
+			flex-direction: row;
+			border-radius: 99px;
+			align-items: center;
+		}
+		.hidden {
+			visibility: hidden;
+		}
+	</style>
+</head>
+<body>
+
+	<h1>Matrix Shifting Environment</h1>
+	<h4>Designed to imitate valid movement types in Shapez 2</h4>
+	
+	<div id="controls">
+		<button onclick="initSystem()" style="background: #822;">🔄️ Reset 🔄️</button>
+			<div id="action-inspector-container"></div>
+		<div class="control-group" style="background:#630;">
+			<label>Buffer %: 
+			<div id="dropdown-buffer" style="display:inline-block;"></div></label>
+		</div>
+		<div class="control-group" style="background:#036;">
+
+			<label>Array Size: 
+				<select id="arraySize" onchange="initSystem()">
+					<option value="3">n = 3</option>
+					<option value="4">n = 4</option>
+					<option value="6" selected>n = 6</option>
+					<option value="8">n = 8</option>
+				</select>
+			</label>
+		</div>
+		<div class="control-group" style="background:#8f1;">
+			<button id="shiftRowBtn">Shift Row (Horiz)</button>
+			<div id="dropdown-shift-row"></div>
+			<div id="dropdown-shift-row-dir"></div>
+		</div>
+
+		<div class="control-group" style="background:#000;">
+			<button id="shiftColBtn">Shift Col (Vert)</button>
+			<div id="dropdown-shift-col"></div>
+			<div id="dropdown-shift-col-dir"></div>
+		</div>
+
+		<div class="control-group" style="background:#f18;">
+			<button id="swapRows">Swap Right Rows</button>
+			<div id="dropdown-1"></div>
+			<div id="dropdown-2"></div>
+		</div>
+
+		<div class="control-group" style="background:#000;">
+			<button id="swapCols">Swap Bottom Cols</button>
+			<div id="dropdown-c1"></div>
+			<div id="dropdown-c2"></div>
+		</div>
+		<div>
+			<button onclick="stepBackward()" id="stepBackward">⏪</button>
+			<button onclick="stepForward()" id="stepForward">⏩</button>
+		</div>
+
+	</div>
+	<canvas id="gridCanvas" width="600" height="600"></canvas>
+	<p>Logging Console:</p>
+	<div id="log">System initialized. Column values matching their starting indices. Empty rows are marked 0.</div>
+	<h99> When manual mode is active, use the arrow keys to navigate between steps in the animation to see exactly what is changing at your own pace. Shapez does not support the column shifts natively, which is why those movement types are in black containers in the button menu. Stacking is an option only available in the animation sequence as the idea is not to use the stacker, only the rotators, cutters, and swappers. All stored animations are pre-programmed by CharlieThunkman.</h99>
+
+<script>
+let N = 4; // Core active matrix size, reset in init function
+createDropdown("dropdown-buffer","bufferPercent");
+let totalRows = N;
+let totalCols = N;
+let grid = []; 
+let macroFramesQueue = [];
+let currentFrameIdx = -1;
+let postFramePauseTime = 500; // Constant rest delay in milliseconds (e.g., 2.5 seconds)
+
+const canvas = document.getElementById('gridCanvas');
+const ctx = canvas.getContext('2d');
+const logDiv = document.getElementById('log');
+
+// Insert a macro animation control button dynamically into the controls layout
+const controlsDiv = document.getElementById('controls');
+const animateBtn = document.createElement('button');
+animateBtn.id = "animateTransposeBtn";
+animateBtn.textContent = "🚀 Animate Transpose 🚀";
+animateBtn.style.background = "#28a745";
+animateBtn.style.fontWeight = "bold";
+animateBtn.addEventListener('click', runTranspositionMacro);
+controlsDiv.insertBefore(animateBtn, controlsDiv.firstElementChild);
+
+// Global tracking states for the active animation thread
+let isAnimating = false;
+let isManualMode = false; // Toggled when using Step controls
+let animPercent = 0;    // Ranges from 0.0 to 1.0
+let animSpeed = 0.02;   // Control how fast the transition completes
+let movingElements = [];   // Array of objects describing what is moving where
+let pendingGridState = []; // Holds the final grid state to commit when done
+
+function lerp(start, end, t) {
+	return start + (end - start) * t;
+}
+
+function startAnimation(elementsList, nextState) {
+	movingElements = elementsList;
+	pendingGridState = nextState;
+	animPercent = 0;
+	isAnimating = true;
+	requestAnimationFrame(animationLoop);
+}
+
+function animationLoop() {
+	if (!isAnimating) return;
+
+	animPercent += animSpeed;
+
+	if (animPercent >= 1.0) {
+		// 1. Commit final state
+		grid = pendingGridState;
+		isAnimating = false;
+		movingElements = [];
+		draw(); // Final static draw layout
+		
+		// 2. Schedule the next automated frame only if a macro is running
+		if (macroFramesQueue.length > 0 && !isManualMode) {
+			currentFrameIdx++;
+			
+			console.log(`⏳ Holding position for ${postFramePauseTime / 1000}s...`);
+			
+			// Guarantees a clean, un-rushed pause before executing the next index
+			setTimeout(() => {executeNextMacroFrame(); }, postFramePauseTime);
+		}
+	} else {
+		renderAnimationFrame();
+		requestAnimationFrame(animationLoop);
+	}
+}
+
+function renderAnimationFrame() {
+	ctx.clearRect(0, 0, canvas.width - 100, canvas.height);
+	let canvasGridWidth = canvas.width - 100;
+	let cellW = canvasGridWidth / totalCols;
+	let cellH = canvas.height / totalRows;
+	const colors = generateColors(N);
+
+	// Step 1: Draw the static background tiles (anything NOT actively moving)
+	for (let i = 0; i < totalRows; i++) {
+		for (let j = 0; j < totalCols; j++) {
+			let isTileMoving = movingElements.some(el => {
+				let physX = (el.endX % totalCols + totalCols) % totalCols;
+				let physY = (el.endY % totalRows + totalRows) % totalRows;
+				return (el.startX === j && el.startY === i) || (physX === j && physY === i);
+			});
+
+			if (!isTileMoving) {
+				let val = grid[i][j];
+				ctx.fillStyle = colors[val] || "#fff";
+				ctx.fillRect(j * cellW, i * cellH, cellW - 2, cellH - 2);
+
+				ctx.fillStyle = val === 0 ? "#555" : "#000";
+				ctx.font = "bold 16px sans-serif";
+				ctx.textAlign = "center";
+				ctx.textBaseline = "middle";
+				ctx.fillText(val, j * cellW + cellW / 2, i * cellH + cellH / 2);
+			} else {
+				ctx.fillStyle = "#1a1a1a";
+				ctx.fillRect(j * cellW, i * cellH, cellW - 2, cellH - 2);
+			}
+
+			if (j >= Math.floor(totalCols / 2) || i >= Math.floor(N / 2)) {
+				ctx.strokeStyle = "rgba(255,255,255,0.05)";
+				ctx.strokeRect(j * cellW, i * cellH, cellW, cellH);
+			}
+		}
+	}
+
+	// Step 2: Draw the animated elements with Clockwise Perpendicular Curvature
+// --- INJECT CANVAS CLIPPING TO CONTAIN MOVING ELEMENTS ---
+	ctx.save(); // Save the clean, unclipped canvas state
+	
+	ctx.beginPath();
+	ctx.rect(0, 0, canvasGridWidth, canvas.height); // Define the safe grid region
+	ctx.clip(); // Everything drawn until ctx.restore() will be forced inside this box
+
+	movingElements.forEach(el => {
+		// Calculate true base linear tracking positions
+		let startXPix = el.startX * cellW;
+		let startYPix = el.startY * cellH;
+		let endXPix = el.endX * cellW;
+		let endYPix = el.endY * cellH;
+
+		let currentX = lerp(startXPix, endXPix, animPercent);
+		let currentY = lerp(startYPix, endYPix, animPercent);
+
+		// Apply bowing curvature strictly to Swaps or Stacking operations
+		if (el.startX !== el.endX && el.startY !== el.endY || (el.isSwap)) {
+			let dx = endXPix - startXPix;
+			let dy = endYPix - startYPix;
+
+			let distance = Math.sqrt(dx * dx + dy * dy);
+			if (distance > 0) {
+				let nx = dx / distance;
+				let ny = dy / distance;
+
+				let pX = -ny;
+				let pY = nx;
+
+				let arcAmplitude = cellW * 0.6; 
+				let arcOffset = Math.sin(animPercent * Math.PI) * arcAmplitude;
+
+				currentX += pX * arcOffset;
+				currentY += pY * arcOffset;
+			}
+		}
+
+		// Bring coordinates securely back into layout workspace using modular wrapping limits
+		let displayX = (currentX % canvasGridWidth + canvasGridWidth) % canvasGridWidth;
+		let displayY = (currentY % canvas.height + canvas.height) % canvas.height;
+
+		let positionsToDraw = [{ x: displayX, y: displayY }];
+
+		if (displayX + cellW > canvasGridWidth) positionsToDraw.push({ x: displayX - canvasGridWidth, y: displayY });
+		if (displayY + cellH > canvas.height) positionsToDraw.push({ x: displayX, y: displayY - canvas.height });
+
+		positionsToDraw.forEach(pos => {
+			ctx.fillStyle = colors[el.val] || "#fff";
+			ctx.fillRect(pos.x, pos.y, cellW - 2, cellH - 2);
+
+			ctx.fillStyle = el.val === 0 ? "#555" : "#000";
+			ctx.font = "bold 16px sans-serif";
+			ctx.textAlign = "center";
+			ctx.textBaseline = "middle";
+			ctx.fillText(el.val, pos.x + cellW / 2, pos.y + cellH / 2);
+		});
+	});
+
+	ctx.restore(); // REMOVE CLIPPING CONSTRAINTS so the sidebar can draw normally!
+
+	// Render sidebar panel backings safely on their own clean layer
+	ctx.fillStyle = "#111";
+	//ctx.fillRect(totalCols * cellW, 0, 50, canvas.height);
+
+	for (let i = 0; i < totalRows; i++) {
+		let isThisRowMoving = movingElements.some(el => el.startY === i || el.endY === i);
+		let displayState = isThisRowMoving ? pendingGridState : grid;
+		
+		drawRadialRow(i, displayState, cellW, cellH, colors, 50);
+	}
+}
+
+function createDropdown(containerId, selectId, limit) {
+	const container = document.getElementById(containerId);
+	if (!container) return; 
+	
+	const select = document.createElement("select");
+	select.id = selectId;
+	
+	if (selectId === "bufferPercent") {
+		select.addEventListener("change", initSystem);
+	}
+
+	if (limit == -1) {
+		options = [-1, 1, 180];
+		optionNames = ["ccw","cw","180°"];
+		for (let i = 0; i < options.length; i++) {
+			const option = document.createElement("option");
+			option.value = options[i];
+			option.textContent = optionNames[i];
+			select.appendChild(option);
+		}
+	} else if (limit) {
+		for (let i = 0; i < limit; i++) {
+			const option = document.createElement("option");
+			option.value = i + 1;
+			option.textContent = (i + 1);
+			select.appendChild(option);
+		}
+	} else {
+		const items = [
+			{ name: `Strictly ${N} rows`, value: 0 },
+	//		{ name: `50% (${N*1.5} rows)`, value: 0.5 },
+			{ name: `Double (${N*2} rows)`, value: 1.0 },
+	//		{ name: `${(N - 2)*50}% (${N*N/2} rows)`, value: (N - 2)/2 },
+			{ name: `Exploded (${N*N} rows)`, value: N - 1 }
+		];
+
+		items.forEach(item => {
+			const option = document.createElement("option");
+			option.value = item.value;
+			option.textContent = item.name;
+			if (document.getElementById("bufferPercent") && item.value === parseFloat(document.getElementById("bufferPercent").value)) option.selected = true; 
+			if (document.getElementById("bufferPercent") && item.value > 1 && parseFloat(document.getElementById("bufferPercent").value) > 1) option.selected = true; 
+			if ((!select.hasChildNodes() || select.lastElementChild.value != item.value)) select.appendChild(option);
+		});
+	}
+
+	if (container.childNodes.length > 0) {
+		container.replaceChild(select, container.childNodes[0]);
+	} else {
+		container.appendChild(select);
+	}
+}
+
+function drawRadialRow(rowIdx, currentGridState, cellW, cellH, colors, isNew) {
+	// 1. Establish the center of the wheel in the right-side margin area
+	if(!isNew) isNew = 0;
+	let gridWidth = totalCols * cellW;
+	let wheelCenterX = gridWidth + 25 + isNew; // Centers it in the 50px sidebar margin
+	let wheelCenterY = (rowIdx * cellH) + (cellH / 2);
+	
+	// Define the radius based on row height so it fits cleanly
+	let radius = (cellH / 2) - 4; 
+	if (radius < 10) radius = 10; // Guard floor size for large matrix modes
+
+	let numCells = totalCols;
+	// Calculate the arc angle allocated to each individual cell
+	let angleStep = (2 * Math.PI) / numCells; 
+
+	// 2. Iterate through every cell in this specific row
+	for (let j = 0; j < numCells; j++) {
+		let val = currentGridState[rowIdx][j];
+		
+		// Subtracting Math.PI / 2 rotates the start point to 12 o'clock (top)
+		let startAngle = (j * angleStep) - (Math.PI / 2);
+		let endAngle = startAngle + angleStep;
+
+		// 3. Render the colored slice
+		ctx.beginPath();
+		ctx.moveTo(wheelCenterX, wheelCenterY);
+		ctx.arc(wheelCenterX, wheelCenterY, radius, startAngle, endAngle);
+		ctx.closePath();
+		
+		ctx.fillStyle = colors[val] || "#fff";
+		ctx.fill();
+
+		// Draw separation lines between slices
+		ctx.strokeStyle = "rgba(0,0,0,0.3)";
+		ctx.lineWidth = 1;
+		ctx.stroke();
+		
+		// 4. Draw mini value labels inside the slices if space permits
+		if (cellH > 30) {
+			let midAngle = startAngle + (angleStep / 2);
+			// Place text at 65% of the radius length outward from the center
+			let textX = wheelCenterX + Math.cos(midAngle) * (radius * 0.65);
+			let textY = wheelCenterY + Math.sin(midAngle) * (radius * 0.65);
+
+			ctx.fillStyle = val === 0 ? "#555" : "#000";
+			ctx.font = `bold ${Math.floor(cellH * 0.3)}px sans-serif`;
+			ctx.textAlign = "center";
+			ctx.textBaseline = "middle";
+			ctx.fillText(val, textX, textY);
+		}
+	}
+
+	// Draw a clean ring outer boundary accent around the complete wheel
+	ctx.beginPath();
+	ctx.arc(wheelCenterX, wheelCenterY, radius, 0, 2 * Math.PI);
+	ctx.strokeStyle = "rgba(255,255,255,0.2)";
+	ctx.lineWidth = 1.5;
+	ctx.stroke();
+}
+
+// Attach UI Event Listeners
+document.getElementById("swapRows").addEventListener("click", () => {
+	const r1 = parseInt(document.getElementById("select-1").value);
+	const r2 = parseInt(document.getElementById("select-2").value);
+	swapRightHalfRows(r1, r2, false);
+});
+
+document.getElementById("swapCols").addEventListener("click", () => {
+	const c1 = parseInt(document.getElementById("select-c1").value);
+	const c2 = parseInt(document.getElementById("select-c2").value);
+	swapBottomHalfCols(c1, c2, false);
+});
+
+document.getElementById("shiftRowBtn").addEventListener("click", () => {
+	const rowNum = parseInt(document.getElementById("select-shift-row").value);
+	const dir = parseInt(document.getElementById("select-shift-row-dir").value);
+	shiftRow(rowNum, dir, false);
+});
+
+document.getElementById("shiftColBtn").addEventListener("click", () => {
+	const colNum = parseInt(document.getElementById("select-shift-col").value);
+	const dir = parseInt(document.getElementById("select-shift-col-dir").value);
+	shiftCol(colNum, dir, false);
+});
+
+function logAction(msg) {
+	logDiv.innerHTML += "<br>" + msg;
+	logDiv.scrollTop = logDiv.scrollHeight;
+}
+
+function initSystem() {
+	if(N != parseInt(document.getElementById("arraySize").value)){
+		N = parseInt(document.getElementById("arraySize").value); 
+		createDropdown("dropdown-buffer","bufferPercent");
+	}
+	N = parseInt(document.getElementById("arraySize").value); 
+	let bufferMultiplier = 0;
+	if(document.getElementById('bufferPercent')){
+		bufferMultiplier = parseFloat(document.getElementById('bufferPercent').value);
+	}
+	const extraRows = Math.floor(N * bufferMultiplier);
+	totalRows = N + extraRows;
+	totalCols = N;
+	document.title = `${N}×${totalRows} Matrix Shifting Enviornment`;
+	canvas.height = totalRows * 50; // Keep rows consistently sized
+	canvas.width = (N * 50) + 100;  // Grid columns + 50px layout margin for wheels
+	createDropdown("dropdown-1", "select-1", totalRows);
+	createDropdown("dropdown-2", "select-2", totalRows);
+	createDropdown("dropdown-shift-row", "select-shift-row", totalRows);
+	createDropdown("dropdown-shift-col", "select-shift-col", totalCols);
+	createDropdown("dropdown-shift-row-dir", "select-shift-row-dir", -1);
+	createDropdown("dropdown-shift-col-dir", "select-shift-col-dir", -1);
+	createDropdown("dropdown-c1", "select-c1", totalCols);
+	createDropdown("dropdown-c2", "select-c2", totalCols);
+	
+	grid = [];
+	for (let i = 0; i < totalRows; i++) {
+		let row = [];
+		for (let j = 0; j < totalCols; j++) {
+			if (i < N) {
+				row.push((i)%N + 1);
+			} else {
+				row.push(0);
+			}
+		}
+		grid.push(row);
+	}
+	logDiv.innerHTML = `Initialized: ${N}x${N} matrix inside a ${totalRows}x${totalCols} workspace.`;
+	draw();
+}
+
+// --- FULL RE-ENGINEERED COMPOSABLE OPERATIONS ---
+
+function shiftRow(rowNum, d, silent, targetGrid) {
+	let dir = d === 180 ? Math.floor(totalCols / 2) : d;
+	let rowIdx = rowNum - 1;
+	let workGrid = targetGrid || JSON.parse(JSON.stringify(grid));
+
+	let elements = [];
+	for (let j = 0; j < totalCols; j++) {
+		elements.push({
+			val: workGrid[rowIdx][j],
+			startX: j,
+			startY: rowIdx,
+			// Virtual continuous destination coordinate (can be negative or > totalCols)
+			endX: j + dir, 
+			endY: rowIdx
+		});
+	}
+
+	const dirNames = { "1": "clockwise (right)", "-1": "counter-clockwise (left)", "180": "180°" };
+	logAction(`&nbsp;&nbsp;• Shifted Row ${rowNum} ${dirNames[d.toString()] || d + ' steps'}`);
+	
+	if (!silent) {
+		let nextState = JSON.parse(JSON.stringify(grid));
+		elements.forEach(el => {
+			// Resolve virtual bounds back to physical grid indices for data commitment
+			let physicalX = (el.endX % totalCols + totalCols) % totalCols;
+			nextState[el.endY][physicalX] = el.val;
+		});
+		startAnimation(elements, nextState);
+		macroFramesQueue[++currentFrameIdx] = ([{ op:'shiftRow', target: rowNum, dir: dir}]);
+	}
+	return elements;
+}
+
+function shiftCol(colNum, d, silent, targetGrid) {
+	let dir = d === 180 ? Math.floor(totalRows / 2) : d;
+	let colIdx = colNum - 1;
+	let workGrid = targetGrid || JSON.parse(JSON.stringify(grid));
+	
+	let elements = [];
+	for (let i = 0; i < totalRows; i++) {
+		elements.push({
+			val: workGrid[i][colIdx],
+			startX: colIdx,
+			startY: i,
+			endX: colIdx,
+			// Virtual continuous destination coordinate
+			endY: i + dir 
+		});
+	}
+
+	const dirNames = { "1": "down", "-1": "upward", "180": "180° rotation" };
+	logAction(`&nbsp;&nbsp;• Shifted Column ${colNum} (${dirNames[d.toString()] || d + ' steps'})`);
+	
+	if (!silent) {
+		let nextState = JSON.parse(JSON.stringify(grid));
+		elements.forEach(el => {
+			let physicalY = (el.endY % totalRows + totalRows) % totalRows;
+			nextState[physicalY][el.endX] = el.val;
+		});
+		macroFramesQueue.push([{ op:'shiftCol',target: colNum, dir: dir}]);
+		startAnimation(elements, nextState);
+	}
+	return elements;
+}
+
+function swapRightHalfRows(r1, r2, silent, targetGrid) {
+	let startCol = Math.floor(totalCols / 2);
+	let idx1 = r1 - 1;
+	let idx2 = r2 - 1;
+	let workGrid = targetGrid || JSON.parse(JSON.stringify(grid));
+	let elements = [];
+
+	// Elements not involved stay in place
+	for (let j = startCol; j < totalCols; j++) {
+		elements.push({ val: workGrid[idx1][j], startX: j, startY: idx1, endX: j, endY: idx2, isSwap: true });
+		elements.push({ val: workGrid[idx2][j], startX: j, startY: idx2, endX: j, endY: idx1, isSwap: true });
+	}
+
+	logAction(`&nbsp;&nbsp;• Swapped Right-Half of Row ${r1} and Row ${r2}`);
+	if (!silent) {
+		let nextState = JSON.parse(JSON.stringify(grid));
+		elements.forEach(el => nextState[el.endY][el.endX] = el.val);
+		startAnimation(elements, nextState);
+	}
+	return elements;
+}
+
+function swapBottomHalfCols(c1, c2, silent, targetGrid) {
+	let startRow = Math.floor(totalRows / 2); 
+	let idx1 = c1 - 1;
+	let idx2 = c2 - 1;
+	let workGrid = targetGrid || JSON.parse(JSON.stringify(grid));
+	let elements = [];
+
+	for (let i = startRow; i < totalRows; i++) {
+		elements.push({ val: workGrid[i][idx1], startX: idx1, startY: i, endX: idx2, endY: i, isSwap: true });
+		elements.push({ val: workGrid[i][idx2], startX: idx2, startY: i, endX: idx1, endY: i, isSwap: true });
+	}
+
+	logAction(`&nbsp;&nbsp;• Swapped Bottom-Half of Col ${c1} and Col ${c2}`);
+	if (!silent) {
+		let nextState = JSON.parse(JSON.stringify(grid));
+		elements.forEach(el => nextState[el.endY][el.endX] = el.val);
+		startAnimation(elements, nextState);
+	}
+	return elements;
+}
+
+function stacking(r1, r2, silent, targetGrid) {
+	let idx1 = r1 - 1;
+	let idx2 = r2 - 1;
+	let workGrid = targetGrid || grid;
+	let elements = [];
+	
+	for (let j = 0; j < totalCols; j++) {
+		if(workGrid[idx2][j] > 0) {
+			elements.push({ val: workGrid[idx2][j], startX: j, startY: idx2, endX: j, endY: idx1 });
+		}
+	}
+	logAction(`&nbsp;&nbsp;• Stacked Row ${r2} on top of Row ${r1}`);
+	if (!silent) {
+		let nextState = JSON.parse(JSON.stringify(grid));
+		elements.forEach(el => {
+			nextState[el.endY][el.endX] = el.val;
+			nextState[el.startY][el.startX] = 0;
+		});
+		startAnimation(elements, nextState);
+	}
+	return elements;
+}
+
+// --- REVISED MULTI-ACTION AUTOMATION ENGINE ---
+
+function runTranspositionMacro() {
+	initSystem();
+	isManualMode = false;
+	const currentBuffer = document.getElementById('bufferPercent').value;
+	const lookupKey = `${N}_${currentBuffer}`;
+	const frames = macroRegistry[lookupKey];
+	
+	if (!frames) {
+		logAction(`⚠️ No custom sequence found for Key: [${lookupKey}]`);
+		return;
+	}
+	let actions = 0;
+	frames.forEach(frame => {
+		actions += frame.length;
+	});
+
+	
+	logAction(`🎬 Initializing chained sequence for [${lookupKey}] (${actions} actions in ${frames.length} frames)...`);
+	document.getElementById("stepBackward").classList.add("hidden");
+	document.getElementById("stepForward").classList.add("hidden");
+
+	// Store the instructions in our global queue and reset step index pointers
+	macroFramesQueue = frames;
+	currentFrameIdx = 0;
+
+	// Fire the very first frame to start the domino chain reaction
+	executeNextMacroFrame();
+}
+
+function executeNextMacroFrame() {
+	// If we've processed all the frames in the queue, shut down safely
+	if (currentFrameIdx >= macroFramesQueue.length) {
+		if(!isManualMode && macroFramesQueue.length > 1){
+			logAction(`✅ Controlled parallel sequence completed successfully. Manual mode activated.`);
+		}
+		currentFrameIdx--; 
+	//	macroFramesQueue = []; // Clear queue
+		isManualMode = true;
+		document.getElementById("stepBackward").classList.remove("hidden");
+		document.getElementById("stepForward").classList.remove("hidden");
+		return;
+	}
+
+	const currentFrameActions = macroFramesQueue[currentFrameIdx];
+	logAction(`<b>[Frame ${currentFrameIdx + 1} / ${macroFramesQueue.length}] Running ${currentFrameActions.length} actions:</b>`);
+
+	let elementsToAnimate = [];
+	let referenceGrid = JSON.parse(JSON.stringify(grid));
+	
+	currentFrameActions.forEach(action => {
+		if(!action.dir) action.dir = 1;
+		let actionElements = [];
+
+		switch (action.op) {
+			case 'shiftCol':
+				actionElements = shiftCol(action.target, action.dir, true, referenceGrid);
+				break;
+			case 'shiftRow':
+				actionElements = shiftRow(action.target, action.dir, true, referenceGrid);
+				break;
+			case 'swapRightRows':
+				actionElements = swapRightHalfRows(action.r1, action.r2, true, referenceGrid);
+				break;
+			case 'swapBottomCols':
+				actionElements = swapBottomHalfCols(action.c1, action.c2, true, referenceGrid);
+				break;
+			case 'stacking':
+				actionElements = stacking(action.s1, action.s2, true, referenceGrid);
+				break;
+		}
+		elementsToAnimate = elementsToAnimate.concat(actionElements);
+	});
+
+	let nextGridState = JSON.parse(JSON.stringify(grid));
+	elementsToAnimate.forEach(el => {
+		let physicalX = (el.endX % totalCols + totalCols) % totalCols;
+		let physicalY = (el.endY % totalRows + totalRows) % totalRows;
+		
+		nextGridState[physicalY][physicalX] = el.val;
+		
+		if (currentFrameActions.some(a => a.op === 'stacking' && a.s2 === el.startY + 1)) {
+			nextGridState[el.startY][el.startX] = 0;
+		}
+	});
+
+	// Kick off the visual render. When it hits 100%, it calls this function again!
+	startAnimation(elementsToAnimate, nextGridState);
+}
+
+function generateColors(n) {
+	const colors = ["#222"];
+	for (let i = 0; i < n; i++) {
+		const hue = (i * 360) / n;
+		colors.push(`hsl(${hue}, 80%, 50%)`);
+	}
+	return colors;
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+	let cellW = (canvas.width - 100) / totalCols; // Subtract margin
+	let cellH = canvas.height / totalRows;
+    const colors = generateColors(N);
+
+    for (let i = 0; i < totalRows; i++) {
+        for (let j = 0; j < totalCols; j++) {
+            let val = grid[i][j];
+            ctx.fillStyle = colors[val] || "#fff";
+            ctx.fillRect(j * cellW, i * cellH, cellW - 2, cellH - 2);
+            
+            ctx.fillStyle = val === 0 ? "#555" : "#000";
+            ctx.font = "bold 16px sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(val, j * cellW + cellW/2, i * cellH + cellH/2);
+            
+            if (j >= Math.floor(totalCols / 2) || i >= Math.floor(N / 2)) {
+                ctx.strokeStyle = "rgba(255,255,255,0.2)";
+                ctx.strokeRect(j * cellW, i * cellH, cellW, cellH);
+            }
+        }
+    }
+	// Paint a sidebar background panel
+	ctx.fillStyle = "#111";
+	ctx.fillRect(totalCols * cellW, 0, 100, canvas.height);
+
+	// Render a circle for every single active row layout
+	for (let i = 0; i < totalRows; i++) {
+		drawRadialRow(i, grid, cellW, cellH, colors);
+	}
+}
+
+function stepForward() {
+	if(isManualMode){
+		if (macroFramesQueue.length === 0 || isAnimating) return;
+		
+		currentFrameIdx++;
+		if (currentFrameIdx >= macroFramesQueue.length) {
+			currentFrameIdx--;
+			logAction("🏁 You are already at the final frame of this sequence.");
+			return;
+		}
+	
+		isManualMode = true;
+		logAction(`➡️ <b>Stepping Forward to Frame ${currentFrameIdx + 1}:</b>`);
+		executeNextMacroFrame();
+	}
+}
+
+function stepBackward() {
+	if(isManualMode){
+		if (macroFramesQueue.length === 0 || isAnimating) return;
+		
+		if (currentFrameIdx < 0) {
+			logAction("⏮️ You are already at the beginning of the sequence.");
+			return;
+		}
+	
+		isManualMode = true;
+		// Step the index back to point to the frame we want to reverse
+		const actionsToUndo = macroFramesQueue[currentFrameIdx];
+		currentFrameIdx--; 
+		
+		logAction(`⏪ <b>Undoing Frame ${currentFrameIdx + 2} entirely:</b>`);
+		
+		// Create exact inverses for the entire frame's batch of actions
+		let inverseActions = actionsToUndo.map(action => {
+			let inv = { ...action };
+			if (action.op === 'shiftRow' || action.op === 'shiftCol') {
+				if (action.dir === 180) inv.dir = 180;
+				else inv.dir = -(action.dir || 1);
+			}
+			return inv; // Swaps naturally invert themselves when run again
+		});
+	
+		let elementsToAnimate = [];
+		let referenceGrid = JSON.parse(JSON.stringify(grid));
+		
+		inverseActions.forEach(action => {
+			let actionElements = [];
+			switch (action.op) {
+				case 'shiftCol': actionElements = shiftCol(action.target, action.dir, true, referenceGrid); break;
+				case 'shiftRow': actionElements = shiftRow(action.target, action.dir, true, referenceGrid); break;
+				case 'swapRightRows': actionElements = swapRightHalfRows(action.r1, action.r2, true, referenceGrid); break;
+				case 'swapBottomCols': actionElements = swapBottomHalfCols(action.c1, action.c2, true, referenceGrid); break;
+			}
+			elementsToAnimate = elementsToAnimate.concat(actionElements);
+		});
+	
+		let prevGridState = JSON.parse(JSON.stringify(grid));
+		elementsToAnimate.forEach(el => {
+			let physicalX = (el.endX % totalCols + totalCols) % totalCols;
+			let physicalY = (el.endY % totalRows + totalRows) % totalRows;
+			prevGridState[physicalY][physicalX] = el.val;
+		});
+	
+		startAnimation(elementsToAnimate, prevGridState);
+	}
+}
+
+window.addEventListener("keydown", (e) => {
+	if (e.key === "ArrowRight") {
+		stepForward();
+	} else if (e.key === "ArrowLeft") {
+		stepBackward();
+	}
+});
+
+window.onload = initSystem;
+
+// --- CENTRAL AUTOMATION REPOSITORY ---
+
+// This acts exactly like an embedded CSV database. 
+// Keys are formatted as "N_BufferPercentage"
+const macroRegistry = {
+	"4_1.0Example": [
+		[{ op: 'swapRightRows', r1: 1, r2: 8 },
+		{ op: 'shiftRow', target: 3 },
+		{ op: 'shiftCol', target: 2 },
+		{ op: 'swapBottomCols', c1: 2, c2: 3 }]
+		[{ op: 'stacking', s1: 4, s2: 7 }],
+	],
+	"3_0": [
+		[{ op: 'swapRightRows', r1: 1, r2: 3 }],
+		[{ op: 'swapRightRows', r1: 1, r2: 2 }],
+		[{ op: 'shiftRow', target: 1 },
+		 { op: 'shiftRow', target: 2 },
+		 { op: 'shiftRow', target: 3 }],
+		[{ op: 'swapRightRows', r1: 1, r2: 2 }],
+		[{ op: 'swapRightRows', r1: 1, r2: 3 }],
+		[{ op: 'shiftRow', target: 1 },
+		 { op: 'shiftRow', target: 2, dir:-1 }],
+		 // 223
+		 // 231
+		 // 311
+	],
+	// Unique sequence for N=4 with 0% buffer (4 rows total)
+	"4_0": [
+		[{ op: 'swapRightRows', r1: 1, r2: 2 },
+		 { op: 'swapRightRows', r1: 3, r2: 4 }],
+		[{ op: 'shiftRow', target: 1 },
+		 { op: 'shiftRow', target: 2 },
+		 { op: 'shiftRow', target: 3 },
+		 { op: 'shiftRow', target: 4 }],
+		[{ op: 'swapRightRows', r1: 1, r2: 2 },
+		 { op: 'swapRightRows', r1: 3, r2: 4 }],
+		[{ op: 'shiftRow', target: 2 },
+		 { op: 'shiftRow', target: 3 }],
+		[{ op: 'swapRightRows', r1: 2, r2: 4 },
+		 { op: 'swapRightRows', r1: 1, r2: 3 }],
+		[{ op: 'shiftRow', target: 1, dir: 180 },
+		 { op: 'shiftRow', target: 2, dir: 180 }],
+	],
+	// Completely distinct strategy for N=4 with 100% buffer (8 rows total)
+	"4_1": [
+		[{ op: 'swapRightRows', r1: 1, r2: 5 },
+		 { op: 'swapRightRows', r1: 2, r2: 6 },
+		 { op: 'swapRightRows', r1: 3, r2: 7 },
+		 { op: 'swapRightRows', r1: 4, r2: 8 }],
+		[{ op: 'shiftRow', target: 1 },
+		 { op: 'shiftRow', target: 2 },
+		 { op: 'shiftRow', target: 3 },
+		 { op: 'shiftRow', target: 4 },
+		 { op: 'shiftRow', target: 5 },
+		 { op: 'shiftRow', target: 6 },
+		 { op: 'shiftRow', target: 7 },
+		 { op: 'shiftRow', target: 8 }],
+		[{ op: 'swapRightRows', r1: 1, r2: 8 },
+		 { op: 'swapRightRows', r1: 2, r2: 7 },
+		 { op: 'swapRightRows', r1: 3, r2: 6 },
+		 { op: 'swapRightRows', r1: 4, r2: 5 }],
+		[{ op: 'shiftRow', target: 5, dir: -1 },
+		 { op: 'shiftRow', target: 8, dir: -1 },
+		 { op: 'shiftRow', target: 2},
+		 { op: 'shiftRow', target: 3 }],
+		[{ op: 'swapRightRows', r1: 1, r2: 2 },
+		 { op: 'swapRightRows', r1: 3, r2: 4 },
+		 { op: 'swapRightRows', r1: 5, r2: 6 },
+		 { op: 'swapRightRows', r1: 7, r2: 8 }],
+		[{ op: 'shiftRow', target: 01, dir: -1 },
+		 { op: 'shiftRow', target: 02, dir: -1 },
+		 { op: 'shiftRow', target: 03 },
+		 { op: 'shiftRow', target: 04 },
+		 { op: 'shiftRow', target: 05 },
+		 { op: 'shiftRow', target: 06 },
+		 { op: 'shiftRow', target: 07, dir: -1 },
+		 { op: 'shiftRow', target: 08, dir: -1 }],
+		[{ op: 'swapRightRows', r1: 1, r2: 2 },
+		 { op: 'swapRightRows', r1: 3, r2: 4 },
+		 { op: 'swapRightRows', r1: 5, r2: 6 },
+		 { op: 'swapRightRows', r1: 7, r2: 8 }],
+	],
+		"6_0": [ // solved reversed
+		[{ op: 'swapRightRows', r1: 01, r2: 02 },{ op: 'swapRightRows', r1: 03, r2: 04 },{ op: 'swapRightRows', r1: 05, r2: 06 }],
+		[{ op: 'shiftRow', target: 01, dir: 1 },{ op: 'shiftRow', target: 02, dir: 1 },{ op: 'shiftRow', target: 03, dir: 1 },{ op: 'shiftRow', target: 04, dir: 1 },,{ op: 'shiftRow', target: 05, dir: 1 },,{ op: 'shiftRow', target: 06, dir: 1 }],
+		[{ op: 'swapRightRows', r1: 03, r2: 02 },{ op: 'swapRightRows', r1: 05, r2: 04 },{ op: 'swapRightRows', r1: 01, r2: 06 }],
+		[{ op: 'shiftRow', target: 01, dir: 1 },{ op: 'shiftRow', target: 02, dir: 1 },{ op: 'shiftRow', target: 03, dir: 1 },{ op: 'shiftRow', target: 04, dir: 1 },,{ op: 'shiftRow', target: 05, dir: 1 },,{ op: 'shiftRow', target: 06, dir: 1 }],
+		[{ op: 'swapRightRows', r1: 03, r2: 02 },{ op: 'swapRightRows', r1: 05, r2: 04 },{ op: 'swapRightRows', r1: 01, r2: 06 }],
+		[{ op: 'shiftRow', target: 01, dir: -1 },{ op: 'shiftRow', target: 03, dir: -1 },{ op: 'shiftRow', target: 05, dir: -1 }],
+		[{ op: 'swapRightRows', r1: 01, r2: 02 },{ op: 'swapRightRows', r1: 03, r2: 04 },{ op: 'swapRightRows', r1: 05, r2: 06 }],
+		[{ op: 'shiftRow', target: 02, dir: 1 },{ op: 'shiftRow', target: 04, dir: 1 },{ op: 'shiftRow', target: 06, dir: 1 }],
+		[{ op: 'swapRightRows', r1: 02, r2: 04 }],
+		[{ op: 'swapRightRows', r1: 02, r2: 06 }],
+		[{ op: 'shiftRow', target: 02, dir: 1 },{ op: 'shiftRow', target: 04, dir: 1 },{ op: 'shiftRow', target: 06, dir: 1 }],
+		[{ op: 'swapRightRows', r1: 02, r2: 04 }],
+		[{ op: 'swapRightRows', r1: 04, r2: 06 }],
+		[{ op: 'shiftRow', target: 02, dir: -1 },{ op: 'shiftRow', target: 04, dir: -1 },{ op: 'shiftRow', target: 06, dir: -1 }],
+		[{ op: 'shiftRow', target: 02, dir: -1 },{ op: 'shiftRow', target: 04, dir: -1 },{ op: 'shiftRow', target: 06, dir: -1 }],
+		[{ op: 'swapRightRows', r1: 02, r2: 03 },{ op: 'swapRightRows', r1: 04, r2: 05 },{ op: 'swapRightRows', r1: 01, r2: 06 }],
+		[{ op: 'swapRightRows', r1: 02, r2: 04 }],
+		[{ op: 'swapRightRows', r1: 04, r2: 06 }],
+		[{ op: 'shiftRow', target: 01, dir: -1 },{ op: 'shiftRow', target: 02},{ op: 'shiftRow', target: 03},{ op: 'shiftRow', target: 06, dir: -1 }],
+		[{ op: 'shiftRow', target: 01, dir: -1 },{ op: 'shiftRow', target: 02},{ op: 'shiftRow', target: 03},{ op: 'shiftRow', target: 06, dir: -1 }],
+		
+
+		],
+		"6_1":[
+		[{ op: 'swapRightRows', r1: 01, r2: 07 },{ op: 'swapRightRows', r1: 02, r2: 08 },{ op: 'swapRightRows', r1: 03, r2: 09 },{ op: 'swapRightRows', r1: 04, r2: 10 },{ op: 'swapRightRows', r1: 05, r2: 11 },{ op: 'swapRightRows', r1: 06, r2: 12 }],
+		[{ op: 'shiftRow', target: 01, dir:-1 },{ op: 'shiftRow', target: 02, dir:-1 },{ op: 'shiftRow', target: 03, dir:-1 },{ op: 'shiftRow', target: 04, dir:-1 },{ op: 'shiftRow', target: 05, dir:-1 },{ op: 'shiftRow', target: 06, dir:-1 },{ op: 'shiftRow', target: 07, dir:-1 },{ op: 'shiftRow', target: 08, dir:-1 },{ op: 'shiftRow', target: 09, dir:-1 },{ op: 'shiftRow', target: 10, dir:-1 },{ op: 'shiftRow', target: 11, dir:-1 },{ op: 'shiftRow', target: 12, dir:-1 }],
+		[{ op: 'swapRightRows', r1: 01, r2: 02 },{ op: 'shiftRow', target: 03, dir: -1 },{ op: 'shiftRow', target: 06, dir: -1 },{ op: 'swapRightRows', r1: 04, r2: 05 },{ op: 'swapRightRows', r1: 07, r2: 08 },{ op: 'shiftRow', target: 09, dir: -1 },{ op: 'swapRightRows', r1: 10, r2: 11 },{ op: 'shiftRow', target: 12, dir: -1 }],
+		[{ op: 'shiftRow', target: 02, dir: -1 },{ op: 'shiftRow', target: 05, dir: -1 },{ op: 'shiftRow', target: 07, dir: -1 },{ op: 'shiftRow', target: 10, dir: -1 }],
+		[{ op: 'swapRightRows', r1: 02, r2: 03 },{ op: 'swapRightRows', r1: 05, r2: 06 },{ op: 'swapRightRows', r1: 07, r2: 09 },{ op: 'swapRightRows', r1: 10, r2: 12 }],
+		[{ op: 'shiftRow', target: 01, dir: -1 },{ op: 'shiftRow', target: 03, dir: -1 },{ op: 'shiftRow', target: 04, dir: -1 },{ op: 'shiftRow', target: 06, dir: -1 },{ op: 'shiftRow', target: 07, dir: -1 },{ op: 'shiftRow', target: 08, dir: -1 },{ op: 'shiftRow', target: 10, dir: -1 },{ op: 'shiftRow', target: 11, dir: -1 }],
+		 // middle 4
+		[{ op: 'swapRightRows', r1: 01, r2: 02 },{ op: 'swapRightRows', r1: 04, r2: 05 },{ op: 'swapRightRows', r1: 08, r2: 09 },{ op: 'swapRightRows', r1: 11, r2: 12 }],
+		[{ op: 'shiftRow', target: 01 },{ op: 'shiftRow', target: 02, dir: -1 },{ op: 'shiftRow', target: 04 },{ op: 'shiftRow', target: 05, dir: -1 },{ op: 'shiftRow', target: 08, dir: -1 },{ op: 'shiftRow', target: 09 },{ op: 'shiftRow', target: 11, dir: -1 },{ op: 'shiftRow', target: 12 }],
+		[{ op: 'swapRightRows', r1: 02, r2: 01 },{ op: 'swapRightRows', r1: 05, r2: 04 },{ op: 'swapRightRows', r1: 08, r2: 09 },{ op: 'swapRightRows', r1: 11, r2: 12 }],
+		[{ op: 'shiftRow', target: 02, dir: -1 },{ op: 'shiftRow', target: 01, dir: -1 },{ op: 'shiftRow', target: 05, dir: -1 },{ op: 'shiftRow', target: 04, dir: -1 },{ op: 'shiftRow', target: 08, dir: -1 },{ op: 'shiftRow', target: 09, dir: -1 },{ op: 'shiftRow', target: 11, dir: -1 },{ op: 'shiftRow', target: 12, dir: -1 }],
+		 // final 4
+		[{ op: 'shiftRow', target: 02, dir: -1 },{ op: 'shiftRow', target: 05, dir: -1 },{ op: 'shiftRow', target: 09, dir: -1 },{ op: 'shiftRow', target: 12, dir: -1 }],
+		[{ op: 'swapRightRows', r1: 01, r2: 02 },{ op: 'swapRightRows', r1: 04, r2: 05 },{ op: 'swapRightRows', r1: 08, r2: 09 },{ op: 'swapRightRows', r1: 11, r2: 12 }],
+		[{ op: 'shiftRow', target: 01, dir: -1 },{ op: 'shiftRow', target: 04, dir: -1 },{ op: 'shiftRow', target: 09, dir: -1 },{ op: 'shiftRow', target: 12, dir: -1 }],
+		[{ op: 'shiftRow', target: 01, dir: -1 },{ op: 'shiftRow', target: 04, dir: -1 },{ op: 'shiftRow', target: 09, dir: -1 },{ op: 'shiftRow', target: 12, dir: -1 }],
+		[{ op: 'swapRightRows', r1: 03, r2: 01 },{ op: 'swapRightRows', r1: 06, r2: 04 },{ op: 'swapRightRows', r1: 08, r2: 09 },{ op: 'swapRightRows', r1: 11, r2: 12 }],
+		[{ op: 'shiftRow', target: 03 },{ op: 'shiftRow', target: 06 },{ op: 'shiftRow', target: 09 },{ op: 'shiftRow', target: 12 }],
+		[{ op: 'swapRightRows', r1: 03, r2: 01 },{ op: 'swapRightRows', r1: 06, r2: 04 },{ op: 'swapRightRows', r1: 08, r2: 09 },{ op: 'swapRightRows', r1: 11, r2: 12 }],
+		 // Swap Stack halves
+		[{ op: 'shiftRow', target: 01},{ op: 'shiftRow', target: 04},{ op: 'shiftRow', target: 09},{ op: 'shiftRow', target: 12},],
+		[{ op: 'swapRightRows', r1: 01, r2: 12 },{ op: 'swapRightRows', r1: 02, r2: 11 },{ op: 'swapRightRows', r1: 03, r2: 10 },{ op: 'swapRightRows', r1: 04, r2: 09 },{ op: 'swapRightRows', r1: 05, r2: 08 },{ op: 'swapRightRows', r1: 06, r2: 07 }],
+		[{ op: 'shiftRow', target: 04, dir: 180 },{ op: 'shiftRow', target: 10, dir: 180 },{ op: 'shiftRow', target: 11, dir: 180 }],
+	],
+	"6_5":[
+		[{ op: 'swapRightRows', r1: 01, r2: 19 },{ op: 'swapRightRows', r1: 02, r2: 20 },{ op: 'swapRightRows', r1: 03, r2: 21 },{ op: 'swapRightRows', r1: 04, r2: 22 },{ op: 'swapRightRows', r1: 05, r2: 23 },{ op: 'swapRightRows', r1: 06, r2: 24 }],
+		[{ op: 'shiftRow', target: 01 },{ op: 'shiftRow', target: 02 },{ op: 'shiftRow', target: 03 },{ op: 'shiftRow', target: 04 },{ op: 'shiftRow', target: 05 },{ op: 'shiftRow', target: 06 },{ op: 'shiftRow', target: 19 },{ op: 'shiftRow', target: 20 },{ op: 'shiftRow', target: 21 },{ op: 'shiftRow', target: 22 },{ op: 'shiftRow', target: 23 },{ op: 'shiftRow', target: 24 }],
+		[{ op: 'swapRightRows', r1: 01, r2: 13 },{ op: 'swapRightRows', r1: 02, r2: 14 },{ op: 'swapRightRows', r1: 03, r2: 15 },{ op: 'swapRightRows', r1: 04, r2: 16 },{ op: 'swapRightRows', r1: 05, r2: 17 },{ op: 'swapRightRows', r1: 06, r2: 18 },{ op: 'swapRightRows', r1: 19, r2: 31 },{ op: 'swapRightRows', r1: 20, r2: 32 },{ op: 'swapRightRows', r1: 21, r2: 33 },{ op: 'swapRightRows', r1: 22, r2: 34 },{ op: 'swapRightRows', r1: 23, r2: 35 },{ op: 'swapRightRows', r1: 24, r2: 36 }],
+		[{ op: 'shiftRow', target: 01 },{ op: 'shiftRow', target: 02 },{ op: 'shiftRow', target: 03 },{ op: 'shiftRow', target: 04 },{ op: 'shiftRow', target: 05 },{ op: 'shiftRow', target: 06 },{ op: 'shiftRow', target: 19 },{ op: 'shiftRow', target: 20 },{ op: 'shiftRow', target: 21 },{ op: 'shiftRow', target: 22 },{ op: 'shiftRow', target: 23 },{ op: 'shiftRow', target: 24 },{ op: 'shiftRow', target: 13 },{ op: 'shiftRow', target: 14 },{ op: 'shiftRow', target: 15 },{ op: 'shiftRow', target: 16 },{ op: 'shiftRow', target: 17 },{ op: 'shiftRow', target: 18 },{ op: 'shiftRow', target: 31 },{ op: 'shiftRow', target: 32 },{ op: 'shiftRow', target: 33 },{ op: 'shiftRow', target: 34 },{ op: 'shiftRow', target: 35 },{ op: 'shiftRow', target: 36 }],
+		[{ op: 'swapRightRows', r1: 01, r2: 07 },{ op: 'swapRightRows', r1: 02, r2: 08 },{ op: 'swapRightRows', r1: 03, r2: 09 },{ op: 'swapRightRows', r1: 04, r2: 10 },{ op: 'swapRightRows', r1: 05, r2: 11 },{ op: 'swapRightRows', r1: 06, r2: 12 },{ op: 'swapRightRows', r1: 25, r2: 31 },{ op: 'swapRightRows', r1: 26, r2: 32 },{ op: 'swapRightRows', r1: 27, r2: 33 },{ op: 'swapRightRows', r1: 28, r2: 34 },{ op: 'swapRightRows', r1: 29, r2: 35 },{ op: 'swapRightRows', r1: 30, r2: 36 }],
+		[{ op: 'shiftRow', target: 02 },{ op: 'shiftRow', target: 04 },{ op: 'shiftRow', target: 06 },{ op: 'shiftRow', target: 07, dir: -1},{ op: 'shiftRow', target: 09, dir: -1},{ op: 'shiftRow', target: 11, dir: -1},{ op: 'shiftRow', target: 13, dir: -1},{ op: 'shiftRow', target: 14, dir: -1},{ op: 'shiftRow', target: 15, dir: -1},{ op: 'shiftRow', target: 16, dir: -1},{ op: 'shiftRow', target: 17, dir: -1},{ op: 'shiftRow', target: 18, dir: -1},{ op: 'shiftRow', target: 19},{ op: 'shiftRow', target: 20},{ op: 'shiftRow', target: 21},{ op: 'shiftRow', target: 22},{ op: 'shiftRow', target: 23},{ op: 'shiftRow', target: 24},{ op: 'shiftRow', target: 25, dir: 180},{ op: 'shiftRow', target: 26, dir: -1},{ op: 'shiftRow', target: 27, dir: 180},{ op: 'shiftRow', target: 28, dir: -1},{ op: 'shiftRow', target: 29, dir: 180},{ op: 'shiftRow', target: 30, dir: -1},{ op: 'shiftRow', target: 31},{ op: 'shiftRow', target: 32, dir: 180},{ op: 'shiftRow', target: 33},{ op: 'shiftRow', target: 34, dir: 180},{ op: 'shiftRow', target: 35},{ op: 'shiftRow', target: 36, dir: 180}],
+		[{ op: 'shiftRow', target: 13, dir: -1},{ op: 'shiftRow', target: 15, dir: -1},{ op: 'shiftRow', target: 17, dir: -1},{ op: 'shiftRow', target: 20},{ op: 'shiftRow', target: 22},{ op: 'shiftRow', target: 24},{ op: 'shiftRow', target: 26, dir: -1},{ op: 'shiftRow', target: 28, dir: -1},{ op: 'shiftRow', target: 30, dir: -1},{ op: 'shiftRow', target: 31},{ op: 'shiftRow', target: 33},{ op: 'shiftRow', target: 35}],
+		[{ op: 'swapRightRows', r1: 01, r2: 02 },{ op: 'swapRightRows', r1: 03, r2: 04 },{ op: 'swapRightRows', r1: 05, r2: 06 },{ op: 'swapRightRows', r1: 07, r2: 08 },{ op: 'swapRightRows', r1: 09, r2: 10 },{ op: 'swapRightRows', r1: 11, r2: 12 },{ op: 'swapRightRows', r1: 13, r2: 14 },{ op: 'swapRightRows', r1: 15, r2: 16 },{ op: 'swapRightRows', r1: 17, r2: 18 },{ op: 'swapRightRows', r1: 19, r2: 20 },{ op: 'swapRightRows', r1: 21, r2: 22 },{ op: 'swapRightRows', r1: 23, r2: 24 },{ op: 'swapRightRows', r1: 25, r2: 26 },{ op: 'swapRightRows', r1: 27, r2: 28 },{ op: 'swapRightRows', r1: 29, r2: 30 },{ op: 'swapRightRows', r1: 31, r2: 32 },{ op: 'swapRightRows', r1: 33, r2: 34 },{ op: 'swapRightRows', r1: 35, r2: 36 }],
+		[{ op: 'shiftRow', target: 01 },{ op: 'shiftRow', target: 03, dir: -1 },{ op: 'shiftRow', target: 05, dir: 180 },{ op: 'shiftRow', target: 07 },{ op: 'shiftRow', target: 09, dir: -1 },{ op: 'shiftRow', target: 11, dir: 180 },{ op: 'shiftRow', target: 13 },{ op: 'shiftRow', target: 15, dir: -1 },{ op: 'shiftRow', target: 17, dir: 180 },{ op: 'shiftRow', target: 19 },{ op: 'shiftRow', target: 21, dir: -1 },{ op: 'shiftRow', target: 23, dir: 180 },{ op: 'shiftRow', target: 25 },{ op: 'shiftRow', target: 27, dir: -1 },{ op: 'shiftRow', target: 29, dir: 180 },{ op: 'shiftRow', target: 31 },{ op: 'shiftRow', target: 33, dir: -1 },{ op: 'shiftRow', target: 35, dir: 180 }],
+		[{ op: 'swapRightRows', r1: 01, r2: 03 },{ op: 'swapRightRows', r1: 07, r2: 09 },{ op: 'swapRightRows', r1: 13, r2: 15 },{ op: 'swapRightRows', r1: 19, r2: 21 },{ op: 'swapRightRows', r1: 25, r2: 27 },{ op: 'swapRightRows', r1: 31, r2: 33 }],
+		[{ op: 'stacking', s1: 03, s2: 05 },{ op: 'stacking', s1: 09, s2: 11 },{ op: 'stacking', s1: 15, s2: 17 },{ op: 'stacking', s1: 21, s2: 23 },{ op: 'stacking', s1: 27, s2: 29 },{ op: 'stacking', s1: 33, s2: 35 }],
+		 ],
+
+	// Placeholder for when you scale up to a larger version of N
+	"8_1": [
+		{ op: 'shiftRow', target: 1 }
+		// A much longer, unique sequence goes here
+	]
+};
+
+</script>
+</body>
+</html>
+
+
