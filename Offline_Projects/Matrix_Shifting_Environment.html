@@ -97,8 +97,8 @@
 			<label>Array Size: 
 				<select id="arraySize" onchange="initSystem()">
 					<option value="3">n = 3</option>
-					<option value="4">n = 4</option>
-					<option value="6" selected>n = 6</option>
+					<option value="4" selected>n = 4</option>
+					<option value="6">n = 6</option>
 					<option value="8">n = 8</option>
 				</select>
 			</label>
@@ -494,6 +494,7 @@ function initSystem() {
 		for (let j = 0; j < totalCols; j++) {
 			if (i < N) {
 				row.push((i)%N + 1);
+				//row.push((i+j)%N + 1); // test configuration only
 			} else {
 				row.push(0);
 			}
@@ -501,6 +502,13 @@ function initSystem() {
 		grid.push(row);
 	}
 	logDiv.innerHTML = `Initialized: ${N}x${N} matrix inside a ${totalRows}x${totalCols} workspace.`;
+
+	const currentBuffer = document.getElementById('bufferPercent').value;
+	const lookupKey = `${N}_${currentBuffer}`;
+	macroFramesQueue = macroRegistry[lookupKey];
+	isManualMode = true;
+	currentFrameIdx = -1;
+
 	draw();
 }
 
@@ -645,7 +653,7 @@ function runTranspositionMacro() {
 	const currentBuffer = document.getElementById('bufferPercent').value;
 	const lookupKey = `${N}_${currentBuffer}`;
 	const frames = macroRegistry[lookupKey];
-	
+
 	if (!frames) {
 		logAction(`⚠️ No custom sequence found for Key: [${lookupKey}]`);
 		return;
@@ -842,6 +850,8 @@ function stepBackward() {
 window.addEventListener("keydown", (e) => {
 	if (e.key === "ArrowRight") {
 		stepForward();
+	} else if (e.key === " ") {
+		runTranspositionMacro();
 	} else if (e.key === "ArrowLeft") {
 		stepBackward();
 	}
@@ -871,9 +881,6 @@ const macroRegistry = {
 		[{ op: 'swapRightRows', r1: 1, r2: 3 }],
 		[{ op: 'shiftRow', target: 1 },
 		 { op: 'shiftRow', target: 2, dir:-1 }],
-		 // 223
-		 // 231
-		 // 311
 	],
 	// Unique sequence for N=4 with 0% buffer (4 rows total)
 	"4_0": [
@@ -885,12 +892,12 @@ const macroRegistry = {
 		 { op: 'shiftRow', target: 4 }],
 		[{ op: 'swapRightRows', r1: 1, r2: 2 },
 		 { op: 'swapRightRows', r1: 3, r2: 4 }],
-		[{ op: 'shiftRow', target: 2 },
+		[{ op: 'shiftRow', target: 1 },
 		 { op: 'shiftRow', target: 3 }],
 		[{ op: 'swapRightRows', r1: 2, r2: 4 },
 		 { op: 'swapRightRows', r1: 1, r2: 3 }],
-		[{ op: 'shiftRow', target: 1, dir: 180 },
-		 { op: 'shiftRow', target: 2, dir: 180 }],
+		[{ op: 'shiftRow', target: 3, dir: 180 },
+		 { op: 'shiftRow', target: 4, dir: 180 }],
 	],
 	// Completely distinct strategy for N=4 with 100% buffer (8 rows total)
 	"4_1": [
@@ -930,34 +937,33 @@ const macroRegistry = {
 		 { op: 'swapRightRows', r1: 3, r2: 4 },
 		 { op: 'swapRightRows', r1: 5, r2: 6 },
 		 { op: 'swapRightRows', r1: 7, r2: 8 }],
-	],
-		"6_0": [ // solved reversed
+	], 
+	/*
+	Here on out, I condence each row into it's series of actions 
+	since some sequences are longer than 100 commands
+	*/	
+	"6_0": [ 
 		[{ op: 'swapRightRows', r1: 01, r2: 02 },{ op: 'swapRightRows', r1: 03, r2: 04 },{ op: 'swapRightRows', r1: 05, r2: 06 }],
-		[{ op: 'shiftRow', target: 01, dir: 1 },{ op: 'shiftRow', target: 02, dir: 1 },{ op: 'shiftRow', target: 03, dir: 1 },{ op: 'shiftRow', target: 04, dir: 1 },,{ op: 'shiftRow', target: 05, dir: 1 },,{ op: 'shiftRow', target: 06, dir: 1 }],
+		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 02, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 04, dir: 01 },{ op: 'shiftRow', target: 05, dir: 01 },,{ op: 'shiftRow', target: 06, dir: 01 }],
 		[{ op: 'swapRightRows', r1: 03, r2: 02 },{ op: 'swapRightRows', r1: 05, r2: 04 },{ op: 'swapRightRows', r1: 01, r2: 06 }],
-		[{ op: 'shiftRow', target: 01, dir: 1 },{ op: 'shiftRow', target: 02, dir: 1 },{ op: 'shiftRow', target: 03, dir: 1 },{ op: 'shiftRow', target: 04, dir: 1 },,{ op: 'shiftRow', target: 05, dir: 1 },,{ op: 'shiftRow', target: 06, dir: 1 }],
+		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 02, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 04, dir: 01 },{ op: 'shiftRow', target: 05, dir: 01 },,{ op: 'shiftRow', target: 06, dir: 01 }],
 		[{ op: 'swapRightRows', r1: 03, r2: 02 },{ op: 'swapRightRows', r1: 05, r2: 04 },{ op: 'swapRightRows', r1: 01, r2: 06 }],
 		[{ op: 'shiftRow', target: 01, dir: -1 },{ op: 'shiftRow', target: 03, dir: -1 },{ op: 'shiftRow', target: 05, dir: -1 }],
 		[{ op: 'swapRightRows', r1: 01, r2: 02 },{ op: 'swapRightRows', r1: 03, r2: 04 },{ op: 'swapRightRows', r1: 05, r2: 06 }],
-		[{ op: 'shiftRow', target: 02, dir: 1 },{ op: 'shiftRow', target: 04, dir: 1 },{ op: 'shiftRow', target: 06, dir: 1 }],
+		[{ op: 'shiftRow', target: 02, dir: 01 },{ op: 'shiftRow', target: 04, dir: 01 },{ op: 'shiftRow', target: 06, dir: 01 }],
+		// re-sort half rows
 		[{ op: 'swapRightRows', r1: 02, r2: 04 }],
 		[{ op: 'swapRightRows', r1: 02, r2: 06 }],
 		[{ op: 'shiftRow', target: 02, dir: 1 },{ op: 'shiftRow', target: 04, dir: 1 },{ op: 'shiftRow', target: 06, dir: 1 }],
-		[{ op: 'swapRightRows', r1: 02, r2: 04 }],
-		[{ op: 'swapRightRows', r1: 04, r2: 06 }],
-		[{ op: 'shiftRow', target: 02, dir: -1 },{ op: 'shiftRow', target: 04, dir: -1 },{ op: 'shiftRow', target: 06, dir: -1 }],
-		[{ op: 'shiftRow', target: 02, dir: -1 },{ op: 'shiftRow', target: 04, dir: -1 },{ op: 'shiftRow', target: 06, dir: -1 }],
-		[{ op: 'swapRightRows', r1: 02, r2: 03 },{ op: 'swapRightRows', r1: 04, r2: 05 },{ op: 'swapRightRows', r1: 01, r2: 06 }],
-		[{ op: 'swapRightRows', r1: 02, r2: 04 }],
-		[{ op: 'swapRightRows', r1: 04, r2: 06 }],
-		[{ op: 'shiftRow', target: 01, dir: -1 },{ op: 'shiftRow', target: 02},{ op: 'shiftRow', target: 03},{ op: 'shiftRow', target: 06, dir: -1 }],
-		[{ op: 'shiftRow', target: 01, dir: -1 },{ op: 'shiftRow', target: 02},{ op: 'shiftRow', target: 03},{ op: 'shiftRow', target: 06, dir: -1 }],
-		
-
-		],
-		"6_1":[
+		[{ op: 'swapRightRows', r1: 02, r2: 04 },{ op: 'swapRightRows', r1: 01, r2: 03 }],
+		[{ op: 'swapRightRows', r1: 04, r2: 06 },{ op: 'swapRightRows', r1: 03, r2: 05 }],
+		// final rotation
+		[{ op: 'shiftRow', target: 01, dir: -1 },{ op: 'shiftRow', target: 06, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 04, dir: -1 }],
+		[{ op: 'shiftRow', target: 01, dir: -1 },{ op: 'shiftRow', target: 06, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 04, dir: -1 }],
+	],
+	"6_1":[
 		[{ op: 'swapRightRows', r1: 01, r2: 07 },{ op: 'swapRightRows', r1: 02, r2: 08 },{ op: 'swapRightRows', r1: 03, r2: 09 },{ op: 'swapRightRows', r1: 04, r2: 10 },{ op: 'swapRightRows', r1: 05, r2: 11 },{ op: 'swapRightRows', r1: 06, r2: 12 }],
-		[{ op: 'shiftRow', target: 01, dir:-1 },{ op: 'shiftRow', target: 02, dir:-1 },{ op: 'shiftRow', target: 03, dir:-1 },{ op: 'shiftRow', target: 04, dir:-1 },{ op: 'shiftRow', target: 05, dir:-1 },{ op: 'shiftRow', target: 06, dir:-1 },{ op: 'shiftRow', target: 07, dir:-1 },{ op: 'shiftRow', target: 08, dir:-1 },{ op: 'shiftRow', target: 09, dir:-1 },{ op: 'shiftRow', target: 10, dir:-1 },{ op: 'shiftRow', target: 11, dir:-1 },{ op: 'shiftRow', target: 12, dir:-1 }],
+		[{ op: 'shiftRow', target: 01, dir: -1 },{ op: 'shiftRow', target: 02, dir: -1 },{ op: 'shiftRow', target: 03, dir: -1 },{ op: 'shiftRow', target: 04, dir: -1 },{ op: 'shiftRow', target: 05, dir:-1 },{ op: 'shiftRow', target: 06, dir:-1 },{ op: 'shiftRow', target: 07, dir:-1 },{ op: 'shiftRow', target: 08, dir:-1 },{ op: 'shiftRow', target: 09, dir:-1 },{ op: 'shiftRow', target: 10, dir:-1 },{ op: 'shiftRow', target: 11, dir:-1 },{ op: 'shiftRow', target: 12, dir:-1 }],
 		[{ op: 'swapRightRows', r1: 01, r2: 02 },{ op: 'shiftRow', target: 03, dir: -1 },{ op: 'shiftRow', target: 06, dir: -1 },{ op: 'swapRightRows', r1: 04, r2: 05 },{ op: 'swapRightRows', r1: 07, r2: 08 },{ op: 'shiftRow', target: 09, dir: -1 },{ op: 'swapRightRows', r1: 10, r2: 11 },{ op: 'shiftRow', target: 12, dir: -1 }],
 		[{ op: 'shiftRow', target: 02, dir: -1 },{ op: 'shiftRow', target: 05, dir: -1 },{ op: 'shiftRow', target: 07, dir: -1 },{ op: 'shiftRow', target: 10, dir: -1 }],
 		[{ op: 'swapRightRows', r1: 02, r2: 03 },{ op: 'swapRightRows', r1: 05, r2: 06 },{ op: 'swapRightRows', r1: 07, r2: 09 },{ op: 'swapRightRows', r1: 10, r2: 12 }],
@@ -993,11 +999,41 @@ const macroRegistry = {
 		[{ op: 'swapRightRows', r1: 01, r2: 03 },{ op: 'swapRightRows', r1: 07, r2: 09 },{ op: 'swapRightRows', r1: 13, r2: 15 },{ op: 'swapRightRows', r1: 19, r2: 21 },{ op: 'swapRightRows', r1: 25, r2: 27 },{ op: 'swapRightRows', r1: 31, r2: 33 }],
 		[{ op: 'stacking', s1: 03, s2: 05 },{ op: 'stacking', s1: 09, s2: 11 },{ op: 'stacking', s1: 15, s2: 17 },{ op: 'stacking', s1: 21, s2: 23 },{ op: 'stacking', s1: 27, s2: 29 },{ op: 'stacking', s1: 33, s2: 35 }],
 		 ],
-
-	// Placeholder for when you scale up to a larger version of N
-	"8_1": [
-		{ op: 'shiftRow', target: 1 }
-		// A much longer, unique sequence goes here
+		 
+	"8_0":[
+		[{ op: 'swapRightRows', r1: 01, r2: 05 },{ op: 'swapRightRows', r1: 02, r2: 06 },{ op: 'swapRightRows', r1: 03, r2: 07 },{ op: 'swapRightRows', r1: 04, r2: 08 }],
+		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 02, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 04, dir: 01 },{ op: 'shiftRow', target: 05, dir: -1 },{ op: 'shiftRow', target: 06, dir: -1 },{ op: 'shiftRow', target: 07, dir: -1 },{ op: 'shiftRow', target: 08, dir: -1 }],
+		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 02, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 04, dir: 01 },{ op: 'shiftRow', target: 05, dir: -1 },{ op: 'shiftRow', target: 06, dir: -1 },{ op: 'shiftRow', target: 07, dir: -1 },{ op: 'shiftRow', target: 08, dir: -1 }],
+		[{ op: 'swapRightRows', r1: 01, r2: 03 },{ op: 'swapRightRows', r1: 02, r2: 04 },{ op: 'swapRightRows', r1: 05, r2: 07 },{ op: 'swapRightRows', r1: 06, r2: 08 }],
+		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 02, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 04, dir: 01 },{ op: 'shiftRow', target: 05, dir: -1 },{ op: 'shiftRow', target: 06, dir: -1 },{ op: 'shiftRow', target: 07, dir: -1 },{ op: 'shiftRow', target: 08, dir: -1 }],
+		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 02, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 04, dir: 01 },{ op: 'shiftRow', target: 05, dir: -1 },{ op: 'shiftRow', target: 06, dir: -1 },{ op: 'shiftRow', target: 07, dir: -1 },{ op: 'shiftRow', target: 08, dir: -1 }],
+		[{ op: 'swapRightRows', r1: 01, r2: 05 },{ op: 'swapRightRows', r1: 02, r2: 06 },{ op: 'swapRightRows', r1: 03, r2: 07 },{ op: 'swapRightRows', r1: 04, r2: 08 }],
+		 // used principles from N=4
+		[{ op: 'shiftRow', target: 01, dir: -1 },{ op: 'shiftRow', target: 02, dir: -1 },{ op: 'shiftRow', target: 05, dir: 01 },{ op: 'shiftRow', target: 06, dir: 01 },{ op: 'shiftRow', target: 07, dir: -1 },{ op: 'shiftRow', target: 08, dir: -1 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 04, dir: 01 }],
+		[{ op: 'swapRightRows', r1: 01, r2: 02 },{ op: 'swapRightRows', r1: 03, r2: 04 },{ op: 'swapRightRows', r1: 05, r2: 06 },{ op: 'swapRightRows', r1: 07, r2: 08 }],
+		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 02, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 04, dir: 01 },{ op: 'shiftRow', target: 05, dir: 01 },{ op: 'shiftRow', target: 06, dir: 01 },{ op: 'shiftRow', target: 07, dir: 01 },{ op: 'shiftRow', target: 08, dir: 01 }],
+		[{ op: 'swapRightRows', r1: 01, r2: 02 },{ op: 'swapRightRows', r1: 03, r2: 04 },{ op: 'swapRightRows', r1: 05, r2: 06 },{ op: 'swapRightRows', r1: 07, r2: 08 }],
+		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 02, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 04, dir: 01 },{ op: 'shiftRow', target: 05, dir: 01 },{ op: 'shiftRow', target: 06, dir: 01 },{ op: 'shiftRow', target: 07, dir: 01 },{ op: 'shiftRow', target: 08, dir: 01 }],
+		[{ op: 'swapRightRows', r1: 01, r2: 02 },{ op: 'swapRightRows', r1: 03, r2: 04 },{ op: 'swapRightRows', r1: 05, r2: 06 },{ op: 'swapRightRows', r1: 07, r2: 08 }],
+		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 02, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 04, dir: 01 },{ op: 'shiftRow', target: 05, dir: 01 },{ op: 'shiftRow', target: 06, dir: 01 },{ op: 'shiftRow', target: 07, dir: 01 },{ op: 'shiftRow', target: 08, dir: 01 }],
+		[{ op: 'swapRightRows', r1: 01, r2: 02 },{ op: 'swapRightRows', r1: 03, r2: 04 },{ op: 'swapRightRows', r1: 05, r2: 06 },{ op: 'swapRightRows', r1: 07, r2: 08 }],
+		[{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 07, dir: 01 }],
+		[{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 07, dir: 01 }],
+		[{ op: 'swapRightRows', r1: 01, r2: 03 },{ op: 'swapRightRows', r1: 05, r2: 07 }],
+		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 05, dir: 01 },{ op: 'shiftRow', target: 07, dir: 01 }],
+		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 05, dir: 01 },{ op: 'shiftRow', target: 07, dir: 01 }],
+		[{ op: 'swapRightRows', r1: 01, r2: 03 },{ op: 'swapRightRows', r1: 05, r2: 07 }],
+		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 05, dir: 01 },{ op: 'shiftRow', target: 07, dir: 01 }],
+		[{ op: 'swapRightRows', r1: 01, r2: 03 },{ op: 'swapRightRows', r1: 05, r2: 07 }],
+		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 05, dir: 01 },{ op: 'shiftRow', target: 07, dir: 01 }],
+		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 05, dir: 01 },{ op: 'shiftRow', target: 07, dir: 01 }],
+		[{ op: 'swapRightRows', r1: 01, r2: 03 },{ op: 'swapRightRows', r1: 05, r2: 07 }],
+		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 05, dir: 01 }],
+		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 05, dir: 01 }],
+		[{ op: 'swapRightRows', r1: 01, r2: 05 },{ op: 'swapRightRows', r1: 02, r2: 06 },{ op: 'swapRightRows', r1: 03, r2: 07 },{ op: 'swapRightRows', r1: 04, r2: 08 }],
+		[{ op: 'shiftRow', target: 01, dir: 180},{ op: 'shiftRow', target: 02, dir: 180},{ op: 'shiftRow', target: 03, dir: 180},{ op: 'shiftRow', target: 04, dir: 180}],
+	],
+	// A much longer, unique sequence can be appended HERE
 	]
 };
 
