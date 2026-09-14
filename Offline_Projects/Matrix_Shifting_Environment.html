@@ -34,10 +34,10 @@
 		#controls {
 			margin-bottom: 9px;
 			display: flex;
-			gap: 5px 8px;
+			gap: 5px 5px;
 			flex-wrap: wrap;
 			background: #222;
-			padding: 5px 10px;
+			padding: 5px 5px;
 			border-radius: 28px;
 			justify-content: center;
 			align-items: center;
@@ -72,11 +72,23 @@
 		.control-group {
 			display: flex;
 			flex-direction: row;
-			border-radius: 99px;
+			border-radius: 20px;
 			align-items: center;
+		}
+		.control-group-horiz {
+			display: flex;
+			flex-direction: column;
+			border-radius: 20px;
+			align-items: center;
+			padding: 2px;
 		}
 		.hidden {
 			visibility: hidden;
+			width: 0;
+			height: 0;
+			padding: 0;
+			margin: 0;
+			border: 0;
 		}
 	</style>
 </head>
@@ -86,45 +98,61 @@
 	<h4>Designed to imitate valid movement types in Shapez 2</h4>
 	
 	<div id="controls">
-		<button onclick="initSystem()" style="background: #822;">🔄️ Reset 🔄️</button>
-			<div id="action-inspector-container"></div>
-		<div class="control-group" style="background:#630;">
-			<label>Buffer %: 
-			<div id="dropdown-buffer" style="display:inline-block;"></div></label>
+		<div class="control-group-horiz">
+			<button id="animateTransposeBtn" onclick="runTranspositionMacro()" style="background: #28a745; font-weight: bold">🚀 Solution 🚀</button>
+			<button onclick="initSystem()" style="background: #822;">🔄️ Reset 🔄️</button>
 		</div>
-		<div class="control-group" style="background:#036;">
-
-			<label>Array Size: 
-				<select id="arraySize" onchange="initSystem()">
-					<option value="3">n = 3</option>
-					<option value="4" selected>n = 4</option>
-					<option value="6">n = 6</option>
-					<option value="8">n = 8</option>
-				</select>
-			</label>
+		<div class="control-group-horiz">
+			<div class="control-group" style="background:#630;">
+				<label>Buffer %: 
+				<div id="dropdown-buffer" style="display:inline-block;"></div></label>
+			</div>
+			<div class="control-group" style="background:#036;">
+	
+				<label>Array Size: 
+					<select id="arraySize" onchange="initSystem()">
+						<option value="3">n = 3</option>
+						<option value="4" selected>n = 4</option>
+						<option value="5">n = 5</option>
+						<option value="6">n = 6</option>
+						<option value="7">n = 7</option>
+						<option value="8">n = 8</option>
+						<option value="9">n = 9</option>
+						<option value="10">n = 10</option>
+					</select>
+				</label>
+			</div>
 		</div>
-		<div class="control-group" style="background:#8f1;">
+		<div class="control-group-horiz" style="background:#8f1;">
 			<button id="shiftRowBtn">Shift Row (Horiz)</button>
-			<div id="dropdown-shift-row"></div>
-			<div id="dropdown-shift-row-dir"></div>
+			<div class="control-group">
+				<div id="dropdown-shift-row"></div>
+				<div id="dropdown-shift-row-dir"></div>
+			</div>
 		</div>
 
-		<div class="control-group" style="background:#000;">
+		<div class="control-group-horiz hidden" style="background:#000;">
 			<button id="shiftColBtn">Shift Col (Vert)</button>
-			<div id="dropdown-shift-col"></div>
-			<div id="dropdown-shift-col-dir"></div>
+			<div class="control-group">
+				<div id="dropdown-shift-col"></div>
+				<div id="dropdown-shift-col-dir"></div>
+			</div>
 		</div>
 
-		<div class="control-group" style="background:#f18;">
+		<div class="control-group-horiz" style="background:#f18;">
 			<button id="swapRows">Swap Right Rows</button>
-			<div id="dropdown-1"></div>
-			<div id="dropdown-2"></div>
+			<div class="control-group">
+				<div id="dropdown-1"></div>
+				<div id="dropdown-2"></div>
+			</div>
 		</div>
 
-		<div class="control-group" style="background:#000;">
+		<div class="control-group-horiz hidden" style="background:#000;">
 			<button id="swapCols">Swap Bottom Cols</button>
-			<div id="dropdown-c1"></div>
-			<div id="dropdown-c2"></div>
+			<div class="control-group">
+				<div id="dropdown-c1"></div>
+				<div id="dropdown-c2"></div>
+			</div>
 		</div>
 		<div>
 			<button onclick="stepBackward()" id="stepBackward">⏪</button>
@@ -132,13 +160,14 @@
 		</div>
 
 	</div>
+	<div id="action-inspector-container"></div>
 	<canvas id="gridCanvas" width="600" height="600"></canvas>
 	<p>Logging Console:</p>
 	<div id="log">System initialized. Column values matching their starting indices. Empty rows are marked 0.</div>
 	<h99> When manual mode is active, use the arrow keys to navigate between steps in the animation to see exactly what is changing at your own pace. Shapez does not support the column shifts natively, which is why those movement types are in black containers in the button menu. Stacking is an option only available in the animation sequence as the idea is not to use the stacker, only the rotators, cutters, and swappers. All stored animations are pre-programmed by CharlieThunkman.</h99>
 
 <script>
-let N = 4; // Core active matrix size, reset in init function
+let N = 3; // Core active matrix size, reset in init function
 createDropdown("dropdown-buffer","bufferPercent");
 let totalRows = N;
 let totalCols = N;
@@ -152,14 +181,7 @@ const ctx = canvas.getContext('2d');
 const logDiv = document.getElementById('log');
 
 // Insert a macro animation control button dynamically into the controls layout
-const controlsDiv = document.getElementById('controls');
-const animateBtn = document.createElement('button');
-animateBtn.id = "animateTransposeBtn";
-animateBtn.textContent = "🚀 Animate Transpose 🚀";
-animateBtn.style.background = "#28a745";
-animateBtn.style.fontWeight = "bold";
-animateBtn.addEventListener('click', runTranspositionMacro);
-controlsDiv.insertBefore(animateBtn, controlsDiv.firstElementChild);
+
 
 // Global tracking states for the active animation thread
 let isAnimating = false;
@@ -197,7 +219,7 @@ function animationLoop() {
 		if (macroFramesQueue.length > 0 && !isManualMode) {
 			currentFrameIdx++;
 			
-			console.log(`⏳ Holding position for ${postFramePauseTime / 1000}s...`);
+		//	console.log(`⏳ Holding position for ${postFramePauseTime / 1000}s...`);
 			
 			// Guarantees a clean, un-rushed pause before executing the next index
 			setTimeout(() => {executeNextMacroFrame(); }, postFramePauseTime);
@@ -493,7 +515,7 @@ function initSystem() {
 		let row = [];
 		for (let j = 0; j < totalCols; j++) {
 			if (i < N) {
-				row.push((i)%N + 1);
+				row.push((N-i-1)%N + 1);
 				//row.push((i+j)%N + 1); // test configuration only
 			} else {
 				row.push(0);
@@ -531,8 +553,18 @@ function shiftRow(rowNum, d, silent, targetGrid) {
 		});
 	}
 
-	const dirNames = { "1": "clockwise (right)", "-1": "counter-clockwise (left)", "180": "180°" };
-	logAction(`&nbsp;&nbsp;• Shifted Row ${rowNum} ${dirNames[d.toString()] || d + ' steps'}`);
+	let dirNames = (d) => {
+		if(d == 180){
+			return "180°";
+		} else if(d<-1){
+			return (-d) + " steps counter-clockwise (left)";
+		} else if(d>1){
+			return d + " steps clockwise (right)";
+		}
+		const dirDesc = { "1": "clockwise (right)", "-1": "counter-clockwise (left)"};
+		return dirDesc[d.toString()];
+	}
+	logAction(`&nbsp;&nbsp;• Shifted Row ${rowNum} ${dirNames(d)}`);
 	
 	if (!silent) {
 		let nextState = JSON.parse(JSON.stringify(grid));
@@ -665,8 +697,7 @@ function runTranspositionMacro() {
 
 	
 	logAction(`🎬 Initializing chained sequence for [${lookupKey}] (${actions} actions in ${frames.length} frames)...`);
-	document.getElementById("stepBackward").classList.add("hidden");
-	document.getElementById("stepForward").classList.add("hidden");
+	document.getElementById("stepBackward").parentElement.classList.add("hidden");
 
 	// Store the instructions in our global queue and reset step index pointers
 	macroFramesQueue = frames;
@@ -685,8 +716,7 @@ function executeNextMacroFrame() {
 		currentFrameIdx--; 
 	//	macroFramesQueue = []; // Clear queue
 		isManualMode = true;
-		document.getElementById("stepBackward").classList.remove("hidden");
-		document.getElementById("stepForward").classList.remove("hidden");
+		document.getElementById("stepBackward").parentElement.classList.remove("hidden");
 		return;
 	}
 
@@ -872,32 +902,32 @@ const macroRegistry = {
 		[{ op: 'stacking', s1: 4, s2: 7 }],
 	],
 	"3_0": [
-		[{ op: 'swapRightRows', r1: 1, r2: 3 }],
 		[{ op: 'swapRightRows', r1: 1, r2: 2 }],
+		[{ op: 'swapRightRows', r1: 1, r2: 3 }],
 		[{ op: 'shiftRow', target: 1 },
 		 { op: 'shiftRow', target: 2 },
 		 { op: 'shiftRow', target: 3 }],
-		[{ op: 'swapRightRows', r1: 1, r2: 2 }],
 		[{ op: 'swapRightRows', r1: 1, r2: 3 }],
-		[{ op: 'shiftRow', target: 1 },
+		[{ op: 'swapRightRows', r1: 1, r2: 2 }],
+		[{ op: 'shiftRow', target: 3 },
 		 { op: 'shiftRow', target: 2, dir:-1 }],
 	],
 	// Unique sequence for N=4 with 0% buffer (4 rows total)
 	"4_0": [
 		[{ op: 'swapRightRows', r1: 1, r2: 2 },
 		 { op: 'swapRightRows', r1: 3, r2: 4 }],
-		[{ op: 'shiftRow', target: 1 },
-		 { op: 'shiftRow', target: 2 },
-		 { op: 'shiftRow', target: 3 },
-		 { op: 'shiftRow', target: 4 }],
+		[{ op: 'shiftRow', target: 1, dir:-1},
+		 { op: 'shiftRow', target: 2, dir:-1},
+		 { op: 'shiftRow', target: 3, dir:-1},
+		 { op: 'shiftRow', target: 4, dir:-1}],
 		[{ op: 'swapRightRows', r1: 1, r2: 2 },
 		 { op: 'swapRightRows', r1: 3, r2: 4 }],
 		[{ op: 'shiftRow', target: 1 },
 		 { op: 'shiftRow', target: 3 }],
 		[{ op: 'swapRightRows', r1: 2, r2: 4 },
 		 { op: 'swapRightRows', r1: 1, r2: 3 }],
-		[{ op: 'shiftRow', target: 3, dir: 180 },
-		 { op: 'shiftRow', target: 4, dir: 180 }],
+		[{ op: 'shiftRow', target: 1, dir: 180 },
+		 { op: 'shiftRow', target: 2, dir: 180 }],
 	],
 	// Completely distinct strategy for N=4 with 100% buffer (8 rows total)
 	"4_1": [
@@ -937,11 +967,32 @@ const macroRegistry = {
 		 { op: 'swapRightRows', r1: 3, r2: 4 },
 		 { op: 'swapRightRows', r1: 5, r2: 6 },
 		 { op: 'swapRightRows', r1: 7, r2: 8 }],
-	], 
-	/*
+	], /*
 	Here on out, I condence each row into it's series of actions 
 	since some sequences are longer than 100 commands
 	*/	
+	"5_0": [
+		[{ op: 'swapRightRows', r1: 1, r2: 2 },{ op: 'swapRightRows', r1: 4, r2: 5 }],
+		[{ op: 'swapRightRows', r1: 1, r2: 3 }],
+		[{ op: 'swapRightRows', r1: 1, r2: 4 }],
+		[{ op: 'shiftRow', target: 1 },{ op: 'shiftRow', target: 2 },{ op: 'shiftRow', target: 3 },{ op: 'shiftRow', target: 4 },{ op: 'shiftRow', target: 5 }],
+		[{ op: 'swapRightRows', r1: 1, r2: 4 },{ op: 'swapRightRows', r1: 2, r2: 5}],
+		[{ op: 'swapRightRows', r1: 3, r2: 4 }],
+		[{ op: 'swapRightRows', r1: 4, r2: 5 }],
+		[{ op: 'shiftRow', target: 1 },{ op: 'shiftRow', target: 2 },{ op: 'shiftRow', target: 3 },{ op: 'shiftRow', target: 4 },{ op: 'shiftRow', target: 5 }],
+		[{ op: 'swapRightRows', r1: 1, r2: 4 },{ op: 'swapRightRows', r1: 2, r2: 5}],
+		[{ op: 'swapRightRows', r1: 3, r2: 4 }],
+		[{ op: 'swapRightRows', r1: 4, r2: 5 }],
+		[{ op: 'shiftRow', target: 1, dir: 2},{ op: 'shiftRow', target: 2, dir: 2},{ op: 'shiftRow', target: 3, dir: 2},{ op: 'shiftRow', target: 4, dir: 2},{ op: 'shiftRow', target: 5, dir: 2}],
+		[{ op: 'swapRightRows', r1: 1, r2: 4 },{ op: 'swapRightRows', r1: 2, r2: 5}],
+		[{ op: 'swapRightRows', r1: 1, r2: 3 }],
+		[{ op: 'swapRightRows', r1: 2, r2: 3 }],
+		[{ op: 'shiftRow', target: 1, dir: 2},{ op: 'shiftRow', target: 2, dir: 2},{ op: 'shiftRow', target: 3, dir: 2},{ op: 'shiftRow', target: 4, dir: 2},{ op: 'shiftRow', target: 5, dir: 2}],
+		[{ op: 'swapRightRows', r1: 1, r2: 4 },{ op: 'swapRightRows', r1: 2, r2: 5}],
+		[{ op: 'swapRightRows', r1: 3, r2: 4 }],
+		[{ op: 'swapRightRows', r1: 4, r2: 5 }],
+		[{ op: 'shiftRow', target: 1, dir: -2},{ op: 'shiftRow', target: 2, dir: 02},{ op: 'shiftRow', target: 3, dir: 01},{ op: 'shiftRow', target: 5, dir: -1}],
+	], 
 	"6_0": [ 
 		[{ op: 'swapRightRows', r1: 01, r2: 02 },{ op: 'swapRightRows', r1: 03, r2: 04 },{ op: 'swapRightRows', r1: 05, r2: 06 }],
 		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 02, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 04, dir: 01 },{ op: 'shiftRow', target: 05, dir: 01 },,{ op: 'shiftRow', target: 06, dir: 01 }],
@@ -986,27 +1037,12 @@ const macroRegistry = {
 		[{ op: 'swapRightRows', r1: 01, r2: 12 },{ op: 'swapRightRows', r1: 02, r2: 11 },{ op: 'swapRightRows', r1: 03, r2: 10 },{ op: 'swapRightRows', r1: 04, r2: 09 },{ op: 'swapRightRows', r1: 05, r2: 08 },{ op: 'swapRightRows', r1: 06, r2: 07 }],
 		[{ op: 'shiftRow', target: 04, dir: 180 },{ op: 'shiftRow', target: 10, dir: 180 },{ op: 'shiftRow', target: 11, dir: 180 }],
 	],
-	"6_5":[
-		[{ op: 'swapRightRows', r1: 01, r2: 19 },{ op: 'swapRightRows', r1: 02, r2: 20 },{ op: 'swapRightRows', r1: 03, r2: 21 },{ op: 'swapRightRows', r1: 04, r2: 22 },{ op: 'swapRightRows', r1: 05, r2: 23 },{ op: 'swapRightRows', r1: 06, r2: 24 }],
-		[{ op: 'shiftRow', target: 01 },{ op: 'shiftRow', target: 02 },{ op: 'shiftRow', target: 03 },{ op: 'shiftRow', target: 04 },{ op: 'shiftRow', target: 05 },{ op: 'shiftRow', target: 06 },{ op: 'shiftRow', target: 19 },{ op: 'shiftRow', target: 20 },{ op: 'shiftRow', target: 21 },{ op: 'shiftRow', target: 22 },{ op: 'shiftRow', target: 23 },{ op: 'shiftRow', target: 24 }],
-		[{ op: 'swapRightRows', r1: 01, r2: 13 },{ op: 'swapRightRows', r1: 02, r2: 14 },{ op: 'swapRightRows', r1: 03, r2: 15 },{ op: 'swapRightRows', r1: 04, r2: 16 },{ op: 'swapRightRows', r1: 05, r2: 17 },{ op: 'swapRightRows', r1: 06, r2: 18 },{ op: 'swapRightRows', r1: 19, r2: 31 },{ op: 'swapRightRows', r1: 20, r2: 32 },{ op: 'swapRightRows', r1: 21, r2: 33 },{ op: 'swapRightRows', r1: 22, r2: 34 },{ op: 'swapRightRows', r1: 23, r2: 35 },{ op: 'swapRightRows', r1: 24, r2: 36 }],
-		[{ op: 'shiftRow', target: 01 },{ op: 'shiftRow', target: 02 },{ op: 'shiftRow', target: 03 },{ op: 'shiftRow', target: 04 },{ op: 'shiftRow', target: 05 },{ op: 'shiftRow', target: 06 },{ op: 'shiftRow', target: 19 },{ op: 'shiftRow', target: 20 },{ op: 'shiftRow', target: 21 },{ op: 'shiftRow', target: 22 },{ op: 'shiftRow', target: 23 },{ op: 'shiftRow', target: 24 },{ op: 'shiftRow', target: 13 },{ op: 'shiftRow', target: 14 },{ op: 'shiftRow', target: 15 },{ op: 'shiftRow', target: 16 },{ op: 'shiftRow', target: 17 },{ op: 'shiftRow', target: 18 },{ op: 'shiftRow', target: 31 },{ op: 'shiftRow', target: 32 },{ op: 'shiftRow', target: 33 },{ op: 'shiftRow', target: 34 },{ op: 'shiftRow', target: 35 },{ op: 'shiftRow', target: 36 }],
-		[{ op: 'swapRightRows', r1: 01, r2: 07 },{ op: 'swapRightRows', r1: 02, r2: 08 },{ op: 'swapRightRows', r1: 03, r2: 09 },{ op: 'swapRightRows', r1: 04, r2: 10 },{ op: 'swapRightRows', r1: 05, r2: 11 },{ op: 'swapRightRows', r1: 06, r2: 12 },{ op: 'swapRightRows', r1: 25, r2: 31 },{ op: 'swapRightRows', r1: 26, r2: 32 },{ op: 'swapRightRows', r1: 27, r2: 33 },{ op: 'swapRightRows', r1: 28, r2: 34 },{ op: 'swapRightRows', r1: 29, r2: 35 },{ op: 'swapRightRows', r1: 30, r2: 36 }],
-		[{ op: 'shiftRow', target: 02 },{ op: 'shiftRow', target: 04 },{ op: 'shiftRow', target: 06 },{ op: 'shiftRow', target: 07, dir: -1},{ op: 'shiftRow', target: 09, dir: -1},{ op: 'shiftRow', target: 11, dir: -1},{ op: 'shiftRow', target: 13, dir: -1},{ op: 'shiftRow', target: 14, dir: -1},{ op: 'shiftRow', target: 15, dir: -1},{ op: 'shiftRow', target: 16, dir: -1},{ op: 'shiftRow', target: 17, dir: -1},{ op: 'shiftRow', target: 18, dir: -1},{ op: 'shiftRow', target: 19},{ op: 'shiftRow', target: 20},{ op: 'shiftRow', target: 21},{ op: 'shiftRow', target: 22},{ op: 'shiftRow', target: 23},{ op: 'shiftRow', target: 24},{ op: 'shiftRow', target: 25, dir: 180},{ op: 'shiftRow', target: 26, dir: -1},{ op: 'shiftRow', target: 27, dir: 180},{ op: 'shiftRow', target: 28, dir: -1},{ op: 'shiftRow', target: 29, dir: 180},{ op: 'shiftRow', target: 30, dir: -1},{ op: 'shiftRow', target: 31},{ op: 'shiftRow', target: 32, dir: 180},{ op: 'shiftRow', target: 33},{ op: 'shiftRow', target: 34, dir: 180},{ op: 'shiftRow', target: 35},{ op: 'shiftRow', target: 36, dir: 180}],
-		[{ op: 'shiftRow', target: 13, dir: -1},{ op: 'shiftRow', target: 15, dir: -1},{ op: 'shiftRow', target: 17, dir: -1},{ op: 'shiftRow', target: 20},{ op: 'shiftRow', target: 22},{ op: 'shiftRow', target: 24},{ op: 'shiftRow', target: 26, dir: -1},{ op: 'shiftRow', target: 28, dir: -1},{ op: 'shiftRow', target: 30, dir: -1},{ op: 'shiftRow', target: 31},{ op: 'shiftRow', target: 33},{ op: 'shiftRow', target: 35}],
-		[{ op: 'swapRightRows', r1: 01, r2: 02 },{ op: 'swapRightRows', r1: 03, r2: 04 },{ op: 'swapRightRows', r1: 05, r2: 06 },{ op: 'swapRightRows', r1: 07, r2: 08 },{ op: 'swapRightRows', r1: 09, r2: 10 },{ op: 'swapRightRows', r1: 11, r2: 12 },{ op: 'swapRightRows', r1: 13, r2: 14 },{ op: 'swapRightRows', r1: 15, r2: 16 },{ op: 'swapRightRows', r1: 17, r2: 18 },{ op: 'swapRightRows', r1: 19, r2: 20 },{ op: 'swapRightRows', r1: 21, r2: 22 },{ op: 'swapRightRows', r1: 23, r2: 24 },{ op: 'swapRightRows', r1: 25, r2: 26 },{ op: 'swapRightRows', r1: 27, r2: 28 },{ op: 'swapRightRows', r1: 29, r2: 30 },{ op: 'swapRightRows', r1: 31, r2: 32 },{ op: 'swapRightRows', r1: 33, r2: 34 },{ op: 'swapRightRows', r1: 35, r2: 36 }],
-		[{ op: 'shiftRow', target: 01 },{ op: 'shiftRow', target: 03, dir: -1 },{ op: 'shiftRow', target: 05, dir: 180 },{ op: 'shiftRow', target: 07 },{ op: 'shiftRow', target: 09, dir: -1 },{ op: 'shiftRow', target: 11, dir: 180 },{ op: 'shiftRow', target: 13 },{ op: 'shiftRow', target: 15, dir: -1 },{ op: 'shiftRow', target: 17, dir: 180 },{ op: 'shiftRow', target: 19 },{ op: 'shiftRow', target: 21, dir: -1 },{ op: 'shiftRow', target: 23, dir: 180 },{ op: 'shiftRow', target: 25 },{ op: 'shiftRow', target: 27, dir: -1 },{ op: 'shiftRow', target: 29, dir: 180 },{ op: 'shiftRow', target: 31 },{ op: 'shiftRow', target: 33, dir: -1 },{ op: 'shiftRow', target: 35, dir: 180 }],
-		[{ op: 'swapRightRows', r1: 01, r2: 03 },{ op: 'swapRightRows', r1: 07, r2: 09 },{ op: 'swapRightRows', r1: 13, r2: 15 },{ op: 'swapRightRows', r1: 19, r2: 21 },{ op: 'swapRightRows', r1: 25, r2: 27 },{ op: 'swapRightRows', r1: 31, r2: 33 }],
-		[{ op: 'stacking', s1: 03, s2: 05 },{ op: 'stacking', s1: 09, s2: 11 },{ op: 'stacking', s1: 15, s2: 17 },{ op: 'stacking', s1: 21, s2: 23 },{ op: 'stacking', s1: 27, s2: 29 },{ op: 'stacking', s1: 33, s2: 35 }],
-		 ],
 		 
 	"8_0":[
 		[{ op: 'swapRightRows', r1: 01, r2: 05 },{ op: 'swapRightRows', r1: 02, r2: 06 },{ op: 'swapRightRows', r1: 03, r2: 07 },{ op: 'swapRightRows', r1: 04, r2: 08 }],
-		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 02, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 04, dir: 01 },{ op: 'shiftRow', target: 05, dir: -1 },{ op: 'shiftRow', target: 06, dir: -1 },{ op: 'shiftRow', target: 07, dir: -1 },{ op: 'shiftRow', target: 08, dir: -1 }],
-		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 02, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 04, dir: 01 },{ op: 'shiftRow', target: 05, dir: -1 },{ op: 'shiftRow', target: 06, dir: -1 },{ op: 'shiftRow', target: 07, dir: -1 },{ op: 'shiftRow', target: 08, dir: -1 }],
+		[{ op: 'shiftRow', target: 01, dir: -2 },{ op: 'shiftRow', target: 02, dir: -2 },{ op: 'shiftRow', target: 03, dir: -2 },{ op: 'shiftRow', target: 04, dir: -2 },{ op: 'shiftRow', target: 05, dir: 02 },{ op: 'shiftRow', target: 06, dir: 02 },{ op: 'shiftRow', target: 07, dir: 02 },{ op: 'shiftRow', target: 08, dir: 02 }],
 		[{ op: 'swapRightRows', r1: 01, r2: 03 },{ op: 'swapRightRows', r1: 02, r2: 04 },{ op: 'swapRightRows', r1: 05, r2: 07 },{ op: 'swapRightRows', r1: 06, r2: 08 }],
-		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 02, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 04, dir: 01 },{ op: 'shiftRow', target: 05, dir: -1 },{ op: 'shiftRow', target: 06, dir: -1 },{ op: 'shiftRow', target: 07, dir: -1 },{ op: 'shiftRow', target: 08, dir: -1 }],
-		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 02, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 04, dir: 01 },{ op: 'shiftRow', target: 05, dir: -1 },{ op: 'shiftRow', target: 06, dir: -1 },{ op: 'shiftRow', target: 07, dir: -1 },{ op: 'shiftRow', target: 08, dir: -1 }],
+		[{ op: 'shiftRow', target: 01, dir: -2 },{ op: 'shiftRow', target: 02, dir: -2 },{ op: 'shiftRow', target: 03, dir: -2 },{ op: 'shiftRow', target: 04, dir: -2 },{ op: 'shiftRow', target: 05, dir: 02 },{ op: 'shiftRow', target: 06, dir: 02 },{ op: 'shiftRow', target: 07, dir: 02 },{ op: 'shiftRow', target: 08, dir: 02 }],
 		[{ op: 'swapRightRows', r1: 01, r2: 05 },{ op: 'swapRightRows', r1: 02, r2: 06 },{ op: 'swapRightRows', r1: 03, r2: 07 },{ op: 'swapRightRows', r1: 04, r2: 08 }],
 		 // used principles from N=4
 		[{ op: 'shiftRow', target: 01, dir: -1 },{ op: 'shiftRow', target: 02, dir: -1 },{ op: 'shiftRow', target: 05, dir: 01 },{ op: 'shiftRow', target: 06, dir: 01 },{ op: 'shiftRow', target: 07, dir: -1 },{ op: 'shiftRow', target: 08, dir: -1 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 04, dir: 01 }],
@@ -1017,21 +1053,17 @@ const macroRegistry = {
 		[{ op: 'swapRightRows', r1: 01, r2: 02 },{ op: 'swapRightRows', r1: 03, r2: 04 },{ op: 'swapRightRows', r1: 05, r2: 06 },{ op: 'swapRightRows', r1: 07, r2: 08 }],
 		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 02, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 04, dir: 01 },{ op: 'shiftRow', target: 05, dir: 01 },{ op: 'shiftRow', target: 06, dir: 01 },{ op: 'shiftRow', target: 07, dir: 01 },{ op: 'shiftRow', target: 08, dir: 01 }],
 		[{ op: 'swapRightRows', r1: 01, r2: 02 },{ op: 'swapRightRows', r1: 03, r2: 04 },{ op: 'swapRightRows', r1: 05, r2: 06 },{ op: 'swapRightRows', r1: 07, r2: 08 }],
-		[{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 07, dir: 01 }],
-		[{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 07, dir: 01 }],
-		[{ op: 'swapRightRows', r1: 01, r2: 03 },{ op: 'swapRightRows', r1: 05, r2: 07 }],
-		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 05, dir: 01 },{ op: 'shiftRow', target: 07, dir: 01 }],
-		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 05, dir: 01 },{ op: 'shiftRow', target: 07, dir: 01 }],
-		[{ op: 'swapRightRows', r1: 01, r2: 03 },{ op: 'swapRightRows', r1: 05, r2: 07 }],
-		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 05, dir: 01 },{ op: 'shiftRow', target: 07, dir: 01 }],
-		[{ op: 'swapRightRows', r1: 01, r2: 03 },{ op: 'swapRightRows', r1: 05, r2: 07 }],
-		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 05, dir: 01 },{ op: 'shiftRow', target: 07, dir: 01 }],
-		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 03, dir: 01 },{ op: 'shiftRow', target: 05, dir: 01 },{ op: 'shiftRow', target: 07, dir: 01 }],
-		[{ op: 'swapRightRows', r1: 01, r2: 03 },{ op: 'swapRightRows', r1: 05, r2: 07 }],
-		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 05, dir: 01 }],
-		[{ op: 'shiftRow', target: 01, dir: 01 },{ op: 'shiftRow', target: 05, dir: 01 }],
+		[{ op: 'shiftRow', target: 04, dir: 02 },{ op: 'shiftRow', target: 08, dir: 02 }],
+		[{ op: 'swapRightRows', r1: 02, r2: 04 },{ op: 'swapRightRows', r1: 06, r2: 08 }],
+		[{ op: 'shiftRow', target: 02, dir: 02 },{ op: 'shiftRow', target: 04, dir: 02 },{ op: 'shiftRow', target: 06, dir: 02 },{ op: 'shiftRow', target: 08, dir: 02 }],
+		[{ op: 'swapRightRows', r1: 02, r2: 04 },{ op: 'swapRightRows', r1: 06, r2: 08 }],
+		[{ op: 'shiftRow', target: 02, dir: 01 },{ op: 'shiftRow', target: 04, dir: 01 },{ op: 'shiftRow', target: 06, dir: 01 },{ op: 'shiftRow', target: 08, dir: 01 }],
+		[{ op: 'swapRightRows', r1: 02, r2: 04 },{ op: 'swapRightRows', r1: 06, r2: 08 }],
+		[{ op: 'shiftRow', target: 02, dir: 02 },{ op: 'shiftRow', target: 04, dir: 02 },{ op: 'shiftRow', target: 06, dir: 02 },{ op: 'shiftRow', target: 08, dir: 02 }],
+		[{ op: 'swapRightRows', r1: 02, r2: 04 },{ op: 'swapRightRows', r1: 06, r2: 08 }],
+		[{ op: 'shiftRow', target: 02, dir: 02 },{ op: 'shiftRow', target: 06, dir: 02 }],
 		[{ op: 'swapRightRows', r1: 01, r2: 05 },{ op: 'swapRightRows', r1: 02, r2: 06 },{ op: 'swapRightRows', r1: 03, r2: 07 },{ op: 'swapRightRows', r1: 04, r2: 08 }],
-		[{ op: 'shiftRow', target: 01, dir: 180},{ op: 'shiftRow', target: 02, dir: 180},{ op: 'shiftRow', target: 03, dir: 180},{ op: 'shiftRow', target: 04, dir: 180}],
+		[{ op: 'shiftRow', target: 05, dir: 180},{ op: 'shiftRow', target: 06, dir: 180},{ op: 'shiftRow', target: 07, dir: 180},{ op: 'shiftRow', target: 08, dir: 180}],
 	],
 	// A much longer, unique sequence can be appended HERE
 };
@@ -1039,5 +1071,3 @@ const macroRegistry = {
 </script>
 </body>
 </html>
-
-
