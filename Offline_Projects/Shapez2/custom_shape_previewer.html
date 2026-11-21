@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Modded Shapez 2 Inspector (Canvas + Table)</title>
+<style>
+	body { font-family: sans-serif; background: #181a20; color: #eee; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+	input[type="text"] { width: 640px; max-width: 95vw; padding: 10px; font-family: monospace; font-size: 16px; background: #252830; color: #fff; border: 1px solid #444; border-radius: 4px; }
+	.controls { margin: 12px 0; display: flex; gap: 20px; align-items: center; font-size: 14px; }
+	#status { font-family: monospace; color: #8b949e; margin-top: 8px; font-size: 13px; }
+	.workspace { display: flex; flex-wrap: wrap; gap: 30px; align-items: flex-start; justify-content: center; margin-top: 15px; width: 100%; max-width: 1100px; }
+	canvas { background: #22252d; border-radius: 50%; box-shadow: 0 4px 20px rgba(0,0,0,0.5); flex-shrink: 0; }
+	.table-panel { background: #22252d; border: 1px solid #343946; border-radius: 8px; padding: 15px; max-height: 520px; overflow-y: auto; min-width: 380px;	}
+	table { width: 100%; border-collapse: collapse; font-size: 13px; }
+	th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #303542; }
+	th { background: #2a2e39; color: #adbac7; position: sticky; top: 0; }
+	.layer-header td { background: #1c1f26; font-weight: bold; color: #58a6ff; }
+	.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 6px; vertical-align: middle; border: 1px solid #555; }
+.layer-header-flex { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+	.mini-layer-canvas { background: #181a20; border-radius: 50%; border: 1px solid #343946; flex-shrink: 0; }
+
+</style>
+</head>
+<body>
+	<h2>Modded Shapez 2 Inspector</h2>
+	<input id="code" type="text" value="CrRgWbSw:FbGmHrFyGgHc:XkYkXwYw" placeholder="Enter shape code (e.g. CuRkWccr)">
+	<div id="status"></div>
+	<div class="controls">
+		<label>Layer Scale Shrink: <input id="shrink" type="range" min="0.5" max="0.9" step="0.02" value="0.7"></label>
+		<label><input id="guides" type="checkbox" checked> Show Slice Guides</label>
+	</div>
+
+	<div class="workspace">
+		<canvas id="canvas" width="460" height="460" style="margin: 40px -10px"></canvas>
+		<div class="table-panel">
+			<table>
+				<thead>
+					<tr>
+						<th>Slice</th>
+						<th>Code</th>
+						<th>Shape</th>
+						<th>Color</th>
+					</tr>
+				</thead>
+				<tbody id="breakdown"></tbody>
+			</table>
+		</div>
+	</div>
+
+<script>
+const SHAPE_NAMES = {
+	C: 'Circle',
+	R: 'Rectangular',
+	S: 'Spike',
+	W: 'Concave (W)',
+	F: 'Flower (F)',
+	G: 'Crown (G)',
+	H: 'Triangle (H)',
+	X: 'Refined (X)',
+	Y: 'Over-Refined (Y)',
+	c: 'Crystal',
+	P: 'Pin',
+	'-': 'Empty'
+};
+
+const COLOR_MAP = {
+	u: { name: 'Gray (Uncolored)', hex: '#9ea3ad' },
+	r: { name: 'Red', hex: '#ff3b3b' },
+	g: { name: 'Green', hex: '#3bff58' },
+	b: { name: 'Blue', hex: '#3b82ff' },
+	y: { name: 'Yellow', hex: '#ffe63b' },
+	m: { name: 'Purple', hex: '#d93bff' },
+	c: { name: 'Cyan', hex: '#3bfff2' },
+	w: { name: 'White', hex: '#ffffff' },
+	k: { name: 'Black', hex: '#111317' },
+	'-': { name: 'None', hex: 'transparent' }
+};
+
+function adjustHue(hex, amount) {
+	if (!hex || hex === 'transparent' || hex.charAt(0) !== '#') return '#9ea3ad';
+	const num = parseInt(hex.slice(1), 16);
+	const r = Math.min(255, Math.max(0, (num >> 16) + amount));
+	const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amount));
+	const b = Math.min(255, Math.max(0, (num & 0x0000FF) + amount));
+	return `rgb(${r}, ${g}, ${b})`;
+}
+
+function drawLayer(ctx, parts, cx, cy, rOuter, showGuides) {
+	const n = parts.length;
+	if (n === 0) return;
+	const angleStep = (2 * Math.PI) / n;
+
+	parts.forEach((part, i) => {
+		const shapeChar = part.charAt(0);
+		const colorChar = part.charAt(1) || 'u';
+		const colorInfo = COLOR_MAP[colorChar] || { name: `Custom (${colorChar})`, hex: '#9ea3ad' };
+
+		const a1 = i * angleStep - Math.PI / 2;
+		const a2 = (i + 1) * angleStep - Math.PI / 2;
+		const aMid = (a1 + a2) / 2;
+
+		const x1 = cx + rOuter * Math.cos(a1);
+		const y1 = cy + rOuter * Math.sin(a1);
+		const x2 = cx + rOuter * Math.cos(a2);
+		const y2 = cy + rOuter * Math.sin(a2);
+
+		if (showGuides) {
+			ctx.save();
+			ctx.beginPath();
+			ctx.moveTo(cx, cy);
+			ctx.lineTo(x1, y1);
+			ctx.strokeStyle = '#3a404e';
+			ctx.lineWidth = 1;
+			ctx.stroke();
+			ctx.restore();
+		}
+
+		if (shapeChar === '-' || part === '--') return;
+
+		ctx.save();
+		ctx.beginPath();
+
+		if (shapeChar === 'C' || shapeChar === 'c') {
+				// Circle / Crystal arc
+				ctx.moveTo(cx, cy);
+				ctx.arc(cx, cy, rOuter, a1, a2);
+				ctx.closePath();
+			} else if (shapeChar === 'R') {
+				// Rectangle / Sharp outer corner
+				const rCorner = rOuter / Math.cos(Math.min(angleStep / 2, Math.PI / 3));
+				const xm = cx + rCorner * Math.cos(aMid);
+				const ym = cy + rCorner * Math.sin(aMid);
+				ctx.moveTo(cx, cy);
+				ctx.lineTo(x1, y1);
+				ctx.lineTo(xm, ym);
+				ctx.lineTo(x2, y2);
+				ctx.closePath();
+			} else if (shapeChar === 'S') {
+				// Star (inward dips + sharp outer point)
+				const rDip = rOuter * 0.4;
+				const rTip = rOuter * 1.08;
+				const aQ1 = a1 + angleStep * 0.0;
+				const aQ3 = a1 + angleStep * 1.0;
+				ctx.moveTo(cx, cy);
+				ctx.lineTo(x1, y1);
+				ctx.lineTo(cx + rDip * Math.cos(aQ1), cy + rDip * Math.sin(aQ1));
+				ctx.lineTo(cx + rTip * Math.cos(aMid), cy + rTip * Math.sin(aMid));
+				ctx.lineTo(cx + rDip * Math.cos(aQ3), cy + rDip * Math.sin(aQ3));
+				ctx.lineTo(x2, y2);
+				ctx.closePath();
+			} else if (shapeChar === 'W') {
+				// Concave inward curve (quadratic Bezier dipping toward center)
+				const rCtrl = rOuter * 0.35;
+				const ctrlX = cx + rCtrl * Math.cos(aMid);
+				const ctrlY = cy + rCtrl * Math.sin(aMid);
+				ctx.moveTo(cx, cy);
+				ctx.lineTo(x1, y1);
+				ctx.quadraticCurveTo(ctrlX, ctrlY, x2, y2);
+				ctx.closePath();
+				
+				
+			} else if (shapeChar === 'F') {
+				// Snowcone (straight sides out to rMid, bulging rounded cap on outer edge)
+				const rSide = rOuter * 0.78;
+				const sx1 = cx + rSide * Math.cos(a1);
+				const sy1 = cy + rSide * Math.sin(a1);
+				const sx2 = cx + rSide * Math.cos(a2);
+				const sy2 = cy + rSide * Math.sin(a2);
+				const bulgeX = cx + (rOuter * 1.5) * Math.cos(aMid);
+				const bulgeY = cy + (rOuter * 1.5) * Math.sin(aMid);
+				ctx.moveTo(cx, cy);
+				ctx.lineTo(sx1, sy1);
+				ctx.quadraticCurveTo(bulgeX, bulgeY, sx2, sy2);
+				ctx.closePath();
+			} else if (shapeChar === 'G') {
+				// Previous W shape (straight-edged inward V-notch)
+				const rDip = rOuter * 0.45;
+				ctx.moveTo(cx, cy);
+				ctx.lineTo(x1, y1);
+				ctx.lineTo(cx + rDip * Math.cos(aMid), cy + rDip * Math.sin(aMid));
+				ctx.lineTo(x2, y2);
+				ctx.closePath();
+			} else if (shapeChar === 'H') {
+				// Default triangle wedge
+				ctx.moveTo(cx, cy);
+				ctx.lineTo(x1, y1);
+				ctx.lineTo(x2, y2);
+				ctx.closePath();
+				
+			} else if (shapeChar === 'X') {
+				// House with roof facing toward origin (inset walls + flat outer base)
+				const rWall = rOuter * 0.6;
+				const aW1 = a1 + angleStep * 0.;
+				const aW2 = a1 + angleStep * 1.;
+				const aBase1 = a1 + angleStep * 0.2;
+				const aBase2 = a1 + angleStep * 0.8;
+				ctx.moveTo(cx, cy);
+				ctx.lineTo(cx + rWall * Math.cos(aW1), cy + rWall * Math.sin(aW1));
+				ctx.lineTo(cx + rOuter * Math.cos(aBase1), cy + rOuter * Math.sin(aBase1));
+				ctx.lineTo(cx + rOuter * Math.cos(aBase2), cy + rOuter * Math.sin(aBase2));
+				ctx.lineTo(cx + rWall * Math.cos(aW2), cy + rWall * Math.sin(aW2));
+				ctx.closePath();
+			} else if (shapeChar === 'Y') {
+				// X shape with a triangular doorway cutout along the outer edge
+				const rWall = rOuter * 0.6;
+				const rDoorApex = rOuter * 0.5;
+				const aW1 = a1 + angleStep * 0.0;
+				const aW2 = a1 + angleStep * 1.0;
+				const aBase1 = a1 + angleStep * 0.2;
+				const aBase2 = a1 + angleStep * 0.8;
+				const aDoor1 = a1 + angleStep * 0.2;
+				const aDoor2 = a1 + angleStep * 0.8;
+				ctx.moveTo(cx, cy);
+				ctx.lineTo(cx + rWall * Math.cos(aW1), cy + rWall * Math.sin(aW1));
+				ctx.lineTo(cx + rOuter * Math.cos(aBase1), cy + rOuter * Math.sin(aBase1));
+				ctx.lineTo(cx + rOuter * Math.cos(aDoor1), cy + rOuter * Math.sin(aDoor1));
+				ctx.lineTo(cx + rDoorApex * Math.cos(aMid), cy + rDoorApex * Math.sin(aMid));
+				ctx.lineTo(cx + rOuter * Math.cos(aDoor2), cy + rOuter * Math.sin(aDoor2));
+				ctx.lineTo(cx + rOuter * Math.cos(aBase2), cy + rOuter * Math.sin(aBase2));
+				ctx.lineTo(cx + rWall * Math.cos(aW2), cy + rWall * Math.sin(aW2));
+				ctx.closePath();
+			} else if (shapeChar === 'P') {
+				// Pin dot
+				const xm = cx + (rOuter * 0.6) * Math.cos(aMid);
+				const ym = cy + (rOuter * 0.6) * Math.sin(aMid);
+				ctx.arc(xm, ym, 9, 0, Math.PI * 2);
+			} else {
+				// Fallback triangle wedge
+				ctx.moveTo(cx, cy);
+				ctx.lineTo(x1, y1);
+				ctx.lineTo(x2, y2);
+				ctx.closePath();
+			}
+
+		if (shapeChar === 'c') {
+			// Crystal: No stroke + radial gradient fading from darker core to lighter translucent edge
+			const grad = ctx.createRadialGradient(cx, cy, rOuter * 0.08, cx, cy, rOuter);
+			grad.addColorStop(0, adjustHue(colorInfo.hex, -65));
+			grad.addColorStop(0.55, colorInfo.hex);
+			grad.addColorStop(1, adjustHue(colorInfo.hex, 75));
+
+			ctx.globalAlpha = 0.82;
+			ctx.fillStyle = grad;
+			ctx.fill();
+		} else {
+			// Solid shapes: Flat color fill + crisp dark border
+			ctx.globalAlpha = 1.0;
+			ctx.fillStyle = colorInfo.hex;
+			ctx.fill();
+
+			ctx.strokeStyle = '#2c313c';
+			ctx.lineWidth = Math.max(1, rOuter * 0.06);
+			ctx.stroke();
+		}
+		ctx.restore();
+	});
+}
+
+function render() {
+	const code = document.getElementById('code').value.trim();
+	const shrink = parseFloat(document.getElementById('shrink').value);
+	const showGuides = document.getElementById('guides').checked;
+	const canvas = document.getElementById('canvas');
+	const ctx = canvas.getContext('2d');
+	const tbody = document.getElementById('breakdown');
+	const status = document.getElementById('status');
+
+	const cx = canvas.width / 2;
+	const cy = canvas.height / 2;
+	const baseRadius = 166;
+
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	tbody.innerHTML = '';
+
+	if (!code) {
+		status.textContent = 'Enter a shape code above.';
+		return;
+	}
+
+	const layers = code.split(':');
+	const layerCounts = [];
+
+	layers.forEach((layerStr, layerIdx) => {
+		const parts = layerStr.match(/.{1,2}/g) || [];
+		const n = parts.length;
+		layerCounts.push(`L${layerIdx + 1}: ${n}`);
+
+		// Create Layer Header with Inline Mini-Canvas
+		const headerRow = document.createElement('tr');
+		headerRow.className = 'layer-header';
+		const headerCell = document.createElement('td');
+		headerCell.colSpan = 4;
+
+		const flexWrap = document.createElement('div');
+		flexWrap.className = 'layer-header-flex';
+
+		const titleSpan = document.createElement('span');
+		titleSpan.textContent = `Layer ${layerIdx + 1} (${n} slices — ${(360 / (n || 1)).toFixed(1)}° each)`;
+
+		const miniCanvas = document.createElement('canvas');
+		miniCanvas.className = 'mini-layer-canvas';
+		miniCanvas.width = 64;
+		miniCanvas.height = 64;
+
+		flexWrap.appendChild(titleSpan);
+		flexWrap.appendChild(miniCanvas);
+		headerCell.appendChild(flexWrap);
+		headerRow.appendChild(headerCell);
+		tbody.appendChild(headerRow);
+
+		if (n === 0) return;
+
+		// 1. Draw onto Main Stacked Canvas
+		const rOuter = baseRadius * Math.pow(shrink, layerIdx);
+		drawLayer(ctx, parts, cx, cy, rOuter, showGuides && layerIdx === 0);
+
+		// 2. Draw Isolated Layer onto Inline Mini-Canvas
+		const miniCtx = miniCanvas.getContext('2d');
+		drawLayer(miniCtx, parts, 32, 32, 26, showGuides);
+
+		// 3. Populate Slice Rows
+		parts.forEach((part, i) => {
+			const shapeChar = part.charAt(0);
+			const colorChar = part.charAt(1) || 'u';
+			const shapeLabel = SHAPE_NAMES[shapeChar] || `Custom (${shapeChar})`;
+			const colorInfo = COLOR_MAP[colorChar] || { name: `Custom (${colorChar})`, hex: '#9ea3ad' };
+
+			const row = document.createElement('tr');
+			row.innerHTML = `
+				<td>#${i + 1}</td>
+				<td><code>${part}</code></td>
+				<td>${shapeLabel}</td>
+				<td><span class="swatch" style="background:${colorInfo.hex};"></span>${colorInfo.name}</td>
+			`;
+			tbody.appendChild(row);
+		});
+	});
+
+	status.textContent = `Parsed ${layers.length} layer(s) — Slices per layer: ${layerCounts.join(' | ')}`;
+}
+
+
+
+document.getElementById('code').addEventListener('input', render);
+document.getElementById('shrink').addEventListener('input', render);
+document.getElementById('guides').addEventListener('change', render);
+render();
+</script>
+</body>
+</html>
