@@ -4,8 +4,8 @@
 * options that need paramaters should declare 'name=value'
 
 Video options include:
-| option name | param | description |
-| ---: | ---: | :---: |
+| option name | &nbsp;parameters&nbsp; | description |
+| ---: | :---: | :---: |
 | allowfullscreen | - | enables the button to toggle this button within the player |
 | showplayer | integer: 0-15 | Generates specified player generations based on the binary conversion of this value (see table below) |
 | muteads | - | automatically detects if the play time in the video doesn't match up with the buffer time and mutes the output |
