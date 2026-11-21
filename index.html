@@ -262,6 +262,36 @@ Instructions on how to customize your experience.
         </span>
         <ul class="nested collapsed">
             
+            <div class="readme-box">
+                <div class="readme-header">
+                    <span>README.md</span>
+                    <span class="time-ago" data-time="2026-11-20 20:19:26 -0500"></span>
+                </div>
+                <div class="markdown-body">## Multi-perspective YouTube Player w/ buttons
+* prefix first option with '?' 
+* concatenate multiple url options with '&'
+* options that need paramaters should declare 'name=value'
+
+Video options include:
+| option name | param | description |
+| ---: | ---: | :---: |
+| allowfullscreen | - | enables the button to toggle this button within the player |
+| showplayer | integer: 0-15 | Generates specified player generations based on the binary conversion of this value (see table below) |
+| muteads | - | automatically detects if the play time in the video doesn't match up with the buffer time and mutes the output |
+
+### Examples:
+* [./videos.html?allowfullscreen](https://charliethunkman.github.io/HTML-JS-CSS_Projects/Youtube_Embed_Players/local_site/videos.html?allowfullscreen)
+* [./videos.html?allowfullscreen&showplayer=5&muteads](https://charliethunkman.github.io/HTML-JS-CSS_Projects/Youtube_Embed_Players/local_site/videos.html?allowfullscreen&showplayer=5&muteads)
+* [./videos.html?showplayer=6](https://charliethunkman.github.io/HTML-JS-CSS_Projects/Youtube_Embed_Players/local_site/videos.html?showplayer=6)
+
+  |showPlayer|  - 	| HC 	| HC & WN | WN 	|
+  | ---: 	 | ---:	| ---: 	| ---: 	| ---: 	|
+  | 	-	 | NaN	| 1 	| 3 	| 2 	|
+  | Music Q  | 4 	| 5 	| 7 	| 6		|
+  | mQ & AU  | 12 	| 13 	| 15	| 14	|
+  | Among Us | 8  	| 9 	| 11	| 10	|
+</div>
+            </div>
             
         <li class="file-item " data-name="buttons-videos.html">
             <div class="file-row">
