@@ -152,6 +152,10 @@ const rootHTML = `
         #searchBar { padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; width: 300px; }
         .hidden { display: none !important; }
         button { padding: 8px 14px; cursor: pointer; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; color: #475569; font-size: 0.85rem; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #d0d7de; padding: 10px 14px; text-align: left; }
+        th { background-color: #f6f8fa; font-weight: bold; }
+        tbody tr:nth-child(even) { background-color: #f9fafb; }
     </style>
 </head>
 <body>
