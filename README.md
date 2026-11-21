@@ -2,21 +2,7 @@
 For any website based contraptions, like the YouTube API
 The scripts used for the HTML elements on Wix
 
-Visit [https://charliethunkman.github.io/HTML-JS-CSS_Projects/[insert_filename_HERE].html](https://charliethunkman.github.io/HTML-JS-CSS_Projects/%5Binsert_filename_here%5D) to view any specific HTML file preview.
+Visit [https://charliethunkman.github.io/HTML-JS-CSS_Projects/[insert_filename_HERE].html](https://charliethunkman.github.io/HTML-JS-CSS_Projects/) to view any specific HTML file preview.
 
 
-
-### Here's a compilation of some of the sites:
-* [./Youtube_Embed_Players/local_site/buttons.html](https://charliethunkman.github.io/HTML-JS-CSS_Projects/Youtube_Embed_Players/local_site/buttons.html)
-* [./Youtube_Embed_Players/local_site/videos.html?allowfullscreen](https://charliethunkman.github.io/HTML-JS-CSS_Projects/Youtube_Embed_Players/local_site/videos.html?allowfullscreen)
-* [./Youtube_Embed_Players/local_site/videos.html?allowfullscreen&showplayer=5&muteads](https://charliethunkman.github.io/HTML-JS-CSS_Projects/Youtube_Embed_Players/local_site/videos.html?allowfullscreen&showplayer=5&muteads)
-* [./Youtube_Embed_Players/local_site/videos.html?showplayer=6](https://charliethunkman.github.io/HTML-JS-CSS_Projects/Youtube_Embed_Players/local_site/videos.html?showplayer=6)
-  |showPlayer|  - 	| HC 	| HC+WN | WN 	|
-  | ---: 	 | ---:	| ---: 	| ---: 	| ---: 	|
-  | 	-	 | NaN	| 1 	| 3 	| 2 	|
-  | Music Q  | 4 	| 5 	| 7 	| 6		|
-  | mQ & AU  | 12 	| 13 	| 15	| 14	|
-  | Among Us | 8  	| 9 	| 11	| 10	|
-* [./Youtube_Embed_Players/url_playlist/video.html?allowFullScreen&list=PLuXaDdOtKhFeu-eIaEG63-qVwt2DUO8tA](https://charliethunkman.github.io/HTML-JS-CSS_Projects/Youtube_Embed_Players/url_playlist/video.html?allowFullScreen&list=PLuXaDdOtKhFeu-eIaEG63-qVwt2DUO8tA)
-* [./content_sharer/generic.html?domain=ncs.io&contents=P10+Reactive+Symbolism2+LGPower+LongNightPt2&author=Charlie](https://charliethunkman.github.io/HTML-JS-CSS_Projects/content_sharer/generic.html?domain=ncs.io&contents=P10+Reactive+Symbolism2+LGPower+LongNightPt2&author=Charlie)
-* [./Offline_Projects/Countdown_iFrame.html](https://charliethunkman.github.io/HTML-JS-CSS_Projects/Offline_Projects/Countdown_iFrame.html)
+### Navigate through the folder structures below for a compilation of the sites. Specific folders will provide further details as needed.
