@@ -8,17 +8,42 @@
 	input[type="text"] { width: 640px; max-width: 95vw; padding: 10px; font-family: monospace; font-size: 16px; background: #252830; color: #fff; border: 1px solid #444; border-radius: 4px; }
 	.controls { margin: 12px 0; display: flex; gap: 20px; align-items: center; font-size: 14px; }
 	#status { font-family: monospace; color: #8b949e; margin-top: 8px; font-size: 13px; }
-	.workspace { display: flex; flex-wrap: wrap; gap: 30px; align-items: flex-start; justify-content: center; margin-top: 15px; width: 100%; max-width: 1100px; }
-	canvas { background: #22252d; border-radius: 50%; box-shadow: 0 4px 20px rgba(0,0,0,0.5); flex-shrink: 0; }
-	.table-panel { background: #22252d; border: 1px solid #343946; border-radius: 8px; padding: 15px; max-height: 520px; overflow-y: auto; min-width: 380px;	}
+
+	/* (A) Widest default: t1 - canvas - t2 */
+	.workspace { display: grid; grid-template-columns: 310px auto minmax(340px, 1fr); grid-template-areas: "t1 canvas t2"; gap: 24px; align-items: start; justify-items: center; margin-top: 15px; width: 100%; max-width: 1360px; }
+	.tabbed-panel { grid-area: t1; width: 100%; max-width: 310px; justify-self: center; }
+	canvas { grid-area: canvas; background: #22252d; border-radius: 50%; box-shadow: 0 4px 20px rgba(0,0,0,0.5); flex-shrink: 0; }
+	.breakdown-panel { grid-area: t2; width: 100%; justify-self: stretch; }
+	/* (B) t1 - canvas / t2 */
+	@media (max-width: 1280px) {
+		.workspace { grid-template-columns: 310px minmax(0, 1fr); grid-template-areas: "t1 canvas" "t2 t2"; max-width: 920px; }
+		.breakdown-panel { max-width: 100%; min-width: 320px; }
+	}
+	/* (C) canvas / t1 - t2 */
+	@media (max-width: 860px) {
+	    .workspace { grid-template-columns: 310px minmax(0, 1fr); grid-template-areas: "canvas canvas" "t1 t2"; max-width: 820px; }
+	}
+	/* (D) Slimmest: canvas / t1 / t2 */
+	@media (max-width: 800px) {
+		.workspace { grid-template-columns: minmax(0, 1fr); grid-template-areas: "canvas" "t1" "t2"; max-width: 520px; }
+		.tabbed-panel { max-width: 100%; }
+	}
+
+	.panel { background: #22252d; border: 1px solid #343946; border-radius: 8px; padding: 15px; max-height: 520px; overflow-y: auto; box-sizing: border-box;}
 	table { width: 100%; border-collapse: collapse; font-size: 13px; }
 	th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #303542; }
 	th { background: #2a2e39; color: #adbac7; position: sticky; top: 0; }
 	.layer-header td { background: #1c1f26; font-weight: bold; color: #58a6ff; }
 	.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 6px; vertical-align: middle; border: 1px solid #555; }
-.layer-header-flex { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+	.layer-header-flex { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 	.mini-layer-canvas { background: #181a20; border-radius: 50%; border: 1px solid #343946; flex-shrink: 0; }
 
+	.tab-btn { padding: 5px 10px; font-size: 0.85rem; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(255, 255, 255, 0.04); color: inherit; border-radius: 5px; }
+	.tab-btn.active { background: rgba(255, 255, 255, 0.18); font-weight: 600; }
+	.tab-pane { display: none; }
+	.tab-pane.active { display: block; }
+	.summary-table th, .summary-table td { padding: 5px 6px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); text-align: left; }
+	.summary-table td:last-child, .summary-table th:last-child { font-variant-numeric: tabular-nums; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -31,8 +56,55 @@
 	</div>
 
 	<div class="workspace">
-		<canvas id="canvas" width="460" height="460" style="margin: 40px -10px"></canvas>
-		<div class="table-panel">
+		<div id="summary-window" class="panel tabbed-panel">
+			<h2>Shape &amp; Color Totals</h2>
+
+			<div class="tab-bar" role="tablist">
+				<button type="button" class="tab-btn active" data-tab="shapes" role="tab" aria-selected="true">Shapes</button>
+				<button type="button" class="tab-btn" data-tab="colors" role="tab" aria-selected="false">Colors</button>
+				<button type="button" class="tab-btn" data-tab="pairs" role="tab" aria-selected="false">Shape + Color</button>
+			</div>
+
+			<div class="tab-pane active" data-tab-panel="shapes">
+				<table class="summary-table">
+					<thead>
+						<tr>
+							<th>Shape</th>
+							<th>Amount</th>
+						</tr>
+					</thead>
+					<tbody id="summary-shapes-body"></tbody>
+				</table>
+			</div>
+
+			<div class="tab-pane" data-tab-panel="colors">
+				<table class="summary-table">
+					<thead>
+						<tr>
+							<th>Color</th>
+							<th>Amount</th>
+						</tr>
+					</thead>
+					<tbody id="summary-colors-body"></tbody>
+				</table>
+			</div>
+
+			<div class="tab-pane" data-tab-panel="pairs">
+				<table class="summary-table">
+					<thead>
+						<tr>
+							<th>Shape + Color</th>
+							<th>Amount</th>
+						</tr>
+					</thead>
+					<tbody id="summary-pairs-body"></tbody>
+				</table>
+			</div>
+		</div>
+
+		<canvas id="canvas" width="460" height="460"></canvas>
+
+		<div class="panel breakdown-panel">
 			<table>
 				<thead>
 					<tr>
@@ -46,7 +118,6 @@
 			</table>
 		</div>
 	</div>
-
 <script>
 const SHAPE_NAMES = {
 	C: 'Circle (C)',
@@ -60,7 +131,7 @@ const SHAPE_NAMES = {
 	Y: 'Over-Refined (Y)',
 	c: 'Crystal (c)',
 	P: 'Pin (P)',
-	'-': 'Empty'
+	'-': 'Empty (-)'
 };
 
 const COLOR_MAP = {
@@ -73,7 +144,7 @@ const COLOR_MAP = {
 	c: { name: 'Cyan', hex: '#3bfff2' },
 	w: { name: 'White', hex: '#ffffff' },
 	k: { name: 'Black', hex: '#111317' },
-	'-': { name: 'None', hex: 'transparent' }
+	'-': { name: 'Empty (-)', hex: 'transparent' }
 };
 
 function adjustHue(hex, amount) {
@@ -121,119 +192,104 @@ function drawLayer(ctx, parts, cx, cy, rOuter, showGuides) {
 		ctx.beginPath();
 
 		if (shapeChar === 'C' || shapeChar === 'c') {
-				// Circle / Crystal arc
-				ctx.moveTo(cx, cy);
-				ctx.arc(cx, cy, rOuter, a1, a2);
-				ctx.closePath();
-			} else if (shapeChar === 'R') {
-				// Rectangle / Sharp outer corner
-				const rCorner = rOuter / Math.cos(Math.min(angleStep / 2, Math.PI / 3));
-				const xm = cx + rCorner * Math.cos(aMid);
-				const ym = cy + rCorner * Math.sin(aMid);
-				ctx.moveTo(cx, cy);
-				ctx.lineTo(x1, y1);
-				ctx.lineTo(xm, ym);
-				ctx.lineTo(x2, y2);
-				ctx.closePath();
-			} else if (shapeChar === 'S') {
-				// Star (inward dips + sharp outer point)
-				const rDip = rOuter * 0.4;
-				const rTip = rOuter * 1.08;
-				const aQ1 = a1 + angleStep * 0.0;
-				const aQ3 = a1 + angleStep * 1.0;
-				ctx.moveTo(cx, cy);
-				ctx.lineTo(x1, y1);
-				ctx.lineTo(cx + rDip * Math.cos(aQ1), cy + rDip * Math.sin(aQ1));
-				ctx.lineTo(cx + rTip * Math.cos(aMid), cy + rTip * Math.sin(aMid));
-				ctx.lineTo(cx + rDip * Math.cos(aQ3), cy + rDip * Math.sin(aQ3));
-				ctx.lineTo(x2, y2);
-				ctx.closePath();
-			} else if (shapeChar === 'W') {
-				// Concave inward curve (quadratic Bezier dipping toward center)
-				const rCtrl = rOuter * 0.35;
-				const ctrlX = cx + rCtrl * Math.cos(aMid);
-				const ctrlY = cy + rCtrl * Math.sin(aMid);
-				ctx.moveTo(cx, cy);
-				ctx.lineTo(x1, y1);
-				ctx.quadraticCurveTo(ctrlX, ctrlY, x2, y2);
-				ctx.closePath();
-				
-				
-			} else if (shapeChar === 'F') {
-				// Snowcone (straight sides out to rMid, bulging rounded cap on outer edge)
-				const rSide = rOuter * 0.78;
-				const sx1 = cx + rSide * Math.cos(a1);
-				const sy1 = cy + rSide * Math.sin(a1);
-				const sx2 = cx + rSide * Math.cos(a2);
-				const sy2 = cy + rSide * Math.sin(a2);
-				const bulgeX = cx + (rOuter * 1.5) * Math.cos(aMid);
-				const bulgeY = cy + (rOuter * 1.5) * Math.sin(aMid);
-				ctx.moveTo(cx, cy);
-				ctx.lineTo(sx1, sy1);
-				ctx.quadraticCurveTo(bulgeX, bulgeY, sx2, sy2);
-				ctx.closePath();
-			} else if (shapeChar === 'G') {
-				// Previous W shape (straight-edged inward V-notch)
-				const rDip = rOuter * 0.45;
-				ctx.moveTo(cx, cy);
-				ctx.lineTo(x1, y1);
-				ctx.lineTo(cx + rDip * Math.cos(aMid), cy + rDip * Math.sin(aMid));
-				ctx.lineTo(x2, y2);
-				ctx.closePath();
-			} else if (shapeChar === 'H') {
-				// Default triangle wedge
-				ctx.moveTo(cx, cy);
-				ctx.lineTo(x1, y1);
-				ctx.lineTo(x2, y2);
-				ctx.closePath();
-				
-			} else if (shapeChar === 'X') {
-				// House with roof facing toward origin (inset walls + flat outer base)
-				const rWall = rOuter * 0.6;
-				const aW1 = a1 + angleStep * 0.;
-				const aW2 = a1 + angleStep * 1.;
-				const aBase1 = a1 + angleStep * 0.2;
-				const aBase2 = a1 + angleStep * 0.8;
-				ctx.moveTo(cx, cy);
-				ctx.lineTo(cx + rWall * Math.cos(aW1), cy + rWall * Math.sin(aW1));
-				ctx.lineTo(cx + rOuter * Math.cos(aBase1), cy + rOuter * Math.sin(aBase1));
-				ctx.lineTo(cx + rOuter * Math.cos(aBase2), cy + rOuter * Math.sin(aBase2));
-				ctx.lineTo(cx + rWall * Math.cos(aW2), cy + rWall * Math.sin(aW2));
-				ctx.closePath();
-			} else if (shapeChar === 'Y') {
-				// X shape with a triangular doorway cutout along the outer edge
-				const rWall = rOuter * 0.6;
-				const rDoorApex = rOuter * 0.5;
-				const aW1 = a1 + angleStep * 0.0;
-				const aW2 = a1 + angleStep * 1.0;
-				const aBase1 = a1 + angleStep * 0.2;
-				const aBase2 = a1 + angleStep * 0.8;
-				const aDoor1 = a1 + angleStep * 0.2;
-				const aDoor2 = a1 + angleStep * 0.8;
-				ctx.moveTo(cx, cy);
-				ctx.lineTo(cx + rWall * Math.cos(aW1), cy + rWall * Math.sin(aW1));
-				ctx.lineTo(cx + rOuter * Math.cos(aBase1), cy + rOuter * Math.sin(aBase1));
-				ctx.lineTo(cx + rOuter * Math.cos(aDoor1), cy + rOuter * Math.sin(aDoor1));
-				ctx.lineTo(cx + rDoorApex * Math.cos(aMid), cy + rDoorApex * Math.sin(aMid));
-				ctx.lineTo(cx + rOuter * Math.cos(aDoor2), cy + rOuter * Math.sin(aDoor2));
-				ctx.lineTo(cx + rOuter * Math.cos(aBase2), cy + rOuter * Math.sin(aBase2));
-				ctx.lineTo(cx + rWall * Math.cos(aW2), cy + rWall * Math.sin(aW2));
-				ctx.closePath();
-			} else if (shapeChar === 'P') {
-				// Pin dot
-				const xm = cx + (rOuter * 0.6) * Math.cos(aMid);
-				const ym = cy + (rOuter * 0.6) * Math.sin(aMid);
-				ctx.arc(xm, ym, 9, 0, Math.PI * 2);
-			} else {
-				// Fallback triangle wedge
-				ctx.moveTo(cx, cy);
-				ctx.lineTo(x1, y1);
-				ctx.lineTo(x2, y2);
-				ctx.closePath();
-			}
+			ctx.moveTo(cx, cy);
+			ctx.arc(cx, cy, rOuter, a1, a2);
+			ctx.closePath();
+		} else if (shapeChar === 'R') {
+			const rCorner = rOuter / Math.cos(Math.min(angleStep / 2, Math.PI / 3));
+			const xm = cx + rCorner * Math.cos(aMid);
+			const ym = cy + rCorner * Math.sin(aMid);
+			ctx.moveTo(cx, cy);
+			ctx.lineTo(x1, y1);
+			ctx.lineTo(xm, ym);
+			ctx.lineTo(x2, y2);
+			ctx.closePath();
+		} else if (shapeChar === 'S') {
+			const rDip = rOuter * 0.4;
+			const rTip = rOuter * 1.08;
+			const aQ1 = a1 + angleStep * 0.0;
+			const aQ3 = a1 + angleStep * 1.0;
+			ctx.moveTo(cx, cy);
+			ctx.lineTo(x1, y1);
+			ctx.lineTo(cx + rDip * Math.cos(aQ1), cy + rDip * Math.sin(aQ1));
+			ctx.lineTo(cx + rTip * Math.cos(aMid), cy + rTip * Math.sin(aMid));
+			ctx.lineTo(cx + rDip * Math.cos(aQ3), cy + rDip * Math.sin(aQ3));
+			ctx.lineTo(x2, y2);
+			ctx.closePath();
+		} else if (shapeChar === 'W') {
+			const rCtrl = rOuter * 0.35;
+			const ctrlX = cx + rCtrl * Math.cos(aMid);
+			const ctrlY = cy + rCtrl * Math.sin(aMid);
+			ctx.moveTo(cx, cy);
+			ctx.lineTo(x1, y1);
+			ctx.quadraticCurveTo(ctrlX, ctrlY, x2, y2);
+			ctx.closePath();
+		} else if (shapeChar === 'F') {
+			const rSide = rOuter * 0.78;
+			const sx1 = cx + rSide * Math.cos(a1);
+			const sy1 = cy + rSide * Math.sin(a1);
+			const sx2 = cx + rSide * Math.cos(a2);
+			const sy2 = cy + rSide * Math.sin(a2);
+			const bulgeX = cx + (rOuter * 1.5) * Math.cos(aMid);
+			const bulgeY = cy + (rOuter * 1.5) * Math.sin(aMid);
+			ctx.moveTo(cx, cy);
+			ctx.lineTo(sx1, sy1);
+			ctx.quadraticCurveTo(bulgeX, bulgeY, sx2, sy2);
+			ctx.closePath();
+		} else if (shapeChar === 'G') {
+			const rDip = rOuter * 0.45;
+			ctx.moveTo(cx, cy);
+			ctx.lineTo(x1, y1);
+			ctx.lineTo(cx + rDip * Math.cos(aMid), cy + rDip * Math.sin(aMid));
+			ctx.lineTo(x2, y2);
+			ctx.closePath();
+		} else if (shapeChar === 'H') {
+			ctx.moveTo(cx, cy);
+			ctx.lineTo(x1, y1);
+			ctx.lineTo(x2, y2);
+			ctx.closePath();
+		} else if (shapeChar === 'X') {
+			const rWall = rOuter * 0.6;
+			const aW1 = a1 + angleStep * 0.0;
+			const aW2 = a1 + angleStep * 1.0;
+			const aBase1 = a1 + angleStep * 0.2;
+			const aBase2 = a1 + angleStep * 0.8;
+			ctx.moveTo(cx, cy);
+			ctx.lineTo(cx + rWall * Math.cos(aW1), cy + rWall * Math.sin(aW1));
+			ctx.lineTo(cx + rOuter * Math.cos(aBase1), cy + rOuter * Math.sin(aBase1));
+			ctx.lineTo(cx + rOuter * Math.cos(aBase2), cy + rOuter * Math.sin(aBase2));
+			ctx.lineTo(cx + rWall * Math.cos(aW2), cy + rWall * Math.sin(aW2));
+			ctx.closePath();
+		} else if (shapeChar === 'Y') {
+			const rWall = rOuter * 0.6;
+			const rDoorApex = rOuter * 0.5;
+			const aW1 = a1 + angleStep * 0.0;
+			const aW2 = a1 + angleStep * 1.0;
+			const aBase1 = a1 + angleStep * 0.2;
+			const aBase2 = a1 + angleStep * 0.8;
+			const aDoor1 = a1 + angleStep * 0.2;
+			const aDoor2 = a1 + angleStep * 0.8;
+			ctx.moveTo(cx, cy);
+			ctx.lineTo(cx + rWall * Math.cos(aW1), cy + rWall * Math.sin(aW1));
+			ctx.lineTo(cx + rOuter * Math.cos(aBase1), cy + rOuter * Math.sin(aBase1));
+			ctx.lineTo(cx + rOuter * Math.cos(aDoor1), cy + rOuter * Math.sin(aDoor1));
+			ctx.lineTo(cx + rDoorApex * Math.cos(aMid), cy + rDoorApex * Math.sin(aMid));
+			ctx.lineTo(cx + rOuter * Math.cos(aDoor2), cy + rOuter * Math.sin(aDoor2));
+			ctx.lineTo(cx + rOuter * Math.cos(aBase2), cy + rOuter * Math.sin(aBase2));
+			ctx.lineTo(cx + rWall * Math.cos(aW2), cy + rWall * Math.sin(aW2));
+			ctx.closePath();
+		} else if (shapeChar === 'P') {
+			const xm = cx + (rOuter * 0.6) * Math.cos(aMid);
+			const ym = cy + (rOuter * 0.6) * Math.sin(aMid);
+			ctx.arc(xm, ym, 9, 0, Math.PI * 2);
+		} else {
+			ctx.moveTo(cx, cy);
+			ctx.lineTo(x1, y1);
+			ctx.lineTo(x2, y2);
+			ctx.closePath();
+		}
 
 		if (shapeChar === 'c') {
-			// Crystal: No stroke + radial gradient fading from darker core to lighter translucent edge
 			const grad = ctx.createRadialGradient(cx, cy, rOuter * 0.08, cx, cy, rOuter);
 			grad.addColorStop(0, adjustHue(colorInfo.hex, -65));
 			grad.addColorStop(0.55, colorInfo.hex);
@@ -243,7 +299,6 @@ function drawLayer(ctx, parts, cx, cy, rOuter, showGuides) {
 			ctx.fillStyle = grad;
 			ctx.fill();
 		} else {
-			// Solid shapes: Flat color fill + crisp dark border
 			ctx.globalAlpha = 1.0;
 			ctx.fillStyle = colorInfo.hex;
 			ctx.fill();
@@ -255,6 +310,134 @@ function drawLayer(ctx, parts, cx, cy, rOuter, showGuides) {
 		ctx.restore();
 	});
 }
+
+function addStat(map, key, layerFraction) {
+	if (!map[key]) {
+		map[key] = { slices: 0, layers: 0 };
+	}
+	map[key].slices += 1;
+	map[key].layers += layerFraction;
+}
+
+function formatAmount(stat) {
+	const roundedLayers = Number(stat.layers.toFixed(3));
+	return `${stat.slices} slice${stat.slices === 1 ? '' : 's'} (${roundedLayers} layer${roundedLayers === 1 ? '' : 's'})`;
+}
+
+function computeShapeColorSummary(layers) {
+	const shapeStats = {};
+	const colorStats = {};
+	const pairStats = {};
+
+	layers.forEach((layerStr) => {
+		const parts = layerStr.match(/.{1,2}/g) || [];
+		const n = parts.length;
+		if (n === 0) return;
+		const layerFraction = 1 / n;
+
+		parts.forEach((part) => {
+			const rawShape = part.charAt(0) || '-';
+			const rawColor = part.charAt(1) || 'u';
+
+			const isEmpty = rawShape === '-' || part === '--';
+			const shapeKey = isEmpty ? '-' : rawShape;
+
+			// Non-crystal & empty shapes treat uncolored ('u') as empty ('-')
+			let colorKey = rawColor;
+			if (isEmpty || (rawShape !== 'c' && rawColor === 'u')) {
+				colorKey = '-';
+			}
+
+			addStat(shapeStats, shapeKey, layerFraction);
+			addStat(colorStats, colorKey, layerFraction);
+			addStat(pairStats, `${shapeKey}|${colorKey}`, layerFraction);
+		});
+	});
+
+	return { shapeStats, colorStats, pairStats };
+}
+
+function renderSummaryTable(tbodyId, statsObj, labelFn, swatchFn) {
+	const tbody = document.getElementById(tbodyId);
+	if (!tbody) return;
+
+	const entries = Object.entries(statsObj).sort((a, b) => b[1].slices - a[1].slices);
+	if (entries.length === 0) {
+		tbody.innerHTML = '<tr><td>None</td><td>0</td></tr>';
+		return;
+	}
+
+	tbody.innerHTML = entries
+		.map(([key, stat]) => {
+			const swatchHex = swatchFn ? swatchFn(key) : null;
+			const swatchHtml =
+				swatchHex && swatchHex !== 'transparent'
+					? `<span class="swatch" style="background:${swatchHex};"></span>`
+					: '';
+			return `
+				<tr>
+					<td>${swatchHtml}${labelFn(key)}</td>
+					<td>${formatAmount(stat)}</td>
+				</tr>
+			`;
+		})
+		.join('');
+}
+
+function renderSummaryWindow(layers) {
+	const { shapeStats, colorStats, pairStats } = computeShapeColorSummary(layers);
+
+	renderSummaryTable(
+		'summary-shapes-body',
+		shapeStats,
+		(s) => SHAPE_NAMES[s] || `Custom (${s})`
+	);
+
+	renderSummaryTable(
+		'summary-colors-body',
+		colorStats,
+		(c) => (COLOR_MAP[c] ? COLOR_MAP[c].name : `Custom (${c})`),
+		(c) => (COLOR_MAP[c] ? COLOR_MAP[c].hex : '#9ea3ad')
+	);
+
+	renderSummaryTable(
+		'summary-pairs-body',
+		pairStats,
+		(pairKey) => {
+			const [s, c] = pairKey.split('|');
+			const sLabel = SHAPE_NAMES[s] || `Custom (${s})`;
+			const cLabel = COLOR_MAP[c] ? COLOR_MAP[c].name : `Custom (${c})`;
+			return `${sLabel}`;
+		},
+		(pairKey) => {
+			const [, c] = pairKey.split('|');
+			return COLOR_MAP[c] ? COLOR_MAP[c].hex : '#9ea3ad';
+		}
+	);
+}
+
+function initSummaryTabs() {
+	const buttons = document.querySelectorAll('#summary-window .tab-btn');
+	const panes = document.querySelectorAll('#summary-window .tab-pane');
+
+	buttons.forEach((btn) => {
+		btn.addEventListener('click', () => {
+			const targetTab = btn.getAttribute('data-tab');
+
+			buttons.forEach((b) => {
+				const isActive = b === btn;
+				b.classList.toggle('active', isActive);
+				b.setAttribute('aria-selected', String(isActive));
+			});
+
+			panes.forEach((pane) => {
+				pane.classList.toggle('active', pane.getAttribute('data-tab-panel') === targetTab);
+			});
+		});
+	});
+}
+
+initSummaryTabs();
 
 function render() {
 	const code = document.getElementById('code').value.trim();
@@ -274,6 +457,7 @@ function render() {
 
 	if (!code) {
 		status.textContent = 'Enter a shape code above.';
+		renderSummaryWindow([]);
 		return;
 	}
 
@@ -285,7 +469,6 @@ function render() {
 		const n = parts.length;
 		layerCounts.push(`L${layerIdx + 1}: ${n}`);
 
-		// Create Layer Header with Inline Mini-Canvas
 		const headerRow = document.createElement('tr');
 		headerRow.className = 'layer-header';
 		const headerCell = document.createElement('td');
@@ -310,15 +493,12 @@ function render() {
 
 		if (n === 0) return;
 
-		// 1. Draw onto Main Stacked Canvas
 		const rOuter = baseRadius * Math.pow(shrink, layerIdx);
 		drawLayer(ctx, parts, cx, cy, rOuter, showGuides && layerIdx === 0);
 
-		// 2. Draw Isolated Layer onto Inline Mini-Canvas
 		const miniCtx = miniCanvas.getContext('2d');
 		drawLayer(miniCtx, parts, 32, 32, 26, showGuides);
 
-		// 3. Populate Slice Rows
 		parts.forEach((part, i) => {
 			const shapeChar = part.charAt(0);
 			const colorChar = part.charAt(1) || 'u';
@@ -336,10 +516,9 @@ function render() {
 		});
 	});
 
+	renderSummaryWindow(layers);
 	status.textContent = `Parsed ${layers.length} layer(s) — Slices per layer: ${layerCounts.join(' | ')}`;
 }
-
-
 
 document.getElementById('code').addEventListener('input', render);
 document.getElementById('shrink').addEventListener('input', render);
