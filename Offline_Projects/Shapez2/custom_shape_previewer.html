@@ -4,41 +4,50 @@
 <meta charset="UTF-8">
 <title>Modded Shapez 2 Inspector (Canvas + Table)</title>
 <style>
-	body { font-family: sans-serif; background: #181a20; color: #eee; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+	body { font-family: sans-serif; background: #181a20; color: #eee; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; overflow-x: hidden }
 	input[type="text"] { width: 640px; max-width: 95vw; padding: 10px; font-family: monospace; font-size: 16px; background: #252830; color: #fff; border: 1px solid #444; border-radius: 4px; }
 	.controls { margin: 12px 0; display: flex; gap: 20px; align-items: center; font-size: 14px; }
 	#status { font-family: monospace; color: #8b949e; margin-top: 8px; font-size: 13px; }
 
 	/* (A) Widest default: t1 - canvas - t2 */
-	.workspace { display: grid; grid-template-columns: 310px auto minmax(340px, 1fr); grid-template-areas: "t1 canvas t2"; gap: 24px; align-items: start; justify-items: center; margin-top: 15px; width: 100%; max-width: 1360px; }
-	.tabbed-panel { grid-area: t1; width: 100%; max-width: 310px; justify-self: center; }
+	.workspace { display: grid; grid-template-columns: minmax(310px, 1fr) auto minmax(378px, 1fr); grid-template-areas: "t1 canvas t2"; gap: 24px; align-items: start; justify-items: center; margin-top: 15px; width: 100%; }
+	.tabbed-panel { grid-area: t1; width: 100%; max-width: 310px; justify-self: stretch; overflow-y: nowrap;}
 	canvas { grid-area: canvas; background: #22252d; border-radius: 50%; box-shadow: 0 4px 20px rgba(0,0,0,0.5); flex-shrink: 0; }
-	.breakdown-panel { grid-area: t2; width: 100%; justify-self: stretch; }
+	.breakdown-panel { grid-area: t2; width: 100%; justify-self: stretch; max-width: min-content; min-width: 320px; }
+	.panel { background: #22252d; border: 1px solid #343946; border-radius: 8px; padding: 15px; max-height: 460px; overflow-y: auto; box-sizing: border-box; justify-self: center; align-self: anchor-center;}
 	/* (B) t1 - canvas / t2 */
-	@media (max-width: 1280px) {
-		.workspace { grid-template-columns: 310px minmax(0, 1fr); grid-template-areas: "t1 canvas" "t2 t2"; max-width: 920px; }
-		.breakdown-panel { max-width: 100%; min-width: 320px; }
+	@media (max-width: 1200px) {
+		.workspace { grid-template-columns: 330px minmax(0, 1fr); grid-template-areas: "t1 canvas" "t2 t2"; max-width: 920px; }
+		.panel { min-width: 330px; }
+		canvas { max-width: 500px; } 
+	    .breakdown-panel { max-height: unset}
 	}
 	/* (C) canvas / t1 - t2 */
 	@media (max-width: 860px) {
-	    .workspace { grid-template-columns: 310px minmax(0, 1fr); grid-template-areas: "canvas canvas" "t1 t2"; max-width: 820px; }
+	    .workspace { grid-template-columns: 330px minmax(0, 1fr); grid-template-areas: "canvas canvas" "t1 t2"; max-width: 820px; }
+	    .panel { justify-self: right; align-self: self-start; }
 	}
 	/* (D) Slimmest: canvas / t1 / t2 */
 	@media (max-width: 800px) {
-		.workspace { grid-template-columns: minmax(0, 1fr); grid-template-areas: "canvas" "t1" "t2"; max-width: 520px; }
+		.workspace { grid-template-columns: minmax(340px, 1fr); grid-template-areas: "canvas" "t1" "t2"; max-width: 520px; }
 		.tabbed-panel { max-width: 100%; }
+		canvas { justify-self: stretch; }
+	    .panel { justify-self: anchor-center;}
 	}
 
-	.panel { background: #22252d; border: 1px solid #343946; border-radius: 8px; padding: 15px; max-height: 460px; overflow-y: auto; box-sizing: border-box;}
+	/* (D2) Slimmest: canvas / t1 / t2 */
+	@media (max-width: 380px) {
+		body { overflow-x: auto; }
+	}
 	table { width: 100%; border-collapse: collapse; font-size: 13px; }
-	th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #303542; }
+	th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #303542; white-space: nowrap; }
 	th { background: #2a2e39; color: #adbac7; position: sticky; top: 0; }
-	.layer-header td { background: #1c1f26; font-weight: bold; color: #58a6ff; }
+	h2 { margin-block-start: 0.1em; }
+	.layer-header { background: #1c1f26; font-weight: bold; color: #58a6ff; font-size: 12px; color: #8b949e; margin-bottom: 2px;}
 	.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 6px; vertical-align: middle; border: 1px solid #555; }
-	.layer-header-flex { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-	.mini-layer-canvas { background: #181a20; border-radius: 50%; border: 1px solid #343946; flex-shrink: 0; }
-	.tab-bar { display: flex; gap: 4px; border-bottom: 1px solid #343946; }
-	.tab-btn { padding: 6px 10px 10px; font-size: 0.85rem; cursor: pointer; border: 1px solid transparent; border-bottom: none; border-radius: 10px 10px 0 0; background: rgba(255, 255, 255, 0.04); color: #8b949e; }
+	.mini-layer-canvas { background: #181a20; border-radius: 50%; border: 1px solid #343946; flex-shrink: 0; width: 40px; }
+	.tab-bar { display: flex; gap: 4px; border-top: 1px solid #343946; overflow-x: auto; transform: scaleY(-1); scrollbar-width: thin; scrollbar-color: #444 #1c1f26;}
+	.tab-btn { display: inline-flex; align-items: center; gap: 8px; flex-direction: column; white-space: pre-wrap; padding: 6px 10px 10px; font-size: 0.85rem; cursor: pointer; border: 1px solid transparent; border-bottom: none; border-radius: 10px 10px 0 0; background: rgba(255, 255, 255, 0.04); color: #8b949e; transform: scaleY(-1);}
 	.tab-btn:hover { color: #eee; background: rgba(255, 255, 255, 0.08); }
 	.tab-btn.active { background: rgba(255, 255, 255, 0.18); font-weight: 600; color: #eee; }
 	.tab-pane { display: none; }
@@ -48,7 +57,7 @@
 </style>
 </head>
 <body>
-	<h2>Modded Shapez 2 Inspector</h2>
+	<h1>Votrex Shape Inspector</h1>
 	<input id="code" type="text" value="CrRgWbSw:FbGmHrFyGgHc:XkYkXwYw" placeholder="Enter shape code (e.g. CuRkWccr)">
 	<div id="status"></div>
 	<div class="controls">
@@ -106,17 +115,9 @@
 		<canvas id="canvas" width="460" height="460"></canvas>
 
 		<div class="panel breakdown-panel">
-			<table>
-				<thead>
-					<tr>
-						<th>Slice</th>
-						<th>Code</th>
-						<th>Shape Name</th>
-						<th>Color</th>
-					</tr>
-				</thead>
-				<tbody id="breakdown"></tbody>
-			</table>
+			<h2>Layer Breakdown</h2>
+			<div id="layer-tab-bar" class="tab-bar layer-tab-bar" role="tablist"></div>
+			<div id="layer-tab-panes"></div>
 		</div>
 	</div>
 <script>
@@ -209,11 +210,9 @@ function drawLayer(ctx, parts, cx, cy, rOuter, showGuides) {
 			const rDip = rOuter * 0.4;
 			const rTip = rOuter * 1.08;
 			ctx.moveTo(cx, cy);
-			ctx.lineTo(x1, y1);
 			ctx.lineTo(cx + rDip * Math.cos(a1), cy + rDip * Math.sin(a1));
 			ctx.lineTo(cx + rTip * Math.cos(aMid), cy + rTip * Math.sin(aMid));
 			ctx.lineTo(cx + rDip * Math.cos(a2), cy + rDip * Math.sin(a2));
-			ctx.lineTo(x2, y2);
 			ctx.closePath();
 		} else if (shapeChar === 'W') {
 			const rCtrl = rOuter * 0.35;
@@ -292,16 +291,15 @@ function drawLayer(ctx, parts, cx, cy, rOuter, showGuides) {
 
 			ctx.globalAlpha = 0.82;
 			ctx.fillStyle = grad;
-			ctx.fill();
+			ctx.strokeStyle = `#ffffff00`;
 		} else {
 			ctx.globalAlpha = 1.0;
 			ctx.fillStyle = colorInfo.hex;
-			ctx.fill();
-
 			ctx.strokeStyle = '#2c313c';
-			ctx.lineWidth = Math.max(1, rOuter * 0.06);
-			ctx.stroke();
 		}
+		ctx.fill();
+		ctx.lineWidth = Math.max(1, rOuter * 0.06);
+		ctx.stroke();
 		ctx.restore();
 	});
 }
@@ -316,7 +314,7 @@ function addStat(map, key, layerFraction) {
 
 function formatAmount(stat) {
 	const roundedLayers = Number(stat.layers.toFixed(3));
-	return `${stat.slices} slice${stat.slices === 1 ? '' : 's'} (${roundedLayers} layer${roundedLayers === 1 ? '' : 's'})`;
+	return `${stat.slices} slice${stat.slices === 1 ? '' : 's'} (${roundedLayers} pure shape${roundedLayers === 1 ? '' : 's'})`;
 }
 
 function computeShapeColorSummary(layers) {
@@ -433,21 +431,42 @@ function initSummaryTabs() {
 
 initSummaryTabs();
 
+
+let activeLayerTab = 0;
+
+function selectLayerTab(index) {
+	activeLayerTab = index;
+	const buttons = document.querySelectorAll('#layer-tab-bar .tab-btn');
+	const panes = document.querySelectorAll('#layer-tab-panes .tab-pane');
+
+	buttons.forEach((btn, idx) => {
+		const isActive = idx === index;
+		btn.classList.toggle('active', isActive);
+		btn.setAttribute('aria-selected', String(isActive));
+	});
+
+	panes.forEach((pane, idx) => {
+		pane.classList.toggle('active', idx === index);
+	});
+}
+
 function render() {
 	const code = document.getElementById('code').value.trim();
 	const shrink = parseFloat(document.getElementById('shrink').value);
 	const showGuides = document.getElementById('guides').checked;
 	const canvas = document.getElementById('canvas');
 	const ctx = canvas.getContext('2d');
-	const tbody = document.getElementById('breakdown');
+	const tabBar = document.getElementById('layer-tab-bar');
+	const tabPanes = document.getElementById('layer-tab-panes');
 	const status = document.getElementById('status');
 
 	const cx = canvas.width / 2;
 	const cy = canvas.height / 2;
-	const baseRadius = 166;
+	const baseRadius = (cx+cy) * .707 / 2 ;
 
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	tbody.innerHTML = '';
+	tabBar.innerHTML = '';
+	tabPanes.innerHTML = '';
 
 	if (!code) {
 		status.textContent = 'Enter a shape code above.';
@@ -456,6 +475,9 @@ function render() {
 	}
 
 	const layers = code.split(':');
+	if (activeLayerTab >= layers.length) {
+		activeLayerTab = 0;
+	}
 	const layerCounts = [];
 
 	layers.forEach((layerStr, layerIdx) => {
@@ -463,53 +485,81 @@ function render() {
 		const n = parts.length;
 		layerCounts.push(`L${layerIdx + 1}: ${n}`);
 
-		const headerRow = document.createElement('tr');
-		headerRow.className = 'layer-header';
-		const headerCell = document.createElement('td');
-		headerCell.colSpan = 4;
-
-		const flexWrap = document.createElement('div');
-		flexWrap.className = 'layer-header-flex';
-
-		const titleSpan = document.createElement('span');
-		titleSpan.textContent = `Layer ${layerIdx + 1} (${n} slices — ${(360 / (n || 1)).toFixed(1)}° each)`;
+		// 1. Create dynamic tab button with mini-canvas preview
+		const btn = document.createElement('button');
+		btn.type = 'button';
+		btn.className = 'tab-btn';
+		btn.setAttribute('role', 'tab');
 
 		const miniCanvas = document.createElement('canvas');
 		miniCanvas.className = 'mini-layer-canvas';
-		miniCanvas.width = 64;
-		miniCanvas.height = 64;
+		miniCanvas.width = 56; // 2x resolution for crisp 28px display
+		miniCanvas.height = 56;
 
-		flexWrap.appendChild(titleSpan);
-		flexWrap.appendChild(miniCanvas);
-		headerCell.appendChild(flexWrap);
-		headerRow.appendChild(headerCell);
-		tbody.appendChild(headerRow);
+		btn.appendChild(miniCanvas);
 
-		if (n === 0) return;
+		const labelSpan = document.createElement('span');
+		labelSpan.style.minWidth = "66px";
+		labelSpan.textContent = `Layer ${layerIdx + 1} \n ${n} x ${(360 / (n || 1)).toFixed(1)}°`;
+		btn.appendChild(labelSpan);
+		btn.addEventListener('click', () => selectLayerTab(layerIdx));
+		tabBar.appendChild(btn);
 
-		const rOuter = baseRadius * Math.pow(shrink, layerIdx);
-		drawLayer(ctx, parts, cx, cy, rOuter, showGuides && layerIdx === 0);
+		// 2. Create dynamic tab pane with layer table
+		const pane = document.createElement('div');
+		pane.className = 'tab-pane';
 
-		const miniCtx = miniCanvas.getContext('2d');
-		drawLayer(miniCtx, parts, 32, 32, 26, showGuides);
+		const metaDiv = document.createElement('div');
+		metaDiv.className = 'layer-header';
+		//metaDiv.textContent = `Layer ${layerIdx + 1}: ${n} slices (${(360 / (n || 1)).toFixed(1)}° each)`;
+		pane.appendChild(metaDiv);
 
-		parts.forEach((part, i) => {
-			const shapeChar = part.charAt(0);
-			const colorChar = part.charAt(1) || 'u';
-			const shapeLabel = SHAPE_NAMES[shapeChar] || `Custom (${shapeChar})`;
-			const colorInfo = COLOR_MAP[colorChar] || { name: `Custom (${colorChar})`, hex: '#9ea3ad' };
+		const table = document.createElement('table');
+		table.innerHTML = `
+			<thead>
+				<tr>
+					<th>Slice</th>
+					<th>Code</th>
+					<th>Shape Name</th>
+					<th>Color</th>
+				</tr>
+			</thead>
+			<tbody></tbody>
+		`;
+		const tbody = table.querySelector('tbody');
 
-			const row = document.createElement('tr');
-			row.innerHTML = `
-				<td>#${i + 1}</td>
-				<td><code>${part}</code></td>
-				<td>${shapeLabel}</td>
-				<td><span class="swatch" style="background:${colorInfo.hex};"></span>${colorInfo.name}</td>
-			`;
-			tbody.appendChild(row);
-		});
+		if (n > 0) {
+			const rOuter = baseRadius * Math.pow(shrink, layerIdx);
+			drawLayer(ctx, parts, cx, cy, rOuter, showGuides && layerIdx === 0);
+
+			const miniCtx = miniCanvas.getContext('2d');
+			miniWidth = miniCanvas.width / 2;
+			drawLayer(miniCtx, parts, miniWidth, miniWidth, miniWidth * .707, showGuides);
+
+			parts.forEach((part, i) => {
+				const shapeChar = part.charAt(0);
+				const colorChar = part.charAt(1) || 'u';
+				const shapeLabel = SHAPE_NAMES[shapeChar] || `Custom (${shapeChar})`;
+				const colorInfo = COLOR_MAP[colorChar] || { name: `Custom (${colorChar})`, hex: '#9ea3ad' };
+
+				const row = document.createElement('tr');
+				row.innerHTML = `
+					<td>#${i + 1}</td>
+					<td><code>${part}</code></td>
+					<td>${shapeLabel}</td>
+					<td><span class="swatch" style="background:${colorInfo.hex};"></span>${colorInfo.name}</td>
+				`;
+				tbody.appendChild(row);
+			});
+		} else {
+			tbody.innerHTML = '<tr><td colspan="4">Empty layer</td></tr>';
+		}
+
+		pane.appendChild(table);
+		tabPanes.appendChild(pane);
 	});
 
+	selectLayerTab(activeLayerTab);
 	renderSummaryWindow(layers);
 	status.textContent = `Parsed ${layers.length} layer(s) — Slices per layer: ${layerCounts.join(' | ')}`;
 }
