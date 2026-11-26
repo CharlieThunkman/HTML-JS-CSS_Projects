@@ -208,7 +208,7 @@ function drawLayer(ctx, parts, cx, cy, rOuter, showGuides) {
 			ctx.closePath();
 		} else if (shapeChar === 'S') {
 			const rDip = rOuter * 0.4;
-			const rTip = rOuter * 1.08;
+			const rTip = rOuter * 1.34;
 			ctx.moveTo(cx, cy);
 			ctx.lineTo(cx + rDip * Math.cos(a1), cy + rDip * Math.sin(a1));
 			ctx.lineTo(cx + rTip * Math.cos(aMid), cy + rTip * Math.sin(aMid));
@@ -247,35 +247,36 @@ function drawLayer(ctx, parts, cx, cy, rOuter, showGuides) {
 			ctx.lineTo(x2, y2);
 			ctx.closePath();
 		} else if (shapeChar === 'X') {
-			const rWall = rOuter * 0.6;
-			const aBase1 = a1 + angleStep * 0.2;
-			const aBase2 = a1 + angleStep * 0.8;
+			const rWall = rOuter * 0.5;
+			const aBase1 = a1 + angleStep * 0.28;
+			const aBase2 = a1 + angleStep * 0.72;
 			ctx.moveTo(cx, cy);
 			ctx.lineTo(cx + rWall * Math.cos(a1), cy + rWall * Math.sin(a1));
-			ctx.lineTo(cx + rOuter * Math.cos(aBase1), cy + rOuter * Math.sin(aBase1));
-			ctx.lineTo(cx + rOuter * Math.cos(aBase2), cy + rOuter * Math.sin(aBase2));
+			ctx.lineTo(cx + rOuter*1.1 * Math.cos(aBase1), cy + rOuter*1.1 * Math.sin(aBase1));
+			ctx.lineTo(cx + rOuter*1.1 * Math.cos(aBase2), cy + rOuter*1.1 * Math.sin(aBase2));
 			ctx.lineTo(cx + rWall * Math.cos(a2), cy + rWall * Math.sin(a2));
 			ctx.closePath();
 		} else if (shapeChar === 'Y') {
-			const rWall = rOuter * 0.6;
-			const rDoorApex = rOuter * 0.5;
-			const aBase1 = a1 + angleStep * 0.2;
-			const aBase2 = a1 + angleStep * 0.8;
-			const aDoor1 = a1 + angleStep * 0.2;
-			const aDoor2 = a1 + angleStep * 0.8;
+			const rWall = rOuter * 0.5;
+			const rDoorApex = rOuter * 0.7;
+			const aBase1 = a1 + angleStep * 0.28;
+			const aBase2 = a1 + angleStep * 0.72;
+			const aDoor1 = a1 + angleStep * 0.29;
+			const aDoor2 = a1 + angleStep * 0.71;
 			ctx.moveTo(cx, cy);
 			ctx.lineTo(cx + rWall * Math.cos(a1), cy + rWall * Math.sin(a1));
-			ctx.lineTo(cx + rOuter * Math.cos(aBase1), cy + rOuter * Math.sin(aBase1));
-			ctx.lineTo(cx + rOuter * Math.cos(aDoor1), cy + rOuter * Math.sin(aDoor1));
+			ctx.lineTo(cx + rOuter*1.1 * Math.cos(aBase1), cy + rOuter*1.1 * Math.sin(aBase1));
+//			ctx.lineTo(cx + rDoorApex*2 * Math.cos(aDoor1), cy + rDoorApex*2 * Math.sin(aDoor1));
 			ctx.lineTo(cx + rDoorApex * Math.cos(aMid), cy + rDoorApex * Math.sin(aMid));
-			ctx.lineTo(cx + rOuter * Math.cos(aDoor2), cy + rOuter * Math.sin(aDoor2));
-			ctx.lineTo(cx + rOuter * Math.cos(aBase2), cy + rOuter * Math.sin(aBase2));
+//			ctx.lineTo(cx + rDoorApex*2 * Math.cos(aDoor2), cy + rDoorApex*2 * Math.sin(aDoor2));
+			ctx.lineTo(cx + rOuter*1.1 * Math.cos(aBase2), cy + rOuter*1.1 * Math.sin(aBase2));
 			ctx.lineTo(cx + rWall * Math.cos(a2), cy + rWall * Math.sin(a2));
 			ctx.closePath();
 		} else if (shapeChar === 'P') {
 			const xm = cx + (rOuter * 0.6) * Math.cos(aMid);
 			const ym = cy + (rOuter * 0.6) * Math.sin(aMid);
-			ctx.arc(xm, ym, 9, 0, Math.PI * 2);
+			ctx.arc(xm, ym, rOuter / 6, 0, Math.PI * 2);
+			colorInfo.hex = `#9ea3ad`;
 		} else {
 			ctx.moveTo(cx, cy);
 			ctx.lineTo(x1, y1);
@@ -284,14 +285,29 @@ function drawLayer(ctx, parts, cx, cy, rOuter, showGuides) {
 		}
 
 		if (shapeChar === 'c') {
-			const grad = ctx.createRadialGradient(cx, cy, rOuter * 0.08, cx, cy, rOuter);
-			grad.addColorStop(0, adjustHue(colorInfo.hex, -65));
-			grad.addColorStop(0.55, colorInfo.hex);
-			grad.addColorStop(1, adjustHue(colorInfo.hex, 75));
+			// Half-width of the slice at its outer arc (clamped to rOuter for wide slices)
+			const halfSpan = rOuter * Math.sin(Math.min(angleStep / 2, Math.PI / 2));
+			const perpAngle = aMid + Math.PI / 2;
+
+			// Center the gradient along the radial bisector (cx, cy) -> aMid
+			const gx = cx + (rOuter * 0.5) * Math.cos(aMid);
+			const gy = cy + (rOuter * 0.5) * Math.sin(aMid);
+
+			const xStart = gx - halfSpan * Math.cos(perpAngle);
+			const yStart = gy - halfSpan * Math.sin(perpAngle);
+			const xEnd = gx + halfSpan * Math.cos(perpAngle);
+			const yEnd = gy + halfSpan * Math.sin(perpAngle);
+
+			const grad = ctx.createLinearGradient(xStart, yStart, xEnd, yEnd);
+			grad.addColorStop(0, adjustHue(colorInfo.hex, -65));    // Light at left contact edge (a1)
+			grad.addColorStop(0.25, colorInfo.hex);                 // Base color
+			grad.addColorStop(0.5, adjustHue(colorInfo.hex, -75));  // Darkest line down the center (aMid)
+			grad.addColorStop(0.75, colorInfo.hex);                 // Base color
+			grad.addColorStop(1, adjustHue(colorInfo.hex, -65));    // Light at right contact edge (a2)
 
 			ctx.globalAlpha = 0.82;
 			ctx.fillStyle = grad;
-			ctx.strokeStyle = `#ffffff00`;
+			ctx.strokeStyle = colorInfo.hex;
 		} else {
 			ctx.globalAlpha = 1.0;
 			ctx.fillStyle = colorInfo.hex;
@@ -330,7 +346,7 @@ function computeShapeColorSummary(layers) {
 
 		parts.forEach((part) => {
 			const rawShape = part.charAt(0) || '-';
-			const rawColor = part.charAt(1) || 'u';
+			const rawColor = part.charAt(1) || '-';
 
 			const isEmpty = rawShape === '-' || part === '--';
 			const shapeKey = isEmpty ? '-' : rawShape;
